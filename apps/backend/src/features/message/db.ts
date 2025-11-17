@@ -1,35 +1,39 @@
 import { db } from "@acme/db/client";
 import { message } from "@acme/db/schema";
 import { eq } from "drizzle-orm";
-import type {
-  CreateMessageParams,
-  MessageWithUser,
-  UpdateMessageParams,
-} from "~/domain/entities/message-entity";
-import type { MessageRepository } from "~/domain/repositories/message-repository";
 
-export class MessageDrizzleDbRepository implements MessageRepository {
-  findAll = async () => {
+type MessageWithUser = {
+  id: string;
+  title: string;
+  content: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+};
+
+export const messageDb = {
+  findAll: async () => {
     return db.query.message.findMany({
       with: { user: true },
     }) as Promise<MessageWithUser[]>;
-  };
+  },
 
-  findById = async ({ id }: { id: string }) => {
+  findById: async (id: string) => {
     return db.query.message.findFirst({
       where: eq(message.id, id),
       with: { user: true },
     }) as Promise<MessageWithUser | undefined>;
-  };
+  },
 
-  create = async ({ params }: { params: CreateMessageParams }) => {
+  create: async ({ title, content, userId }: { title: string; content: string; userId: string }) => {
     const result = await db
       .insert(message)
-      .values({
-        title: params.title,
-        content: params.content,
-        userId: params.userId,
-      })
+      .values({ title, content, userId })
       .returning()
       .then((res) => res[0]);
 
@@ -38,17 +42,13 @@ export class MessageDrizzleDbRepository implements MessageRepository {
     }
 
     return result;
-  };
+  },
 
-  update = async ({ params }: { params: UpdateMessageParams }) => {
+  update: async ({ id, title, content }: { id: string; title: string; content: string }) => {
     const result = await db
       .update(message)
-      .set({
-        title: params.title,
-        content: params.content,
-        updatedAt: new Date(),
-      })
-      .where(eq(message.id, params.id))
+      .set({ title, content, updatedAt: new Date() })
+      .where(eq(message.id, id))
       .returning()
       .then((res) => res[0]);
 
@@ -57,9 +57,9 @@ export class MessageDrizzleDbRepository implements MessageRepository {
     }
 
     return result;
-  };
+  },
 
-  delete = async ({ id }: { id: string }) => {
+  delete: async (id: string) => {
     const result = await db
       .delete(message)
       .where(eq(message.id, id))
@@ -71,5 +71,5 @@ export class MessageDrizzleDbRepository implements MessageRepository {
     }
 
     return result;
-  };
-}
+  },
+};

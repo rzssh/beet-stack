@@ -1,14 +1,14 @@
-import { countRepository } from "./_lib/count-file-repository";
+import { countStorage } from "./storage";
 
 class CountService {
 	getCount = () => {
 		return {
-			count: countRepository.getCount(),
+			count: countStorage.getCount(),
 		};
 	};
 
 	increment = async () => {
-		const newCount = await countRepository.increment();
+		const newCount = await countStorage.increment();
 		return {
 			success: true,
 			message: "Count incremented successfully",

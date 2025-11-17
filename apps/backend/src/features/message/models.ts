@@ -1,6 +1,5 @@
 import { t } from "elysia";
 
-// Elysia models for validation
 export const messageModel = t.Object(
 	{
 		title: t.String({
@@ -14,20 +13,6 @@ export const messageModel = t.Object(
 	},
 	{
 		description: "Message payload",
-	},
-);
-
-export const messageResponseModel = t.Object(
-	{
-		id: t.String(),
-		title: t.String(),
-		content: t.String(),
-		userId: t.String(),
-		createdAt: t.Date(),
-		updatedAt: t.Date(),
-	},
-	{
-		description: "Message response",
 	},
 );
 

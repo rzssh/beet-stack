@@ -4,13 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a full-stack monorepo using Bun workspaces with TanStack Start frontend and Elysia backend. The project demonstrates clean architecture with feature-based organization.
+This is a production-ready full-stack monorepo built with bleeding-edge tech for maximum performance and developer experience. Built with Bun workspaces, TanStack Start frontend, and Elysia.js backend.
 
 ### Tech Stack
 
-- **Frontend**: TanStack Start (React Router + SSR), TanStack Query, Jotai (state), shadcn/ui
+- **Frontend**: TanStack Start (React Router + SSR), TanStack Query, Jotai (state), shadcn/ui, PostHog analytics
 - **Backend**: Elysia.js with Better Auth, Swagger docs
-- **Database**: Drizzle ORM with SQLite/Turso
+- **Database**: Drizzle ORM with PostgreSQL (local via Docker or Neon cloud)
+- **Payments**: Stripe integration
+- **Email**: Resend integration
+- **Storage**: AWS S3 integration
+- **Analytics**: PostHog
 - **Runtime**: Bun
 - **Styling**: Tailwind CSS
 
@@ -84,46 +88,44 @@ apps/
 └── web/              # TanStack Start frontend
 packages/
 ├── backend-client/   # Type-safe API client (Eden Treaty)
-└── db/              # Drizzle ORM schemas and migrations
+├── db/              # Drizzle ORM schemas and migrations
+├── email/           # Resend email integration
+├── payments/        # Stripe payments integration
+└── storage/         # S3 storage integration
 tooling/             # Shared configs (ESLint, Prettier, TypeScript, Tailwind)
 ```
 
-### Clean Architecture Layers
-
-- **Domain**: Business entities, repository interfaces (`*-entity.ts`, `*-repository.ts`)
-- **Application**: Services, use cases (`*-service.ts`)
-- **Infrastructure**: Repository implementations (`*-drizzle-db-repo.ts`, `*-api-repo.ts`)
-- **Presentation**: Controllers, components (`*-controller.ts`, `*-routes.ts`)
-
 ### Feature Organization
 
-Both frontend and backend use feature-based organization:
+Simple, flat feature structure focused on productivity:
 
 ```
 features/
 └── feature-name/
-    ├── _components/     # Feature-specific UI components
-    ├── _controllers/    # State management controllers
-    ├── _domain/         # Domain models and interfaces
-    ├── _lib/           # Infrastructure implementations
-    └── _services/      # Business logic services
+    ├── components.tsx   # All React components for this feature
+    ├── routes.ts       # API routes (backend)
+    ├── service.ts      # Business logic
+    ├── db.ts           # Database operations
+    ├── models.ts       # Type definitions/validation
+    └── controller.ts   # Frontend state management
 ```
 
 ## Key Patterns
 
 ### Backend (Elysia)
 
-- Use Elysia instances as controllers with method chaining
+- Simple file structure: `models.ts`, `db.ts`, `service.ts`, `routes.ts`
+- Elysia instances as routers with method chaining
 - Group routes with prefixes and include Swagger `detail` property
 - Class-based services with arrow function methods
-- All methods accept/return objects for consistency
+- Direct database operations (no repository pattern overhead)
 
 ### Frontend (TanStack Start)
 
 - Class-based controllers with Jotai atoms for state
 - All hooks return objects (even single values): `return { isPending }`
-- Repository pattern for data fetching with descriptive naming
 - Component composition following shadcn/ui patterns
+- Multiple components per file is acceptable for productivity
 
 ### Authentication
 
@@ -133,39 +135,120 @@ features/
 
 ### Database
 
-- Drizzle ORM with type-safe schemas
-- Repository pattern for data access
+- Drizzle ORM with PostgreSQL (local Docker or Neon cloud)
+- Direct database operations for simplicity
 - Migrations managed via Drizzle Kit
+
+## Production Features
+
+### Email (Resend)
+- Template-based email system
+- Welcome emails, password reset, notifications
+- Located in `packages/email`
+
+### Payments (Stripe)
+- Payment intents for one-time payments
+- Subscription management
+- Customer management
+- Billing portal integration
+- Webhook handling
+- Located in `packages/payments`
+
+### Storage (AWS S3)
+- File uploads with presigned URLs
+- Direct uploads from client
+- File validation and processing
+- Located in `packages/storage`
+
+### Analytics (PostHog)
+- Event tracking
+- User identification
+- Pageview tracking
+- Custom events for business metrics
+- Located in `apps/web/src/lib/analytics.ts`
+
+### Database Options
+
+#### Local PostgreSQL (Default)
+```bash
+docker compose up -d
+DATABASE_URL="postgres://postgres:postgres@localhost:5555/naara"
+```
+
+#### Neon Cloud Database
+```bash
+DATABASE_URL="postgres://username:password@host/database?sslmode=require"
+```
+See `docs/NEON_SETUP.md` for detailed setup instructions.
 
 ## Development Guidelines
 
 ### Code Style
 
-- Use arrow functions for class methods
-- Object parameters and returns for all functions
-- Absolute imports with `~` prefix
-- Direct imports (avoid barrel files)
-- Feature-specific folders use underscore prefix
+- **Simplicity over architecture**: Prefer simple, direct solutions
+- **Fewer files**: Combine related functionality rather than splitting into many files
+- **No underscore folders**: Use simple folder names
+- **kebab-case** for all files and directories
+- **Direct imports**: Avoid barrel files
+- **Short, descriptive names**: Avoid overly descriptive file names
 
-### File Naming
+### File Organization
 
-- kebab-case for all files and directories
-- Descriptive repository names: `entity-infrastructure-type-repo.ts`
-- Clear entity/model separation: `*-entity.ts` vs `*-model.ts`
+- Keep related code together
+- Prefer fewer, larger files over many small files
+- Use simple, clear naming conventions
+- Multiple components per file is acceptable
 
 ### Performance
 
-- Small, focused components with isolated re-renders
-- Single-responsibility hooks
-- Proper TypeScript with interfaces over types
+- Leverage Bun's performance for fast development
+- Use TanStack Query for caching and state management
+- PostHog for performance monitoring
+- Tailwind for optimal CSS
 
-## Environment Setup
+## Environment Variables
 
-The project uses a shared `.env` file at the root level. Backend and web apps access it via `with-env` scripts that load environment variables.
+All environment variables are in the root `.env` file:
 
-## Key Features Implemented
+```bash
+# Database
+DATABASE_URL="postgres://postgres:postgres@localhost:5555/naara"
 
-- **Count**: File-based persistence demo
-- **Messages**: CRUD operations with database persistence
-- **Pokemon**: External API integration with caching
-- **Auth**: Complete authentication flow with Better Auth
+# Auth
+BETTER_AUTH_SECRET="your-secret-key"
+BETTER_AUTH_URL="http://localhost:3001"
+
+# Email
+RESEND_API_KEY="your_resend_api_key"
+
+# Analytics
+NEXT_PUBLIC_POSTHOG_KEY="your_posthog_key"
+NEXT_PUBLIC_POSTHOG_HOST="https://app.posthog.com"
+
+# Payments
+STRIPE_SECRET_KEY="sk_test_your_key"
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_your_key"
+STRIPE_WEBHOOK_SECRET="whsec_your_secret"
+
+# Storage
+AWS_ACCESS_KEY_ID="your_aws_key"
+AWS_SECRET_ACCESS_KEY="your_aws_secret"
+AWS_REGION="us-east-1"
+AWS_S3_BUCKET="your-bucket"
+```
+
+## Production Deployment
+
+This stack is optimized for:
+- **Vercel** (frontend) + **Railway/Fly.io** (backend)
+- **Neon** (database)
+- **AWS S3** (storage)
+- **Resend** (email)
+- **Stripe** (payments)
+- **PostHog** (analytics)
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

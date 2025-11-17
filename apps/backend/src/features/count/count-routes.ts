@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import {
   countIncrementResponseModel,
   countResponseModel,
-} from "./_domain/count-model";
+} from "./models";
 import { countService } from "./count-service";
 
 export const count = new Elysia({

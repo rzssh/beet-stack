@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PokemonRouteImport } from './routes/pokemon'
 import { Route as LandingRouteImport } from './routes/landing'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MessagesRouteRouteImport } from './routes/messages.route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
@@ -24,7 +23,6 @@ import { Route as PokemonResultsRouteImport } from './routes/pokemon.results'
 import { Route as MessagesMessageIdRouteImport } from './routes/messages.$messageId'
 import { Route as CountTanstackRouteImport } from './routes/count.tanstack'
 import { Route as CountElysiaRouteImport } from './routes/count.elysia'
-import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/_auth/signin'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
@@ -38,11 +36,6 @@ const PokemonRoute = PokemonRouteImport.update({
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -104,11 +97,6 @@ const CountElysiaRoute = CountElysiaRouteImport.update({
   path: '/count/elysia',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminDashboardRoute = AdminDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -134,14 +122,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
-  '/admin': typeof AdminRouteWithChildren
   '/landing': typeof LandingRoute
   '/pokemon': typeof PokemonRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
-  '/admin/dashboard': typeof AdminDashboardRoute
   '/count/elysia': typeof CountElysiaRoute
   '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
@@ -153,13 +139,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/landing': typeof LandingRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
-  '/admin/dashboard': typeof AdminDashboardRoute
   '/count/elysia': typeof CountElysiaRoute
   '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
@@ -175,14 +159,12 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
-  '/admin': typeof AdminRouteWithChildren
   '/landing': typeof LandingRoute
   '/pokemon': typeof PokemonRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
-  '/admin/dashboard': typeof AdminDashboardRoute
   '/count/elysia': typeof CountElysiaRoute
   '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
@@ -198,14 +180,12 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/messages'
-    | '/admin'
     | '/landing'
     | '/pokemon'
     | '/login'
     | '/register'
     | '/signin'
     | '/signup'
-    | '/admin/dashboard'
     | '/count/elysia'
     | '/count/tanstack'
     | '/messages/$messageId'
@@ -217,13 +197,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/landing'
     | '/login'
     | '/register'
     | '/signin'
     | '/signup'
-    | '/admin/dashboard'
     | '/count/elysia'
     | '/count/tanstack'
     | '/messages/$messageId'
@@ -238,14 +216,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/messages'
     | '/_auth'
-    | '/admin'
     | '/landing'
     | '/pokemon'
     | '/_auth/login'
     | '/_auth/register'
     | '/_auth/signin'
     | '/_auth/signup'
-    | '/admin/dashboard'
     | '/count/elysia'
     | '/count/tanstack'
     | '/messages/$messageId'
@@ -261,7 +237,6 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MessagesRouteRoute: typeof MessagesRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  AdminRoute: typeof AdminRouteWithChildren
   LandingRoute: typeof LandingRoute
   PokemonRoute: typeof PokemonRouteWithChildren
   CountElysiaRoute: typeof CountElysiaRoute
@@ -283,13 +258,6 @@ declare module '@tanstack/react-router' {
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -376,13 +344,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountElysiaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/dashboard': {
-      id: '/admin/dashboard'
-      path: '/dashboard'
-      fullPath: '/admin/dashboard'
-      preLoaderRoute: typeof AdminDashboardRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_auth/signup': {
       id: '/_auth/signup'
       path: '/signup'
@@ -456,16 +417,6 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface AdminRouteChildren {
-  AdminDashboardRoute: typeof AdminDashboardRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminDashboardRoute: AdminDashboardRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
 interface PokemonRouteChildren {
   PokemonResultsRoute: typeof PokemonResultsRoute
   PokemonIndexRoute: typeof PokemonIndexRoute
@@ -484,7 +435,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MessagesRouteRoute: MessagesRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  AdminRoute: AdminRouteWithChildren,
   LandingRoute: LandingRoute,
   PokemonRoute: PokemonRouteWithChildren,
   CountElysiaRoute: CountElysiaRoute,

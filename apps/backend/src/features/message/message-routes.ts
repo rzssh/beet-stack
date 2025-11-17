@@ -1,11 +1,6 @@
 import { Elysia } from "elysia";
 import { betterAuthMiddleware } from "../../middlewares/auth-middleware";
-import {
-  messageIdParam,
-  messageModel,
-  messageResponseModel,
-  messageUpdateModel,
-} from "./_domain/message-model";
+import { messageIdParam, messageModel, messageUpdateModel } from "./models";
 import { messageService } from "./message-service";
 
 // Main message router
@@ -15,7 +10,6 @@ export const message = new Elysia({
   .decorate("messageService", messageService)
   .model({
     message: messageModel,
-    messageResponse: messageResponseModel,
     messageUpdate: messageUpdateModel,
     messageIdParam: messageIdParam,
   })
@@ -100,7 +94,7 @@ export const message = new Elysia({
         "/",
         async ({ params, messageService, status }) => {
           try {
-            const message = await messageService.getById({ id: params.id });
+            const message = await messageService.getById(params.id);
 
             if (!message) {
               return status(404, {
@@ -203,7 +197,7 @@ export const message = new Elysia({
             });
 
             // Delete message
-            const result = await messageService.delete({ id: params.id });
+            const result = await messageService.delete(params.id);
 
             return {
               success: true,

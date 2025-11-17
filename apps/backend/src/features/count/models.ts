@@ -1,6 +1,5 @@
 import { t } from "elysia";
 
-// Elysia models for validation
 export const countResponseModel = t.Object(
 	{
 		count: t.Number(),

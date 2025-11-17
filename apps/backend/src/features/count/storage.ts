@@ -1,13 +1,10 @@
-import type { CountRepository } from "~/domain/repositories/count-repository";
-
 const FILE_PATH = "./count.txt";
 
-class CountFileRepository implements CountRepository {
+class CountStorage {
   private count: number;
 
   constructor() {
     this.count = 0;
-    // Initialize without waiting in constructor but ensure first operations wait
     void this.initialize();
   }
 
@@ -41,4 +38,4 @@ class CountFileRepository implements CountRepository {
   };
 }
 
-export const countRepository = new CountFileRepository();
+export const countStorage = new CountStorage();
