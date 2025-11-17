@@ -26,15 +26,13 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
-    "@aws-sdk/client-s3": "^3.721.0",
-    "@aws-sdk/s3-request-presigner": "^3.721.0",
     "@elysiajs/eden": "^1.4.5",
-    "elysia": "^1.4.16",
-    "@sentry/elysia": "^8.40.0",
+    "@sentry/bun": "^8.40.0",
     "@sentry/node": "^8.40.0",
     "better-auth": "^1.3.34",
+    "elysia": "^1.4.16",
     "resend": "^6.4.2",
-    "stripe": "^16.14.0",
+    "stripe": "^19.3.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

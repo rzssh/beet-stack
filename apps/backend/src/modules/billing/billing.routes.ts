@@ -15,58 +15,53 @@ const portalBody = t.Object({
 
 export const billingRoutes = new Elysia({ prefix: "/billing" })
   .use(authMiddleware)
-  .guard(
-    {
-      auth: true,
-    },
-    (app) =>
-      app
-        .get("/products", async ({ set }) => {
+  .guard({ auth: true }, (app) =>
+    app
+      .get("/products", async ({ status }) => {
+        if (!payments.isConfigured) {
+          return status(503, { error: "Stripe is not configured" });
+        }
+
+        const products = await payments.listProducts();
+        return { products };
+      })
+      .post(
+        "/subscriptions",
+        async ({ body, set }) => {
           if (!payments.isConfigured) {
             set.status = 503;
             return { error: "Stripe is not configured" };
           }
 
-          const products = await payments.listProducts();
-          return { products };
-        })
-        .post(
-          "/subscriptions",
-          async ({ body, set }) => {
-            if (!payments.isConfigured) {
-              set.status = 503;
-              return { error: "Stripe is not configured" };
-            }
+          const subscription = await payments.createSubscription({
+            customerId: body.customerId,
+            priceId: body.priceId,
+            trialPeriodDays: body.trialPeriodDays,
+          });
 
-            const subscription = await payments.createSubscription({
-              customerId: body.customerId,
-              priceId: body.priceId,
-              trialPeriodDays: body.trialPeriodDays,
-            });
+          return { subscription };
+        },
+        {
+          body: subscriptionBody,
+        },
+      )
+      .post(
+        "/portal",
+        async ({ body, set }) => {
+          if (!payments.isConfigured) {
+            set.status = 503;
+            return { error: "Stripe is not configured" };
+          }
 
-            return { subscription };
-          },
-          {
-            body: subscriptionBody,
-          },
-        )
-        .post(
-          "/portal",
-          async ({ body, set }) => {
-            if (!payments.isConfigured) {
-              set.status = 503;
-              return { error: "Stripe is not configured" };
-            }
+          const session = await payments.createBillingPortalSession({
+            customerId: body.customerId,
+            returnUrl: body.returnUrl,
+          });
 
-            const session = await payments.createBillingPortalSession({
-              customerId: body.customerId,
-              returnUrl: body.returnUrl,
-            });
-
-            return { url: session.url };
-          },
-          {
-            body: portalBody,
-          },
-        ),
+          return { url: session.url };
+        },
+        {
+          body: portalBody,
+        },
+      ),
   );

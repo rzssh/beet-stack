@@ -9,31 +9,27 @@ const presignBody = t.Object({
 
 export const fileRoutes = new Elysia({ prefix: "/files" })
   .use(authMiddleware)
-  .guard(
-    {
-      auth: true,
-    },
-    (app) =>
-      app.post(
-        "/presign",
-        async ({ user, body, set }) => {
-          if (!storage.isConfigured) {
-            set.status = 503;
-            return {
-              error: "Storage is not configured",
-            };
-          }
+  .guard({ auth: true }, (app) =>
+    app.post(
+      "/presign",
+      async ({ user, body, set }) => {
+        if (!storage.isConfigured) {
+          set.status = 503;
+          return {
+            error: "Storage is not configured",
+          };
+        }
 
-          const key = storage.utils.generateKey(body.filename, user.id);
-          const url = await storage.getPresignedUploadUrl({
-            key,
-            contentType: body.contentType,
-          });
+        const key = storage.utils.generateKey(body.filename, user.id);
+        const url = await storage.getPresignedUploadUrl({
+          key,
+          contentType: body.contentType,
+        });
 
-          return url;
-        },
-        {
-          body: presignBody,
-        },
-      ),
+        return url;
+      },
+      {
+        body: presignBody,
+      },
+    ),
   );

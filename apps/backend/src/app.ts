@@ -1,7 +1,13 @@
 import cors from "@elysiajs/cors";
 import { opentelemetry } from "@elysiajs/opentelemetry";
 import swagger from "@elysiajs/swagger";
-import { env, logger, rateLimit, securityHeaders, sentryPlugin } from "@acme/platform";
+import {
+  env,
+  logger,
+  rateLimit,
+  securityHeaders,
+  sentryPlugin,
+} from "@acme/platform";
 import { Elysia } from "elysia";
 import { requestContext } from "./core/context";
 import { billingRoutes } from "./modules/billing/billing.routes";
@@ -54,7 +60,7 @@ export const app = new Elysia()
   .use(fileRoutes)
   .use(metricsRoutes)
   .use(pokemonRoutes)
-.onError(({ error, set }) => {
+  .onError(({ error, set }) => {
     logger.error("Unhandled error", error);
     set.status = 500;
     return {

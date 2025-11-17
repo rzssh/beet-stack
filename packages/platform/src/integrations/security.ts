@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { Elysia } from "elysia";
 import { env } from "../config/env";
 import { logger } from "../observability/logger";
@@ -14,7 +14,6 @@ export const initSecurity = () => {
     dsn: env.SENTRY_DSN,
     environment: env.NODE_ENV,
     tracesSampleRate: env.NODE_ENV === "production" ? 0.1 : 1,
-    profilesSampleRate: env.NODE_ENV === "production" ? 0.1 : 1,
   });
 
   sentryInitialized = true;
@@ -23,7 +22,7 @@ export const initSecurity = () => {
 
 export const sentryPlugin = () =>
   new Elysia({ name: "sentry" })
-    .onRequest(() => initSecurity())
+    .onRequest(initSecurity)
     .onError({ as: "global" }, ({ error, path, request }) => {
       if (!sentryInitialized) return;
 
@@ -34,15 +33,15 @@ export const sentryPlugin = () =>
           url: request.url,
         },
       });
-    })
-    .onResponse(({ response }) => {
-      if (!sentryInitialized) return;
-      const transaction = Sentry.getCurrentScope().getSpan();
-      if (transaction) {
-        transaction.setHttpStatus(response.status);
-        transaction.finish();
-      }
     });
+// .onAfterResponse(({ status }) => {
+//   if (!sentryInitialized) return;
+//   const transaction = Sentry.getCurrentScope().getSpan();
+//   if (transaction) {
+//     transaction.setHttpStatus(status);
+//     transaction.finish();
+//   }
+// });
 
 type RateLimitStore = Map<
   string,
@@ -63,7 +62,11 @@ interface RateLimitOptions {
 export const rateLimit = (options: RateLimitOptions) =>
   new Elysia({ name: "rate-limit" }).onRequest(({ request, set }) => {
     const identifier =
-      options.identifier?.(request) ?? request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown";
+      options.identifier?.(request) ??
+      request.headers.get("cf-connecting-ip") ??
+      request.headers.get("x-forwarded-for") ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
 
     const now = Date.now();
     const stored = rateLimitStore.get(identifier) ?? {
@@ -88,17 +91,18 @@ export const rateLimit = (options: RateLimitOptions) =>
     }
 
     set.headers = {
-      ...set.headers,
       "X-RateLimit-Limit": options.maxRequests.toString(),
-      "X-RateLimit-Remaining": Math.max(0, options.maxRequests - stored.count).toString(),
+      "X-RateLimit-Remaining": Math.max(
+        0,
+        options.maxRequests - stored.count,
+      ).toString(),
       "X-RateLimit-Reset": Math.ceil(stored.resetTime / 1000).toString(),
     };
   });
 
 export const securityHeaders = () =>
-  new Elysia({ name: "security-headers" }).onResponse(({ set }) => {
+  new Elysia({ name: "security-headers" }).onAfterResponse(({ set }) => {
     set.headers = {
-      ...set.headers,
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
       "X-XSS-Protection": "1; mode=block",

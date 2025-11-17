@@ -1,10 +1,4 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createHash, createHmac } from "crypto";
 import { env } from "../config/env";
 
 const isConfigured =
@@ -12,20 +6,117 @@ const isConfigured =
   Boolean(env.AWS_ACCESS_KEY_ID) &&
   Boolean(env.AWS_SECRET_ACCESS_KEY);
 
-const s3Client = isConfigured
-  ? new S3Client({
-      region: env.AWS_REGION,
-      credentials: {
-        accessKeyId: env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: env.AWS_SECRET_ACCESS_KEY!,
-      },
-    })
-  : null;
-
 const assertStorage = () => {
-  if (!s3Client || !env.AWS_S3_BUCKET) {
+  if (!isConfigured || !env.AWS_S3_BUCKET) {
     throw new Error("S3 credentials are not configured");
   }
+};
+
+const createAwsSignature = (
+  method: string,
+  bucket: string,
+  key: string,
+  timestamp: string,
+  headers: Record<string, string>
+): string => {
+  const date = timestamp.slice(0, 8);
+  const canonicalHeaders = Object.entries(headers)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k.toLowerCase()}:${v}`)
+    .join("\n");
+  const signedHeaders = Object.keys(headers)
+    .sort()
+    .map(k => k.toLowerCase())
+    .join(";");
+  
+  const canonicalRequest = [
+    method,
+    `/${key}`,
+    "",
+    canonicalHeaders,
+    "",
+    signedHeaders,
+    "UNSIGNED-PAYLOAD"
+  ].join("\n");
+  
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    timestamp,
+    `${date}/${env.AWS_REGION}/s3/aws4_request`,
+    createHash("sha256").update(canonicalRequest).digest("hex")
+  ].join("\n");
+  
+  const kDate = createHmac("sha256", `AWS4${env.AWS_SECRET_ACCESS_KEY}`).update(date).digest();
+  const kRegion = createHmac("sha256", kDate).update(env.AWS_REGION).digest();
+  const kService = createHmac("sha256", kRegion).update("s3").digest();
+  const kSigning = createHmac("sha256", kService).update("aws4_request").digest();
+  const signature = createHmac("sha256", kSigning).update(stringToSign).digest("hex");
+  
+  return signature;
+};
+
+const createS3Headers = (options: {
+  method: string;
+  bucket: string;
+  key: string;
+  contentType?: string;
+  metadata?: Record<string, string>;
+}) => {
+  const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
+  const date = timestamp.slice(0, 8);
+  
+  const headers: Record<string, string> = {
+    "Host": `${options.bucket}.s3.${env.AWS_REGION}.amazonaws.com`,
+    "X-Amz-Date": timestamp,
+  };
+  
+  if (options.contentType) {
+    headers["Content-Type"] = options.contentType;
+  }
+  
+  if (options.metadata) {
+    Object.entries(options.metadata).forEach(([key, value]) => {
+      headers[`X-Amz-Meta-${key}`] = value;
+    });
+  }
+  
+  const signature = createAwsSignature(options.method, options.bucket, options.key, timestamp, headers);
+  const credential = `${env.AWS_ACCESS_KEY_ID}/${date}/${env.AWS_REGION}/s3/aws4_request`;
+  const signedHeaders = Object.keys(headers).sort().map(k => k.toLowerCase()).join(";");
+  
+  headers["Authorization"] = `AWS4-HMAC-SHA256 Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  
+  return headers;
+};
+
+const createPresignedUrl = (
+  method: string,
+  bucket: string,
+  key: string,
+  expiresIn: number,
+  contentType?: string
+): string => {
+  const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
+  const date = timestamp.slice(0, 8);
+  const credential = `${env.AWS_ACCESS_KEY_ID}/${date}/${env.AWS_REGION}/s3/aws4_request`;
+  
+  const params = new URLSearchParams({
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": credential,
+    "X-Amz-Date": timestamp,
+    "X-Amz-Expires": expiresIn.toString(),
+    "X-Amz-SignedHeaders": "host",
+  });
+  
+  if (contentType) {
+    params.set("Content-Type", contentType);
+  }
+  
+  const headers = { "Host": `${bucket}.s3.${env.AWS_REGION}.amazonaws.com` };
+  const signature = createAwsSignature(method, bucket, key, timestamp, headers);
+  params.set("X-Amz-Signature", signature);
+  
+  return `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com/${key}?${params.toString()}`;
 };
 
 export interface UploadOptions {
@@ -49,30 +140,52 @@ export const storage = {
   async upload({ key, body, contentType, metadata }: UploadOptions) {
     assertStorage();
     const cleanKey = buildKey(key);
-    await s3Client!.send(
-      new PutObjectCommand({
-        Bucket: env.AWS_S3_BUCKET,
-        Key: cleanKey,
-        Body: body,
-        ContentType: contentType,
-        Metadata: metadata,
-      }),
-    );
+    
+    const url = `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${cleanKey}`;
+    const headers = createS3Headers({ 
+      method: "PUT", 
+      bucket: env.AWS_S3_BUCKET!, 
+      key: cleanKey, 
+      contentType, 
+      metadata 
+    });
+    
+    const response = await fetch(url, {
+      method: "PUT",
+      headers,
+      body,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`S3 upload failed: ${response.status} ${response.statusText}`);
+    }
 
     return {
       key: cleanKey,
-      url: `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${cleanKey}`,
+      url,
     };
   },
 
   async delete(key: string) {
     assertStorage();
-    await s3Client!.send(
-      new DeleteObjectCommand({
-        Bucket: env.AWS_S3_BUCKET,
-        Key: buildKey(key),
-      }),
-    );
+    const cleanKey = buildKey(key);
+    
+    const url = `https://${env.AWS_S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${cleanKey}`;
+    const headers = createS3Headers({ 
+      method: "DELETE", 
+      bucket: env.AWS_S3_BUCKET!, 
+      key: cleanKey 
+    });
+    
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`S3 delete failed: ${response.status} ${response.statusText}`);
+    }
+    
     return { success: true };
   },
 
@@ -83,15 +196,7 @@ export const storage = {
   }: PresignedUrlOptions) {
     assertStorage();
     const cleanKey = buildKey(key);
-    const url = await getSignedUrl(
-      s3Client!,
-      new PutObjectCommand({
-        Bucket: env.AWS_S3_BUCKET,
-        Key: cleanKey,
-        ContentType: contentType,
-      }),
-      { expiresIn },
-    );
+    const url = createPresignedUrl("PUT", env.AWS_S3_BUCKET!, cleanKey, expiresIn, contentType);
 
     return { url, key: cleanKey };
   },
@@ -99,14 +204,7 @@ export const storage = {
   async getPresignedDownloadUrl({ key, expiresIn = 3600 }: PresignedUrlOptions) {
     assertStorage();
     const cleanKey = buildKey(key);
-    const url = await getSignedUrl(
-      s3Client!,
-      new GetObjectCommand({
-        Bucket: env.AWS_S3_BUCKET,
-        Key: cleanKey,
-      }),
-      { expiresIn },
-    );
+    const url = createPresignedUrl("GET", env.AWS_S3_BUCKET!, cleanKey, expiresIn);
 
     return { url, key: cleanKey };
   },
