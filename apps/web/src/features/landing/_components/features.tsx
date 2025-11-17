@@ -94,6 +94,7 @@ const Features = () => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {featureList.map(({ icon, title, description }) => {
           const Icon = iconMap[icon];
+          if (!Icon) return null;
           return (
             <Card key={title} className="h-full border-0 shadow-none bg-background">
               <CardHeader className="flex flex-col justify-center items-center">

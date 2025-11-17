@@ -32,9 +32,9 @@
     "with-env": "bun --env-file=../../.env --"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0",
-    "drizzle-orm": "^0.42.0",
-    "drizzle-zod": "^0.5.1",
+    "@libsql/client": "^0.15.15",
+    "drizzle-orm": "^0.44.7",
+    "drizzle-zod": "^0.8.3",
     "pg": "^8.16.3",
     "zod": "^4.1.12"
   },
@@ -43,10 +43,10 @@
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@types/pg": "^8.15.6",
-    "drizzle-kit": "^0.31.0",
-    "eslint": "^9.24.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "drizzle-kit": "^0.31.7",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
   },
   "prettier": "@acme/prettier-config"
 }

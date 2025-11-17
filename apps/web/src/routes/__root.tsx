@@ -10,7 +10,7 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
-import appCss from "~/styles/app.css?url";
+import "~/styles/app.css";
 
 import { getSessionFn } from "~/libs/better-auth/auth-session";
 
@@ -38,7 +38,6 @@ export const Route = createRootRouteWithContext<{
         title: "React TanStarter",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
   }),
   component: RootComponent,
 });

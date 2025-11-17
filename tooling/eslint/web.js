@@ -7,6 +7,11 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import baseConfig from "./base.js";
 
+const reactCompilerConfigs =
+	/** @type {import("typescript-eslint").ConfigArray} */ (
+		/** @type {any} */ (reactCompiler).configs?.recommended ?? []
+	);
+
 export default tseslint.config(
 	...baseConfig,
 	{
@@ -23,7 +28,7 @@ export default tseslint.config(
 			...reactHooks.configs.recommended.rules,
 		},
 	},
-	reactCompiler.configs.recommended,
+	...reactCompilerConfigs,
 	{
 		files: ["**/*.{ts,tsx}"],
 		languageOptions: {

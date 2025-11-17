@@ -1,8 +1,17 @@
 {
-	"include": ["src"],
-	"exclude": ["node_modules", "dist", "build"],
+	"extends": "@acme/tsconfig/library.json",
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"],
+	"compilerOptions": {
+		"baseUrl": ".",
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"noEmit": false,
+		"paths": {
+			"~/*": ["./src/*"]
+		}
+	},
 	"references": [
-		// Need to fix type alias not working for eden
 		{
 			"path": "../../apps/backend"
 		}

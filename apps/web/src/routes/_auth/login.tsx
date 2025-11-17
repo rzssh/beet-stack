@@ -1,8 +1,8 @@
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
-import { buttonVariants } from "src/components/ui/button";
-import { cn } from "src/components/ui/utils";
-import { AuthLoginForm } from "src/features/auth/_components/auth-login-form";
-import { authController } from "src/features/auth/_controllers/auth-controller";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/components/ui/utils";
+import { AuthLoginForm } from "~/features/auth/_components/auth-login-form";
+import { authController } from "~/features/auth/_controllers/auth-controller";
 
 // Create a custom error class for redirects
 class RedirectError extends Error {
@@ -21,17 +21,20 @@ export const Route = createFileRoute("/_auth/login")({
     try {
       const session = await authController.getSession();
       if (session?.user) {
-        return redirect({ to: "/" });
+        throw redirect({ to: "/" });
       }
     } catch (error) {
       // If error is a RedirectError, process the redirect
       if (error instanceof RedirectError) {
-        return redirect({ to: error.to });
+        throw redirect({ to: error.to });
+      }
+      // If it's already a redirect, re-throw it
+      if (error && typeof error === "object" && "to" in error) {
+        throw error;
       }
       // Otherwise, just log it and continue
       console.error("Error in beforeLoad:", error);
     }
-    return {};
   },
 });
 

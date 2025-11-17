@@ -14,15 +14,13 @@ export class MessageApiRepo implements MessageRepository {
   };
 
   getMessage = async ({ id }: { id: string }): Promise<Message> => {
-    const { data } = await api.messages[":id"].get({
-      $query: { id },
-    });
+    const { data } = await api.messages({ id }).get();
 
-    if (!data?.data) {
+    if (!data?.message) {
       throw new Error("Message not found");
     }
 
-    return data.data;
+    return data.message;
   };
 
   createMessage = async ({
@@ -30,16 +28,19 @@ export class MessageApiRepo implements MessageRepository {
   }: {
     params: MessageCreateParams;
   }): Promise<Message> => {
-    const { data } = await api.messages.index.post({
-      content: params.content,
-      title: params.title,
-    });
+    const { data } = await api.messages.index.post(
+      {
+        content: params.content,
+        title: params.title,
+      },
+      { headers: {}, query: {} },
+    );
 
-    if (!data?.data) {
+    if (!data?.result) {
       throw new Error("Failed to create message");
     }
 
-    return data.data;
+    return data.result;
   };
 
   updateMessage = async ({
@@ -49,21 +50,23 @@ export class MessageApiRepo implements MessageRepository {
   }): Promise<Message> => {
     const { id, ...updateData } = params;
 
-    const { data } = await api.messages[":id"].patch({
-      $query: { id },
-      content: updateData.content,
-      title: updateData.title,
-    });
+    const { data } = await api.messages({ id }).patch(
+      {
+        content: updateData.content,
+        title: updateData.title,
+      },
+      { headers: {}, query: {} },
+    );
 
-    if (!data?.data) {
+    if (!data?.result) {
       throw new Error("Failed to update message");
     }
 
-    return data.data;
+    return data.result;
   };
 
   deleteMessage = async ({ id }: { id: string }): Promise<{ success: boolean }> => {
-    await api.messages[":id"].delete({ $query: { id } });
+    await api.messages({ id }).delete({}, { headers: {}, query: {} });
     return { success: true };
   };
 }

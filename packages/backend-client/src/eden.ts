@@ -1,14 +1,21 @@
-import { edenTreaty } from "@elysiajs/eden";
+import { treaty } from "@elysiajs/eden";
 import type {
   App as ElysiaBackendApp,
   Session,
-} from "../../../apps/backend/src";
+} from "../../../apps/backend/dist";
 
-export const api = edenTreaty<ElysiaBackendApp>("http://localhost:3001", {
-  $fetch: {
+const runtimeEnv = process.env;
+
+const baseUrl =
+  runtimeEnv.VITE_BACKEND_URL ??
+  runtimeEnv.NEXT_PUBLIC_BACKEND_URL ??
+  "http://localhost:3001";
+
+export const api = treaty<ElysiaBackendApp>(baseUrl, {
+  fetch: {
     credentials: "include",
-    mode: "cors",
   },
 });
 
-export type { Session, ElysiaBackendApp };
+export type { ElysiaBackendApp, Session };
+export type App = ElysiaBackendApp;

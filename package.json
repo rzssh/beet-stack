@@ -27,7 +27,8 @@
 	},
 	"devDependencies": {
 		"@acme/eslint-config": "workspace:*",
-		"@acme/prettier-config": "workspace:*"
+		"@acme/prettier-config": "workspace:*",
+		"eslint-plugin-react-compiler": "^19.1.0-rc.2"
 	},
 	"trustedDependencies": [
 		"@parcel/watcher",
