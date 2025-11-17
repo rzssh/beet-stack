@@ -1,5 +1,5 @@
 {
-  "name": "@acme/storage",
+  "name": "@acme/security",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,7 +15,11 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@sentry/node": "^8.40.0",
+    "@sentry/elysia": "^8.40.0",
+    "helmet": "^8.0.0"
+  },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/typescript-config": "workspace:*",

@@ -39,6 +39,10 @@ export const Route = createRootRouteWithContext<{
         title: "React TanStarter",
       },
     ],
+    links: [
+      { rel: "stylesheet", href: "/src/styles/app.css" },
+      { rel: "icon", href: "/favicon.ico" },
+    ],
   }),
   component: RootComponent,
 });

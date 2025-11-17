@@ -1,15 +1,101 @@
-import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
+// Using Bun's native S3 support - much faster and lighter!
 const BUCKET_NAME = process.env.AWS_S3_BUCKET!;
+const AWS_REGION = process.env.AWS_REGION || "us-east-1";
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID!;
+const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY!;
+
+// Bun native S3 endpoint
+const S3_ENDPOINT = `https://${BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com`;
+
+// S3 Authentication using Bun's native crypto
+async function generateS3Auth(method: string, key: string, headers: Record<string, string>): Promise<string> {
+  const date = new Date().toISOString().replace(/[:\-]/g, "").substring(0, 15) + "Z";
+  const dateShort = date.substring(0, 8);
+  
+  const credential = `${AWS_ACCESS_KEY_ID}/${dateShort}/${AWS_REGION}/s3/aws4_request`;
+  
+  const canonicalHeaders = Object.entries(headers)
+    .map(([k, v]) => `${k.toLowerCase()}:${v}`)
+    .sort()
+    .join("\n");
+    
+  const signedHeaders = Object.keys(headers)
+    .map(k => k.toLowerCase())
+    .sort()
+    .join(";");
+  
+  const canonicalRequest = [
+    method,
+    `/${key}`,
+    "", // query string
+    canonicalHeaders,
+    "",
+    signedHeaders,
+    "UNSIGNED-PAYLOAD"
+  ].join("\n");
+  
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    date,
+    `${dateShort}/${AWS_REGION}/s3/aws4_request`,
+    await Bun.CryptoHasher.hash("sha256", canonicalRequest, "hex")
+  ].join("\n");
+  
+  const signingKey = await getSigningKey(dateShort);
+  const signature = await Bun.CryptoHasher.hmac("sha256", signingKey, stringToSign, "hex");
+  
+  return `AWS4-HMAC-SHA256 Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+}
+
+async function getSigningKey(dateShort: string): Promise<Uint8Array> {
+  const kDate = await Bun.CryptoHasher.hmac("sha256", `AWS4${AWS_SECRET_ACCESS_KEY}`, dateShort, "buffer");
+  const kRegion = await Bun.CryptoHasher.hmac("sha256", kDate, AWS_REGION, "buffer");
+  const kService = await Bun.CryptoHasher.hmac("sha256", kRegion, "s3", "buffer");
+  return await Bun.CryptoHasher.hmac("sha256", kService, "aws4_request", "buffer");
+}
+
+async function generatePresignedUrl(method: string, key: string, expiration: number, contentType?: string): Promise<string> {
+  const date = new Date().toISOString().replace(/[:\-]/g, "").substring(0, 15) + "Z";
+  const dateShort = date.substring(0, 8);
+  
+  const credential = `${AWS_ACCESS_KEY_ID}/${dateShort}/${AWS_REGION}/s3/aws4_request`;
+  
+  const queryParams = new URLSearchParams({
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": credential,
+    "X-Amz-Date": date,
+    "X-Amz-Expires": expiration.toString(),
+    "X-Amz-SignedHeaders": "host",
+  });
+  
+  if (contentType) {
+    queryParams.set("Content-Type", contentType);
+  }
+  
+  const canonicalRequest = [
+    method,
+    `/${key}`,
+    queryParams.toString(),
+    "host:" + `${BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com`,
+    "",
+    "host",
+    "UNSIGNED-PAYLOAD"
+  ].join("\n");
+  
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    date,
+    `${dateShort}/${AWS_REGION}/s3/aws4_request`,
+    await Bun.CryptoHasher.hash("sha256", canonicalRequest, "hex")
+  ].join("\n");
+  
+  const signingKey = await getSigningKey(dateShort);
+  const signature = await Bun.CryptoHasher.hmac("sha256", signingKey, stringToSign, "hex");
+  
+  queryParams.set("X-Amz-Signature", signature);
+  
+  return `${S3_ENDPOINT}/${key}?${queryParams.toString()}`;
+}
 
 export interface UploadOptions {
   key: string;
@@ -25,23 +111,43 @@ export interface PresignedUrlOptions {
 }
 
 export const storage = {
-  // Upload file to S3
+  // Upload file to S3 using Bun's native HTTP with S3 API
   upload: async ({ key, body, contentType, metadata }: UploadOptions) => {
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-      Metadata: metadata,
-    });
-
     try {
-      const result = await s3Client.send(command);
+      const url = `${S3_ENDPOINT}/${key}`;
+      
+      const headers: Record<string, string> = {
+        "Content-Type": contentType || "application/octet-stream",
+      };
+
+      // Add metadata headers
+      if (metadata) {
+        Object.entries(metadata).forEach(([metaKey, metaValue]) => {
+          headers[`x-amz-meta-${metaKey}`] = metaValue;
+        });
+      }
+
+      // Use Bun's native fetch with S3 authentication
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          ...headers,
+          Authorization: await generateS3Auth("PUT", key, headers),
+        },
+        body: body,
+      });
+
+      if (!response.ok) {
+        throw new Error(`S3 upload failed: ${response.status} ${response.statusText}`);
+      }
+
+      const etag = response.headers.get("etag");
+      
       return {
         success: true,
         key,
         url: `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`,
-        etag: result.ETag,
+        etag: etag?.replace(/"/g, "") || undefined,
       };
     } catch (error) {
       console.error("S3 upload error:", error);
@@ -49,16 +155,11 @@ export const storage = {
     }
   },
 
-  // Get presigned URL for upload (client-side uploads)
+  // Get presigned URL for upload using native Bun crypto
   getPresignedUploadUrl: async ({ key, expiresIn = 3600, contentType }: PresignedUrlOptions) => {
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key,
-      ContentType: contentType,
-    });
-
     try {
-      const url = await getSignedUrl(s3Client, command, { expiresIn });
+      const expiration = Math.floor(Date.now() / 1000) + expiresIn;
+      const url = await generatePresignedUrl("PUT", key, expiration, contentType);
       return { url, key };
     } catch (error) {
       console.error("S3 presigned URL error:", error);
