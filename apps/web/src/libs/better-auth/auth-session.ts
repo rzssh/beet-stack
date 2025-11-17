@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getWebRequest } from "vinxi/http";
+import { getRequest } from "@tanstack/react-start/server";
 import { authClientRepo } from "./auth-client-repo";
 // import { authServerRepo } from "./auth-server-repo";
 
@@ -8,7 +8,7 @@ type Session = typeof authClientRepo.$Infer.Session;
 const getSessionFn = createServerFn({
   method: "GET",
 }).handler(async () => {
-  const { headers } = getWebRequest()!;
+  const { headers } = getRequest();
 
   // Use this for fetching session from elysia as BE
   const session = await authClientRepo.getSession({
@@ -16,7 +16,7 @@ const getSessionFn = createServerFn({
       headers,
     },
   });
-  return session.data || null;
+  return session.data ?? null;
 
   // const session = await authServerRepo.api.getSession({ headers });
   // return session || null;

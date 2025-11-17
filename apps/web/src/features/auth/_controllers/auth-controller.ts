@@ -75,7 +75,7 @@ export class AuthController {
 
     const githubLoginMutation = useMutation({
       mutationFn: async () => {
-        return authClientRepo.signIn.social({
+        return await authClientRepo.signIn.social({
           provider: "github",
         });
       },

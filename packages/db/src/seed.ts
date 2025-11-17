@@ -1,6 +1,5 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 import { account, note, pokemon, user } from "./schema";
 
@@ -45,29 +44,26 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required");
 }
 
-const client = createClient({
-  url: process.env.DATABASE_URL,
-  authToken: process.env.DATABASE_AUTH_TOKEN,
-});
-
-const db = drizzle(client);
+const db = drizzle(process.env.DATABASE_URL);
 
 async function seed() {
   await migrate(db, {
     migrationsFolder: `${process.env.ROOT_DIR}/packages/db/migrations`,
   });
 
-  const newUser = await db
-    .insert(user)
-    .values({
-      email: "rachel@remix.run",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      emailVerified: true,
-      name: "Rachel",
-    })
-    .returning()
-    .get();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const newUser = (
+    await db
+      .insert(user)
+      .values({
+        email: "rachel@remix.run",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        emailVerified: true,
+        name: "Rachel",
+      })
+      .returning()
+  ).at(0)!;
 
   const hash = await Bun.password.hash("racheliscool");
   await db.insert(account).values({
@@ -99,4 +95,4 @@ async function seed() {
   process.exit(0);
 }
 
-seed();
+void seed();
