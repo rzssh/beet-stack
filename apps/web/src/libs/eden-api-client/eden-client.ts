@@ -1,14 +1,19 @@
-import { edenTreaty } from "@elysiajs/eden";
-import type { App, Session } from "backend-client";
-import { api } from "backend-client";
+import {
+  createBackendClient,
+} from "@acme/platform/clients/backend";
+import type {
+  BackendApp as App,
+  Session,
+} from "@acme/platform/clients/backend";
 
-// export const api = edenTreaty<App>("http://localhost:3001", {
-//   $fetch: {
-//     credentials: "include",
-//     mode: "cors",
-//   },
-// });
+const baseUrl =
+  import.meta.env.VITE_BACKEND_URL ||
+  import.meta.env.PUBLIC_BACKEND_URL ||
+  import.meta.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:3001";
 
-export { api };
+export const api = createBackendClient({
+  baseUrl,
+});
 
-export type { Session };
+export type { Session, App };

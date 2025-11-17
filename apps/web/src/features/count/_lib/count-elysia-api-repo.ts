@@ -1,4 +1,4 @@
-import { api } from "backend-client";
+import { api } from "~/libs/eden-api-client/eden-client";
 import type { ElysiaCountResponse } from "../_domain/count-model";
 import type { CountRepository } from "../_domain/count-repository";
 

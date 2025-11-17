@@ -36,11 +36,11 @@ export class MessageApiRepo implements MessageRepository {
       { headers: {}, query: {} },
     );
 
-    if (!data?.result) {
+    if (!data?.message) {
       throw new Error("Failed to create message");
     }
 
-    return data.result;
+    return data.message;
   };
 
   updateMessage = async ({
@@ -58,11 +58,11 @@ export class MessageApiRepo implements MessageRepository {
       { headers: {}, query: {} },
     );
 
-    if (!data?.result) {
+    if (!data?.message) {
       throw new Error("Failed to update message");
     }
 
-    return data.result;
+    return data.message;
   };
 
   deleteMessage = async ({ id }: { id: string }): Promise<{ success: boolean }> => {

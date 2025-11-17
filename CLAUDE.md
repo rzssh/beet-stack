@@ -87,11 +87,8 @@ apps/
 ├── backend/          # Elysia.js API server
 └── web/              # TanStack Start frontend
 packages/
-├── backend-client/   # Type-safe API client (Eden Treaty)
 ├── db/              # Drizzle ORM schemas and migrations
-├── email/           # Resend email integration
-├── payments/        # Stripe payments integration
-└── storage/         # S3 storage integration
+└── platform/        # Env, logger, auth, billing, storage, email, Eden client
 tooling/             # Shared configs (ESLint, Prettier, TypeScript, Tailwind)
 ```
 
@@ -99,26 +96,17 @@ tooling/             # Shared configs (ESLint, Prettier, TypeScript, Tailwind)
 
 Simple, flat feature structure focused on productivity:
 
-```
-features/
-└── feature-name/
-    ├── components.tsx   # All React components for this feature
-    ├── routes.ts       # API routes (backend)
-    ├── service.ts      # Business logic
-    ├── db.ts           # Database operations
-    ├── models.ts       # Type definitions/validation
-    └── controller.ts   # Frontend state management
-```
+Backend modules live under `apps/backend/src/modules/*` with `repository → service → routes` layering. Frontend keeps feature-driven folders under `apps/web/src/features/*`.
 
 ## Key Patterns
 
 ### Backend (Elysia)
 
-- Simple file structure: `models.ts`, `db.ts`, `service.ts`, `routes.ts`
-- Elysia instances as routers with method chaining
-- Group routes with prefixes and include Swagger `detail` property
-- Class-based services with arrow function methods
-- Direct database operations (no repository pattern overhead)
+- Modules follow `repository → service → routes`
+- `@acme/platform` supplies env, auth, billing, storage, email, logger
+- Each route file owns its own `.model` definitions (via `t.Object`)
+- Use `.guard({ auth: true })` with the Better Auth macro instead of ad-hoc checks
+- Log via the shared request context + `logger.child({ requestId })`
 
 ### Frontend (TanStack Start)
 
@@ -141,24 +129,12 @@ features/
 
 ## Production Features
 
-### Email (Resend)
-- Template-based email system
-- Welcome emails, password reset, notifications
-- Located in `packages/email`
-
-### Payments (Stripe)
-- Payment intents for one-time payments
-- Subscription management
-- Customer management
-- Billing portal integration
-- Webhook handling
-- Located in `packages/payments`
-
-### Storage (AWS S3)
-- File uploads with presigned URLs
-- Direct uploads from client
-- File validation and processing
-- Located in `packages/storage`
+- All production integrations live inside `packages/platform`:
+  - **Email (Resend)** – templates + helper senders
+  - **Payments (Stripe)** – products, subscriptions, billing portal helpers
+  - **Storage (AWS S3)** – presigned uploads/downloads, key utilities
+  - **Security** – Sentry + rate limiting + hardened headers
+  - **Auth** – Better Auth server wired to Drizzle
 
 ### Analytics (PostHog)
 - Event tracking

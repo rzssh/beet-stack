@@ -1,120 +1,127 @@
-# TanStack Start + Elysia + Better Auth Template
+# TanStack Start × Elysia × Better Auth — SaaS Boilerplate
 
-A full-stack monorepo template showcasing the power of modern web development with end-to-end type safety, blazing performance, and seamless authentication.
+Ship the next million‑dollar SaaS with a batteries‑included Bun monorepo that proves how auth, billing, messaging, storage, analytics, and observability should be wired together.
 
-## 🚀 Motivation
+## 🔌 Apps & Packages
 
-This project was inspired by [Indra Zulfi Mushoddaq's post](https://lnkd.in/gGW-XZNQ) about the incredible developer experience of Elysia + Eden + Better Auth combination. After trying it out, I can confirm that this stack is absolutely **GOAT** (Greatest Of All Time):
+```
+apps/
+├── backend/      # Elysia API (Better Auth + Swagger + Stripe + S3)
+└── web/          # TanStack Start front-end with shadcn/ui
+packages/
+├── db/           # Drizzle schema, migrations, helpers
+├── platform/     # Shared platform layer: env, logger, auth, billing, email, storage, api client
+└── tooling/*     # ESLint, Prettier, Tailwind, TS configs
+```
 
-✅ **Auto-generated docs** - No more manual API documentation headaches  
-✅ **E2E Type Safety** - Thanks to Eden Client + Better Auth Client  
-✅ **Performance fast AF** - Even faster than server functions from Remix, Next.js, or TanStack Start  
-✅ **Auth setup made easy** - From Social Sign-In to email+password (Indonesian favorite +62)  
+### Platform Layer Highlights
+`@acme/platform` centralises everything the apps share:
+- `config/env` – typed Zod parsing + defaults
+- `database` – re-exports Drizzle client & schema
+- `integrations/auth-server` – Better Auth w/ openAPI plugin
+- `integrations/payments` – Stripe helpers
+- `integrations/storage` – S3 presigned uploads
+- `integrations/email` – Resend templates
+- `integrations/security` – Sentry, CORS, rate limiting, hardened headers
+- `clients/backend` – Eden Treaty helper for the frontend
 
-The SSR works smoothly and is surprisingly easier to configure than Remix and Start.
-
-## 🏗️ What's inside?
-
-This monorepo includes the following packages/apps:
-
-### Apps and Packages
-
-- **`backend`**: [Elysia.js](https://elysiajs.com/) API server with Better Auth
-- **`web`**: [TanStack Start](https://tanstack.com/start) frontend with SSR
-- **`packages/db`**: Drizzle ORM with SQLite/Turso database
-- **`packages/backend-client`**: Type-safe API client using Eden Treaty
-- **`tooling/*`**: Shared configurations (ESLint, Prettier, TypeScript, Tailwind)
-
-### Tech Stack
-
-- **Frontend**: TanStack Start, TanStack Query, Jotai, shadcn/ui
-- **Backend**: Elysia.js, Better Auth, Swagger docs
-- **Database**: Drizzle ORM, SQLite/Turso
-- **Runtime**: Bun
-- **Styling**: Tailwind CSS
-- **Type Safety**: End-to-end with Eden Treaty
-
-### Getting Started
-
-To install and start developing all apps, run the following command:
+## 🚀 Getting Started
 
 ```sh
 bun install
-bun dev
+bun dev        # runs api + web via Bun workspaces
 ```
 
-### Development Scripts
-
+Useful scripts:
 ```sh
-# Type check all packages
-bun typecheck
-
-# Format all packages
-bun format
-bun format:fix
-
-# Lint all packages
-bun lint
-bun lint:fix
-
-# Database operations
-bun db:generate    # Generate migrations
-bun db:push       # Push schema to database
-bun db:seed       # Seed database with sample data
-bun db:studio     # Open Drizzle Studio
-
-# Build and clean
-bun build         # Build all packages
-bun clean         # Clean all artifacts
+bun lint             # lint every workspace
+bun typecheck        # type-check everything
+bun format           # prettier --check
+bun db:push          # drizzle-kit push
+bun db:seed          # seed data
 ```
 
-## 🏛️ Architecture
+## 🔐 Environment
 
-This template follows clean architecture principles with feature-based organization:
+Create `.env` at repo root:
 
-### Monorepo Structure
 ```
-apps/
-├── backend/          # Elysia.js API server
-└── web/              # TanStack Start frontend
-packages/
-├── backend-client/   # Type-safe API client (Eden Treaty)
-└── db/              # Drizzle ORM schemas and migrations
-tooling/             # Shared configs (ESLint, Prettier, TypeScript, Tailwind)
+DATABASE_URL="postgres://..."
+ROOT_DIR=$(pwd)
+BACKEND_URL="http://localhost:3001"
+FRONTEND_URL="http://localhost:3000"
+BETTER_AUTH_TRUSTED_ORIGINS="http://localhost:3000"
+
+# GitHub OAuth (optional)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# Email (optional)
+RESEND_API_KEY=
+
+# Stripe (optional)
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=
+
+# AWS S3 (optional)
+AWS_S3_BUCKET=
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# Observability (optional)
+SENTRY_DSN=
 ```
 
-### Key Features Implemented
+Every module is defensive: if Stripe/S3/Resend aren’t configured the API responds with a helpful `503` so the UI can surface the next step.
 
-- **🔐 Authentication**: Complete flow with Better Auth (email/password + social)
-- **📊 Count Demo**: File-based persistence example
-- **💬 Messages**: Full CRUD operations with database
-- **🎮 Pokemon**: External API integration with caching
-- **📚 Auto Docs**: Swagger documentation generation
-- **🔄 SSR**: Server-side rendering with TanStack Start
+## 🧱 Backend Modules
 
-## 🌟 What Makes This Stack Special
+| Route | Purpose |
+| --- | --- |
+| `GET /health`, `/ready` | uptime & readiness probes |
+| `GET /me` | current Better Auth session |
+| `GET/POST /messages`, `/:id` | Drizzle‑powered CRUD scoped per user |
+| `GET /count`, `POST /count/increment` | persistent metrics example (Bun file store) |
+| `GET /pokemon/pair/results`, `POST /pokemon/vote` | fun Eden Treaty demo |
+| `GET /billing/products`, `POST /billing/subscriptions`, `/portal` | Stripe integration |
+| `POST /files/presign` | S3 presigned upload helper |
 
-1. **End-to-End Type Safety**: From database to frontend, everything is typed
-2. **Performance**: Bun runtime + Elysia performance + TanStack optimizations
-3. **Developer Experience**: Hot reload, auto-completion, built-in docs
-4. **Modern Patterns**: Clean architecture, repository pattern, feature organization
-5. **Production Ready**: Auth, database, error handling, and deployment ready
+Middleware stack: CORS, OpenTelemetry, Swagger docs, Sentry, security headers, rate limiting, Better Auth session guard, request context + structured logs.
 
-## 🤝 Contributing
+## 💻 Frontend UX
 
-This is a demonstration template, but feel free to:
-- Open issues for bugs or suggestions
-- Submit PRs for improvements
-- Use this as a starting point for your projects
+The dashboard route demonstrates how the stack fits together:
+- **Account summary** powered by Better Auth session
+- **Product heartbeat card** hitting the `/count` API
+- **Billing card** fetching Stripe products and portal links
+- **Storage card** issuing presigned upload URLs
+- **Team notes** board with query-powered CRUD + toasts
+- **PostHog analytics** wrapper ready to fire events
 
-## 🙏 Acknowledgments
+Everything uses TanStack Query loaders + Eden Treaty client so data is cached, typed, and streaming-friendly.
 
-- Thanks to [Indra Zulfi Mushoddaq](https://lnkd.in/gGW-XZNQ) for the inspiration
-- The amazing teams behind Elysia, TanStack, and Better Auth
-- The TypeScript and Bun communities
+## ✅ Feature Checklist
 
----
+- 🔐 Better Auth sessions (email/password + GitHub social ready)
+- 🧱 Platform layer exporting env, auth, billing, storage, email
+- 🧾 Swagger docs + Eden Treaty types end-to-end
+- 📊 Stripe billing + portal helpers
+- 🗂️ S3 presigned uploads using AWS SDK v3
+- 💬 Messages CRUD + ownership checks
+- 🧠 Request context & structured logger
+- 🪵 Rate limiting + hardened headers + Sentry integration
+- 🧮 Bun-native counter persistence example
+- 🎯 TanStack Start dashboard showcasing real flows
 
-*Sorry for messy code 🙃, but if you have suggestions, feel free to share!*
+## 🛣️ Next Steps
 
-*Want to discuss minimal features or UI improvements? Drop a comment in the discussions!* 🚀
+- Point `DATABASE_URL` at Postgres/Turso/Neon
+- Wire Better Auth webhooks for Stripe customer mapping
+- Swap the Bun counter for Redis or Drizzle table for horizontal scale
+- Hook up your preferred analytics vendor via `lib/analytics.ts`
+
+## 🙏 Credits
+
+Inspired by [Indra Zulfi Mushoddaq](https://lnkd.in/gGW-XZNQ), the Elysia/TanStack/Better Auth teams, and everyone pushing Bun forward. Take it, remix it, and build the next unicorn. PRs welcome! 🚀

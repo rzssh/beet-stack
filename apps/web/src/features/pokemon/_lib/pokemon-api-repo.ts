@@ -1,4 +1,4 @@
-import { api } from "backend-client";
+import { api } from "~/libs/eden-api-client/eden-client";
 import type {
 	PokemonPair,
 	PokemonResult,
