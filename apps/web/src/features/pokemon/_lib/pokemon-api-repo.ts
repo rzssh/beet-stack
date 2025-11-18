@@ -1,28 +1,28 @@
-import { api } from "~/libs/eden-api-client/eden-client";
+import { api } from "@acme/api";
 import type {
-	PokemonPair,
-	PokemonResult,
-	PokemonVoteParams,
+  PokemonPair,
+  PokemonResult,
+  PokemonVoteParams,
 } from "../_domain/pokemon-model";
 import type { PokemonRepository } from "../_domain/pokemon-repository";
 
 class PokemonApiRepository implements PokemonRepository {
-	getPokemonPair = async (): Promise<PokemonPair> => {
-		const { data } = await api.pokemon.pair.get();
-		return data?.pair ?? [];
-	};
+  getPokemonPair = async (): Promise<PokemonPair> => {
+    const { data } = await api.pokemon.pair.get();
+    return data?.pair ?? [];
+  };
 
-	voteForPokemon = async ({
-		votedForId,
-		votedAgainstId,
-	}: PokemonVoteParams): Promise<void> => {
-		await api.pokemon.vote.post({ votedForId, votedAgainstId });
-	};
+  voteForPokemon = async ({
+    votedForId,
+    votedAgainstId,
+  }: PokemonVoteParams): Promise<void> => {
+    await api.pokemon.vote.post({ votedForId, votedAgainstId });
+  };
 
-	getPokemonResults = async (): Promise<PokemonResult[]> => {
-		const { data } = await api.pokemon.results.get();
-		return data ?? [];
-	};
+  getPokemonResults = async (): Promise<PokemonResult[]> => {
+    const { data } = await api.pokemon.results.get();
+    return data ?? [];
+  };
 }
 
 export const pokemonApiRepository = new PokemonApiRepository();

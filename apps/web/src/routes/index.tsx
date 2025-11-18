@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import ThemeToggle from "~/components/ThemeToggle";
+import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
-import { authClientRepo } from "~/libs/better-auth/auth-client-repo";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
 
 export const Route = createFileRoute("/")({
   component: Home,

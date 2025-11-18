@@ -1,4 +1,9 @@
-import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  redirect,
+} from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { ThemeToggle } from "~/components/ThemeToggle";
@@ -26,7 +31,9 @@ function DashboardLayout() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
           <div>
             <p className="text-sm text-muted-foreground">Signed in as</p>
-            <p className="text-lg font-semibold">{user?.name ?? "Anonymous founder"}</p>
+            <p className="text-lg font-semibold">
+              {user?.name ?? "Anonymous founder"}
+            </p>
             <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
           <div className="flex items-center gap-3">

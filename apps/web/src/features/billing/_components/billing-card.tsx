@@ -19,11 +19,7 @@ const currencyFormatter = (currency: string) =>
     currency,
   });
 
-export const BillingCard = ({
-  customerId,
-}: {
-  customerId?: string;
-}) => {
+export const BillingCard = ({ customerId }: { customerId?: string }) => {
   const { toast } = useToast();
 
   const productsQuery = useQuery({
@@ -149,12 +145,12 @@ export const BillingCard = ({
                   </div>
                 )}
               </div>
-                <Button
-                  className="mt-4 w-full"
-                  disabled={!customerId || subscribeMutation.isPending}
-                  onClick={() => {
-                    const price = product.prices[0];
-                    if (!price) {
+              <Button
+                className="mt-4 w-full"
+                disabled={!customerId || subscribeMutation.isPending}
+                onClick={() => {
+                  const price = product.prices[0];
+                  if (!price) {
                     toast({
                       title: "Missing price",
                       description: "Add at least one active price in Stripe.",
@@ -165,7 +161,9 @@ export const BillingCard = ({
                   subscribeMutation.mutate(price);
                 }}
               >
-                {subscribeMutation.isPending ? "Starting checkout..." : "Start subscription"}
+                {subscribeMutation.isPending
+                  ? "Starting checkout..."
+                  : "Start subscription"}
               </Button>
             </div>
           ))
@@ -182,7 +180,8 @@ export const BillingCard = ({
         </Button>
         {!customerId && (
           <p className="text-xs text-muted-foreground text-center">
-            Attach a Stripe customer id to the Better Auth user metadata to enable billing actions.
+            Attach a Stripe customer id to the Better Auth user metadata to enable billing
+            actions.
           </p>
         )}
       </CardFooter>

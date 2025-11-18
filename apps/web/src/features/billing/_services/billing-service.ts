@@ -1,4 +1,4 @@
-import { api } from "~/libs/eden-api-client/eden-client";
+import { api } from "@acme/api";
 
 export interface BillingProduct {
   id: string;
@@ -18,7 +18,8 @@ export const billingService = {
     const { data, error, status } = await api.billing.products.get();
     if (error || status >= 400) {
       throw new Error(
-        error?.message || "Billing API unavailable. Configure STRIPE_SECRET_KEY.",
+        error?.message ||
+          "Billing API unavailable. Configure STRIPE_SECRET_KEY.",
       );
     }
     return data?.products ?? [];

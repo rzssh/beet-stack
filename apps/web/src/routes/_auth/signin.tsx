@@ -14,14 +14,14 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { authToast } from "~/libs/sonner-toast";
+import { authToast } from "~/lib/sonner-toast";
 import {
   authKeys,
   emailSignInMutationOptions,
   SignInCredentials,
   SocialSignInCredentials,
   socialSignInMutationOptions,
-} from "~/libs/tanstack-query/auth-queries";
+} from "~/lib/tanstack-query/auth-queries";
 import { cn } from "~/components/ui/utils";
 
 const REDIRECT_URL = "/dashboard";

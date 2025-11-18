@@ -1,0 +1,19 @@
+{
+  "name": "@acme/config",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "lint:check": "biome check .",
+    "lint": "biome check --write --diagnostic-level=error .",
+    "lint:linter": "biome lint --write --diagnostic-level=error .",
+    "lint:formatter": "biome format --write --diagnostic-level=error .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "zod": "^4.1.12"
+  }
+}

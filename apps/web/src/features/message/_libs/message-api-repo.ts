@@ -1,4 +1,4 @@
-import { api } from "~/libs/eden-api-client/eden-client";
+import { api } from "@acme/api";
 import type {
   Message,
   MessageCreateParams,
@@ -65,7 +65,9 @@ export class MessageApiRepo implements MessageRepository {
     return data.message;
   };
 
-  deleteMessage = async ({ id }: { id: string }): Promise<{ success: boolean }> => {
+  deleteMessage = async ({
+    id,
+  }: { id: string }): Promise<{ success: boolean }> => {
     await api.messages({ id }).delete({}, { headers: {}, query: {} });
     return { success: true };
   };

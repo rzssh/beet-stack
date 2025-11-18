@@ -1,4 +1,4 @@
-import { api } from "~/libs/eden-api-client/eden-client";
+import { api } from "@acme/api";
 
 export const storageService = {
   async createPresignedUpload({

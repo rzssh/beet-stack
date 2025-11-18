@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { queryClient } from "~/libs/tanstack-query/query-client";
+import { queryClient } from "~/lib/tanstack-query/query-client";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";

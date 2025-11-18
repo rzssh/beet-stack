@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { ChevronsDown, Menu, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import ThemeToggle from "~/components/ThemeToggle";
+import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
 import {
   NavigationMenu,
@@ -20,7 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "~/components/ui/sheet";
-import { authClientRepo } from "~/libs/better-auth/auth-client-repo";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
 import GithubIcon from "./github-icon";
 
 interface RouteProps {
@@ -60,11 +60,13 @@ const Navbar = ({ user }: { user?: { name: string } }) => {
     },
     {
       title: "Build Trust",
-      description: "Leverages social proof elements to establish trust and credibility.",
+      description:
+        "Leverages social proof elements to establish trust and credibility.",
     },
     {
       title: "Capture Leads",
-      description: "Make your lead capture form visually appealing and strategically.",
+      description:
+        "Make your lead capture form visually appealing and strategically.",
     },
   ];
 
@@ -123,7 +125,11 @@ const Navbar = ({ user }: { user?: { name: string } }) => {
 
                 {user ? (
                   <>
-                    <Button variant="ghost" className="justify-start text-base" asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      asChild
+                    >
                       <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                         Dashboard
                       </Link>
@@ -140,7 +146,11 @@ const Navbar = ({ user }: { user?: { name: string } }) => {
                     </Button>
                   </>
                 ) : (
-                  <Button variant="default" className="justify-start text-base" asChild>
+                  <Button
+                    variant="default"
+                    className="justify-start text-base"
+                    asChild
+                  >
                     <Link to="/signin" onClick={() => setIsOpen(false)}>
                       Sign in
                     </Link>
@@ -151,7 +161,11 @@ const Navbar = ({ user }: { user?: { name: string } }) => {
 
             <SheetFooter className="flex-col items-start justify-start sm:flex-col">
               <Separator className="mb-2" />
-              <ThemeToggle size="sm" variant="ghost" className="justify-start" />
+              <ThemeToggle
+                size="sm"
+                variant="ghost"
+                className="justify-start"
+              />
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -225,7 +239,12 @@ const Navbar = ({ user }: { user?: { name: string } }) => {
           </div>
         ) : (
           <>
-            <Button asChild size="sm" variant="ghost" aria-label="View on GitHub">
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              aria-label="View on GitHub"
+            >
               <a
                 aria-label="View on GitHub"
                 href="https://github.com/leoMirandaa/shadcn-vue-landing-page.git"

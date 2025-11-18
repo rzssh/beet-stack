@@ -1,28 +1,33 @@
-import { api } from "~/libs/eden-api-client/eden-client";
+import { api } from "@acme/api";
 import type { ElysiaCountResponse } from "../_domain/count-model";
 import type { CountRepository } from "../_domain/count-repository";
 
 // Extract Elysia count from response safely
-const extractElysiaCount = (response: ElysiaCountResponse): { count: number } => {
-  if (typeof response.data === "object" && response.data !== null) {
-    if ("count" in response.data) {
+const extractElysiaCount = (
+  response: any,
+): { count: number } => {
+  // Eden Treaty response might be wrapped differently
+  if (response && typeof response === "object") {
+    if ("count" in response) {
+      return { count: response.count };
+    }
+    if (response.data && typeof response.data === "object" && "count" in response.data) {
       return { count: response.data.count };
     }
-    return { count: 0 };
   }
-  return { count: response.data ?? 0 };
+  return { count: 0 };
 };
 
 // Elysia Implementation
 export class ElysiaCountApiRepo implements CountRepository {
-  getCount = async ({ signal }: { signal?: AbortSignal } = {}): Promise<{
+  getCount = async ({
+    signal,
+  }: { signal?: AbortSignal } = {}): Promise<{
     count: number;
   }> => {
     try {
-      const response = await api.count.index
-        .get()
-        .catch(() => ({ data: { count: 0 } }) as ElysiaCountResponse);
-
+      const response = await api.count.get();
+      console.log("API Response:", response);
       return extractElysiaCount(response);
     } catch (error) {
       console.error("Failed to load count:", error);
@@ -32,8 +37,9 @@ export class ElysiaCountApiRepo implements CountRepository {
 
   incrementCount = async (): Promise<{ count: number }> => {
     try {
-      await api.count.increment.post();
-      return this.getCount();
+      const response = await api.count.increment.post();
+      console.log("Increment API Response:", response);
+      return extractElysiaCount(response);
     } catch (error) {
       console.error("Failed to increment count:", error);
       return { count: 0 };

@@ -12,7 +12,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import "~/styles/app.css";
 
-import { getSessionFn } from "~/libs/better-auth/auth-session";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 import { analytics } from "~/lib/analytics";
 
 export const Route = createRootRouteWithContext<{
@@ -69,12 +69,12 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
             localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
             )`}
         </ScriptOnce>
-        
+
         <ScriptOnce>
           {`
             // Initialize PostHog
-            window.POSTHOG_KEY = '${import.meta.env.VITE_POSTHOG_KEY || ''}';
-            window.POSTHOG_HOST = '${import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com'}';
+            window.POSTHOG_KEY = '${import.meta.env.VITE_POSTHOG_KEY || ""}';
+            window.POSTHOG_HOST = '${import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com"}';
           `}
         </ScriptOnce>
 

@@ -2,9 +2,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useToast } from "src/controllers/use-toast";
-import { authClientRepo } from "src/libs/better-auth/auth-client-repo";
-import { getSessionFn } from "src/libs/better-auth/auth-session";
-import type { LoginFormValues, RegisterFormValues } from "../_domain/auth-model";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
+import type {
+  LoginFormValues,
+  RegisterFormValues,
+} from "../_domain/auth-model";
+
 export class AuthController {
   // Use better-auth's built-in session hook
   useSession = () => authClientRepo.useSession();
@@ -32,7 +36,8 @@ export class AuthController {
       onError: (error) => {
         toast({
           title: "Failed to login",
-          description: error instanceof Error ? error.message : "An error occurred",
+          description:
+            error instanceof Error ? error.message : "An error occurred",
           variant: "destructive",
         });
       },
@@ -60,7 +65,8 @@ export class AuthController {
       onError: (error) => {
         toast({
           title: "Failed to create account",
-          description: error instanceof Error ? error.message : "An error occurred",
+          description:
+            error instanceof Error ? error.message : "An error occurred",
           variant: "destructive",
         });
       },
@@ -88,7 +94,8 @@ export class AuthController {
       onError: (error) => {
         toast({
           title: "Failed to login with GitHub",
-          description: error instanceof Error ? error.message : "An error occurred",
+          description:
+            error instanceof Error ? error.message : "An error occurred",
           variant: "destructive",
         });
       },
@@ -117,7 +124,8 @@ export class AuthController {
       onError: (error) => {
         toast({
           title: "Failed to logout",
-          description: error instanceof Error ? error.message : "An error occurred",
+          description:
+            error instanceof Error ? error.message : "An error occurred",
           variant: "destructive",
         });
       },
