@@ -30,6 +30,7 @@ class CountRepository {
   }
 
   async increment() {
+    await this.boot();
     this.#count += 1;
     await this.persist();
     return this.#count;

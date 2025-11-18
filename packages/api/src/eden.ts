@@ -2,7 +2,7 @@ import { edenTreaty } from "@elysiajs/eden";
 import type {
   App as ElysiaBackendApp,
   Session,
-} from "../../../apps/server/src";
+} from "@acme/server";
 
 export const api = edenTreaty<ElysiaBackendApp>("http://localhost:3001", {
   $fetch: {

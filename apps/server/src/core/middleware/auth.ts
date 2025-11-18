@@ -12,7 +12,6 @@ const resolveSession = async (headers: Headers) => {
 };
 
 export const authMiddleware = new Elysia({ name: "auth-middleware" })
-  .mount(auth.handler)
   .derive(async ({ request }) => {
     const session = await resolveSession(request.headers);
 

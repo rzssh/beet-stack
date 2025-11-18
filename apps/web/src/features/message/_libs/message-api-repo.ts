@@ -14,7 +14,12 @@ export class MessageApiRepo implements MessageRepository {
   };
 
   getMessage = async ({ id }: { id: string }): Promise<Message> => {
-    const { data } = await api.messages({ id }).get();
+    const route = api.messages[id];
+    if (!route) {
+      throw new Error("Messages route not available");
+    }
+
+    const { data } = await route.get();
 
     if (!data?.message) {
       throw new Error("Message not found");
@@ -28,13 +33,10 @@ export class MessageApiRepo implements MessageRepository {
   }: {
     params: MessageCreateParams;
   }): Promise<Message> => {
-    const { data } = await api.messages.index.post(
-      {
-        content: params.content,
-        title: params.title,
-      },
-      { headers: {}, query: {} },
-    );
+    const { data } = await api.messages.index.post({
+      content: params.content,
+      title: params.title,
+    });
 
     if (!data?.message) {
       throw new Error("Failed to create message");
@@ -50,13 +52,15 @@ export class MessageApiRepo implements MessageRepository {
   }): Promise<Message> => {
     const { id, ...updateData } = params;
 
-    const { data } = await api.messages({ id }).patch(
-      {
-        content: updateData.content,
-        title: updateData.title,
-      },
-      { headers: {}, query: {} },
-    );
+    const route = api.messages[id];
+    if (!route) {
+      throw new Error("Messages route not available");
+    }
+
+    const { data } = await route.patch({
+      content: updateData.content,
+      title: updateData.title,
+    });
 
     if (!data?.message) {
       throw new Error("Failed to update message");
@@ -68,7 +72,12 @@ export class MessageApiRepo implements MessageRepository {
   deleteMessage = async ({
     id,
   }: { id: string }): Promise<{ success: boolean }> => {
-    await api.messages({ id }).delete({}, { headers: {}, query: {} });
+    const route = api.messages[id];
+    if (!route) {
+      throw new Error("Messages route not available");
+    }
+
+    await route.delete();
     return { success: true };
   };
 }

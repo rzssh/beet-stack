@@ -4,9 +4,8 @@ export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
   beforeLoad: async ({ context }) => {
     if (context.session?.user) {
-      redirect({
-        to: "/admin/dashboard",
-        throw: true,
+      throw redirect({
+        to: "/dashboard",
       });
     }
   },

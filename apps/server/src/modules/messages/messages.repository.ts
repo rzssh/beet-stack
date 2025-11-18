@@ -2,7 +2,16 @@ import { db } from "@acme/db/client";
 import * as schema from "@acme/db/schema";
 import { desc, eq } from "drizzle-orm";
 
+const DEFAULT_LIMIT = 100;
+
 export const messageRepository = {
+  findMany: () => {
+    return db.query.message.findMany({
+      orderBy: desc(schema.message.createdAt),
+      limit: DEFAULT_LIMIT,
+    });
+  },
+
   findManyByUser: (userId: string) => {
     return db.query.message.findMany({
       where: eq(schema.message.userId, userId),

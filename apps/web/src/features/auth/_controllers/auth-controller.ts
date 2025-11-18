@@ -4,6 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useToast } from "src/controllers/use-toast";
 import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
 import { getSessionFn } from "~/lib/better-auth/auth-session";
+import { authKeys } from "~/lib/tanstack-query/auth-queries";
 import type {
   LoginFormValues,
   RegisterFormValues,
@@ -23,15 +24,19 @@ export class AuthController {
       mutationFn: async ({ email, password }: LoginFormValues) => {
         return authClientRepo.signIn.email({ email, password });
       },
-      onSuccess: () => {
+      onSuccess: async () => {
         toast({
           title: "Success",
           description: "You have been successfully logged in.",
         });
 
-        // Invalidate router to refresh protected routes
-        void router.invalidate();
-        void queryClient.invalidateQueries();
+        await Promise.all([
+          router.invalidate(),
+          queryClient.invalidateQueries({ queryKey: authKeys.user }),
+          queryClient.invalidateQueries({ queryKey: authKeys.session }),
+        ]);
+
+        router.navigate({ to: "/" });
       },
       onError: (error) => {
         toast({

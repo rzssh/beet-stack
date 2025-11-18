@@ -1,14 +1,11 @@
-import { Await, createFileRoute } from "@tanstack/react-router";
-import { ResultsLoader } from "src/features/pokemon/_components/pokemon-loader";
+import { createFileRoute } from "@tanstack/react-router";
 import { PokemonResultsList } from "src/features/pokemon/_components/pokemon-results-list";
 import { pokemonController } from "src/features/pokemon/_controllers/pokemon-controller";
+import { pokemonResultsQueryOptions } from "src/features/pokemon/_libs/pokemon-query";
 
 export const Route = createFileRoute("/pokemon/results")({
-	loader: () => {
-		const resultsPromise = pokemonController.getPokemonResults();
-		return {
-			pokemonResults: resultsPromise.then(({ results }) => results),
-		};
+	loader: ({ context }) => {
+		return context.queryClient.ensureQueryData(pokemonResultsQueryOptions());
 	},
 	component: ResultsPage,
 	head: () => ({
@@ -21,14 +18,12 @@ export const Route = createFileRoute("/pokemon/results")({
 });
 
 function ResultsPage() {
-	const { pokemonResults } = Route.useLoaderData();
+	const { results } = pokemonController.usePokemonResults();
 
 	return (
 		<div className="container px-4 py-8 mx-auto text-white">
 			<div className="grid gap-4">
-				<Await promise={pokemonResults} fallback={<ResultsLoader />}>
-					{(results) => <PokemonResultsList results={results} />}
-				</Await>
+				<PokemonResultsList results={results} />
 			</div>
 		</div>
 	);

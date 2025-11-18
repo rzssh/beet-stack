@@ -3,13 +3,18 @@ import { betterAuth, env } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI } from "better-auth/plugins";
 
-const trustedOrigins = env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
+const configuredOrigins = env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
   .map((origin) => origin.trim())
-  .filter(Boolean);
+  .filter((value): value is string => value.length > 0);
 
-if (!trustedOrigins || trustedOrigins.length === 0) {
-  throw new Error("No trusted origins configured for Better Auth");
-}
+const fallbackOrigins = [env.FRONTEND_URL, env.BACKEND_URL].filter(
+  (origin): origin is string => Boolean(origin),
+);
+
+const trustedOrigins: string[] =
+  configuredOrigins && configuredOrigins.length > 0
+    ? configuredOrigins
+    : fallbackOrigins;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),

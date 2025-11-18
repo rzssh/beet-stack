@@ -9,9 +9,10 @@ import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { logger } from "~/core/logger";
 import { rateLimit } from "~/lib/security";
+import { auth } from "~/lib/auth-server";
 import { requestContext } from "./core/context";
-// import { billingRoutes } from "./modules/billing/billing.routes";
-// import { fileRoutes } from "./modules/files/files.routes";
+import { billingRoutes } from "./modules/billing/billing.routes";
+import { fileRoutes } from "./modules/files/files.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { messageRoutes } from "./modules/messages/messages.routes";
 import { metricsRoutes } from "./modules/metrics/count.routes";
@@ -37,10 +38,13 @@ export const app = new Elysia()
   .decorate("logger", logger)
   .use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin: true,
       credentials: true,
+      methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
     }),
   )
+  .mount(auth.handler)
   .use(opentelemetry())
   .use(
     swagger({
@@ -70,8 +74,8 @@ export const app = new Elysia()
   .use(healthRoutes)
   .use(userRoutes)
   .use(messageRoutes)
-  // .use(billingRoutes)
-  // .use(fileRoutes)
+  .use(billingRoutes)
+  .use(fileRoutes)
   .use(metricsRoutes)
   .use(pokemonRoutes)
   .onError(({ error, set }) => {

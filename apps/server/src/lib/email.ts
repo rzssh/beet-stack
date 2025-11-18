@@ -3,6 +3,8 @@ import { env } from "@acme/config";
 import { logger } from "~/core/logger";
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
+type ResendClient = InstanceType<typeof Resend>;
+type SendOptions = Parameters<ResendClient["emails"]["send"]>[0];
 
 export interface EmailOptions {
   to: string | string[];
@@ -26,16 +28,24 @@ export const email = {
   async send({ to, subject, html, text, from = defaultFrom }: EmailOptions) {
     assertConfigured();
 
-    const response = await resend!.emails.send({
+    const payload = {
       from,
       to,
       subject,
-      html,
-      text,
-    });
+    } as SendOptions;
+
+    if (html) {
+      payload.html = html;
+    }
+
+    if (text) {
+      payload.text = text;
+    }
+
+    const response = await resend!.emails.send(payload);
 
     if (response.error) {
-      logger.error("Email send error", response.error);
+      logger.error(response.error, "Email send error");
       throw new Error(`Failed to send email: ${response.error.message}`);
     }
 

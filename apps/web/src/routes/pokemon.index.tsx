@@ -3,21 +3,21 @@ import { PokemonCard } from "src/features/pokemon/_components/pokemon-card";
 import { PokemonLoader } from "src/features/pokemon/_components/pokemon-loader";
 import { pokemonController } from "src/features/pokemon/_controllers/pokemon-controller";
 import type { Pokemon } from "src/features/pokemon/_domain/pokemon-entity";
+import { pokemonPairQueryOptions } from "src/features/pokemon/_libs/pokemon-query";
 
 export const Route = createFileRoute("/pokemon/")({
-	loader: async () => {
-		const { pokemonPair } = await pokemonController.getPokemonPair();
-		return { pokemonPair };
+	loader: async ({ context }) => {
+		return context.queryClient.ensureQueryData(pokemonPairQueryOptions());
 	},
 	component: VotePage,
 });
 
 function VotePage() {
-	const { pokemonPair } = Route.useLoaderData();
+	const { pokemonPair } = pokemonController.usePokemonPair();
 	const { isPending } = pokemonController.useIsPendingVote();
 	const { voteForPokemon } = pokemonController.useVoteForPokemon();
 
-	if (!pokemonPair[0] || !pokemonPair[1]) {
+  if (!pokemonPair[0] || !pokemonPair[1]) {
 		return (
 			<div className="font-bold text-2xl text-red-500">
 				No more Pokemon to vote on!

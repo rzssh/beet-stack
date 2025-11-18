@@ -1,15 +1,21 @@
 import { messageRepository } from "./messages.repository";
 
+interface MessageInput {
+  title: string;
+  content: string;
+}
+
 export class MessagesService {
-  list(userId: string) {
+  getAll() {
+    return messageRepository.findMany();
+  }
+
+  getForUser(userId: string) {
     return messageRepository.findManyByUser(userId);
   }
 
-  async create(userId: string, input: { title: string; content: string }) {
-    const message = await messageRepository.create({
-      ...input,
-      userId,
-    });
+  async create(input: MessageInput & { userId: string }) {
+    const message = await messageRepository.create(input);
 
     if (!message) {
       throw new Error("Failed to create message");
@@ -18,41 +24,39 @@ export class MessagesService {
     return message;
   }
 
-  async get(id: string, userId: string) {
-    return this.assertOwnership(id, userId);
+  async getById({ id }: { id: string }) {
+    const message = await messageRepository.findById(id);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+    return message;
   }
 
-  async update(
-    id: string,
-    userId: string,
-    input: { title: string; content: string },
-  ) {
-    await this.assertOwnership(id, userId);
+  async validateOwnership({ id, userId }: { id: string; userId: string }) {
+    const message = await this.getById({ id });
+    if (message.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+    return message;
+  }
 
-    const message = await messageRepository.update(id, input);
+  async update(input: MessageInput & { id: string }) {
+    const message = await messageRepository.update(input.id, {
+      title: input.title,
+      content: input.content,
+    });
+
     if (!message) {
-      throw new Error("Failed to update message");
+      throw new Error("Message not found");
     }
 
     return message;
   }
 
-  async remove(id: string, userId: string) {
-    await this.assertOwnership(id, userId);
-    const deleted = await messageRepository.delete(id);
-    if (!deleted) {
-      throw new Error("Failed to delete message");
-    }
-    return deleted;
-  }
-
-  private async assertOwnership(id: string, userId: string) {
-    const message = await messageRepository.findById(id);
+  async delete({ id }: { id: string }) {
+    const message = await messageRepository.delete(id);
     if (!message) {
       throw new Error("Message not found");
-    }
-    if (message.userId !== userId) {
-      throw new Error("Unauthorized");
     }
     return message;
   }
