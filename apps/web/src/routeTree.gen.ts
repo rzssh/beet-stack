@@ -9,33 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PokemonRouteImport } from './routes/pokemon'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as CountRouteImport } from './routes/count'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MessagesRouteRouteImport } from './routes/messages.route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PokemonIndexRouteImport } from './routes/pokemon.index'
 import { Route as MessagesIndexRouteImport } from './routes/messages.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as CountIndexRouteImport } from './routes/count.index'
-import { Route as PokemonResultsRouteImport } from './routes/pokemon.results'
 import { Route as MessagesMessageIdRouteImport } from './routes/messages.$messageId'
-import { Route as CountTanstackRouteImport } from './routes/count.tanstack'
-import { Route as CountElysiaRouteImport } from './routes/count.elysia'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/_auth/signin'
-import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
-import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 
-const PokemonRoute = PokemonRouteImport.update({
-  id: '/pokemon',
-  path: '/pokemon',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CountRoute = CountRouteImport.update({
+  id: '/count',
+  path: '/count',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -57,11 +50,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PokemonIndexRoute = PokemonIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PokemonRoute,
-} as any)
 const MessagesIndexRoute = MessagesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -72,30 +60,10 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const CountIndexRoute = CountIndexRouteImport.update({
-  id: '/count/',
-  path: '/count/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PokemonResultsRoute = PokemonResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => PokemonRoute,
-} as any)
 const MessagesMessageIdRoute = MessagesMessageIdRouteImport.update({
   id: '/$messageId',
   path: '/$messageId',
   getParentRoute: () => MessagesRouteRoute,
-} as any)
-const CountTanstackRoute = CountTanstackRouteImport.update({
-  id: '/count/tanstack',
-  path: '/count/tanstack',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CountElysiaRoute = CountElysiaRouteImport.update({
-  id: '/count/elysia',
-  path: '/count/elysia',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
@@ -107,51 +75,28 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AuthRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
+  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
-  '/pokemon': typeof PokemonRouteWithChildren
-  '/login': typeof AuthLoginRoute
-  '/register': typeof AuthRegisterRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
-  '/count/elysia': typeof CountElysiaRoute
-  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
-  '/pokemon/results': typeof PokemonResultsRoute
-  '/count': typeof CountIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/messages/': typeof MessagesIndexRoute
-  '/pokemon/': typeof PokemonIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
-  '/login': typeof AuthLoginRoute
-  '/register': typeof AuthRegisterRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
-  '/count/elysia': typeof CountElysiaRoute
-  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
-  '/pokemon/results': typeof PokemonResultsRoute
-  '/count': typeof CountIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/messages': typeof MessagesIndexRoute
-  '/pokemon': typeof PokemonIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,20 +104,13 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
-  '/pokemon': typeof PokemonRouteWithChildren
-  '/_auth/login': typeof AuthLoginRoute
-  '/_auth/register': typeof AuthRegisterRoute
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
-  '/count/elysia': typeof CountElysiaRoute
-  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
-  '/pokemon/results': typeof PokemonResultsRoute
-  '/count/': typeof CountIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/messages/': typeof MessagesIndexRoute
-  '/pokemon/': typeof PokemonIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -180,56 +118,36 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/messages'
+    | '/count'
     | '/landing'
-    | '/pokemon'
-    | '/login'
-    | '/register'
     | '/signin'
     | '/signup'
-    | '/count/elysia'
-    | '/count/tanstack'
     | '/messages/$messageId'
-    | '/pokemon/results'
-    | '/count'
     | '/dashboard/'
     | '/messages/'
-    | '/pokemon/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/count'
     | '/landing'
-    | '/login'
-    | '/register'
     | '/signin'
     | '/signup'
-    | '/count/elysia'
-    | '/count/tanstack'
     | '/messages/$messageId'
-    | '/pokemon/results'
-    | '/count'
     | '/dashboard'
     | '/messages'
-    | '/pokemon'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/messages'
     | '/_auth'
+    | '/count'
     | '/landing'
-    | '/pokemon'
-    | '/_auth/login'
-    | '/_auth/register'
     | '/_auth/signin'
     | '/_auth/signup'
-    | '/count/elysia'
-    | '/count/tanstack'
     | '/messages/$messageId'
-    | '/pokemon/results'
-    | '/count/'
     | '/dashboard/'
     | '/messages/'
-    | '/pokemon/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -237,27 +155,24 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MessagesRouteRoute: typeof MessagesRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  CountRoute: typeof CountRoute
   LandingRoute: typeof LandingRoute
-  PokemonRoute: typeof PokemonRouteWithChildren
-  CountElysiaRoute: typeof CountElysiaRoute
-  CountTanstackRoute: typeof CountTanstackRoute
-  CountIndexRoute: typeof CountIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/pokemon': {
-      id: '/pokemon'
-      path: '/pokemon'
-      fullPath: '/pokemon'
-      preLoaderRoute: typeof PokemonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/landing': {
       id: '/landing'
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/count': {
+      id: '/count'
+      path: '/count'
+      fullPath: '/count'
+      preLoaderRoute: typeof CountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -288,13 +203,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pokemon/': {
-      id: '/pokemon/'
-      path: '/'
-      fullPath: '/pokemon/'
-      preLoaderRoute: typeof PokemonIndexRouteImport
-      parentRoute: typeof PokemonRoute
-    }
     '/messages/': {
       id: '/messages/'
       path: '/'
@@ -309,40 +217,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/count/': {
-      id: '/count/'
-      path: '/count'
-      fullPath: '/count'
-      preLoaderRoute: typeof CountIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pokemon/results': {
-      id: '/pokemon/results'
-      path: '/results'
-      fullPath: '/pokemon/results'
-      preLoaderRoute: typeof PokemonResultsRouteImport
-      parentRoute: typeof PokemonRoute
-    }
     '/messages/$messageId': {
       id: '/messages/$messageId'
       path: '/$messageId'
       fullPath: '/messages/$messageId'
       preLoaderRoute: typeof MessagesMessageIdRouteImport
       parentRoute: typeof MessagesRouteRoute
-    }
-    '/count/tanstack': {
-      id: '/count/tanstack'
-      path: '/count/tanstack'
-      fullPath: '/count/tanstack'
-      preLoaderRoute: typeof CountTanstackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/count/elysia': {
-      id: '/count/elysia'
-      path: '/count/elysia'
-      fullPath: '/count/elysia'
-      preLoaderRoute: typeof CountElysiaRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_auth/signup': {
       id: '/_auth/signup'
@@ -356,20 +236,6 @@ declare module '@tanstack/react-router' {
       path: '/signin'
       fullPath: '/signin'
       preLoaderRoute: typeof AuthSigninRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/register': {
-      id: '/_auth/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/login': {
-      id: '/_auth/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
   }
@@ -402,44 +268,24 @@ const MessagesRouteRouteWithChildren = MessagesRouteRoute._addFileChildren(
 )
 
 interface AuthRouteChildren {
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthRegisterRoute: typeof AuthRegisterRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthLoginRoute: AuthLoginRoute,
-  AuthRegisterRoute: AuthRegisterRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface PokemonRouteChildren {
-  PokemonResultsRoute: typeof PokemonResultsRoute
-  PokemonIndexRoute: typeof PokemonIndexRoute
-}
-
-const PokemonRouteChildren: PokemonRouteChildren = {
-  PokemonResultsRoute: PokemonResultsRoute,
-  PokemonIndexRoute: PokemonIndexRoute,
-}
-
-const PokemonRouteWithChildren =
-  PokemonRoute._addFileChildren(PokemonRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MessagesRouteRoute: MessagesRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  CountRoute: CountRoute,
   LandingRoute: LandingRoute,
-  PokemonRoute: PokemonRouteWithChildren,
-  CountElysiaRoute: CountElysiaRoute,
-  CountTanstackRoute: CountTanstackRoute,
-  CountIndexRoute: CountIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

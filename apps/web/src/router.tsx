@@ -8,7 +8,7 @@ import { queryClient } from "~/lib/tanstack-query/query-client";
 export function getRouter() {
   const router = createRouter({
     routeTree,
-    context: { queryClient, session: null },
+    context: { queryClient },
     defaultPreload: "intent",
     // react-query will handle data fetching & caching
     // https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#passing-all-loader-events-to-an-external-cache

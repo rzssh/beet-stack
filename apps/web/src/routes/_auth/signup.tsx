@@ -16,10 +16,11 @@ import {
 import { Input } from "~/components/ui/input";
 import { authToast } from "~/lib/sonner-toast";
 import {
-  authKeys,
   emailSignUpMutationOptions,
   SignUpCredentials,
 } from "~/lib/tanstack-query/auth-queries";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 const REDIRECT_URL = "/dashboard";
 
@@ -55,9 +56,8 @@ function SignupPage() {
     ...emailSignUpMutationOptions,
     onSuccess: async () => {
       authToast.signUpSuccess();
-      await queryClient.invalidateQueries({ queryKey: authKeys.user });
       await router.invalidate();
-      router.navigate({ to: REDIRECT_URL });
+      window.location.href = REDIRECT_URL;
     },
     onError: (error) => {
       authToast.error(
@@ -194,8 +194,9 @@ function SignupPage() {
 
 export const Route = createFileRoute("/_auth/signup")({
   component: SignupPage,
-  beforeLoad: async ({ context }) => {
-    if (context.session?.user) {
+  beforeLoad: async () => {
+    const session = await getSessionFn();
+    if (session?.user) {
       throw redirect({
         to: REDIRECT_URL,
       });

@@ -1,9 +1,12 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
-  beforeLoad: async ({ context }) => {
-    if (context.session?.user) {
+  beforeLoad: async () => {
+    // Use server function for session check
+    const session = await getSessionFn();
+    if (session?.user) {
       throw redirect({
         to: "/dashboard",
       });

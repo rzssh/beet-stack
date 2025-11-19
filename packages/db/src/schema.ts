@@ -117,51 +117,6 @@ export const notesRelation = relations(note, ({ one }) => ({
   }),
 }));
 
-export const pokemon = pgTable("pokemon", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-});
-
-export type Pokemon = typeof pokemon.$inferSelect;
-export type NewPokemon = typeof pokemon.$inferInsert;
-
-export const vote = pgTable("votes", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => Bun.randomUUIDv7()),
-  createdAt: timestamp("createdAt").notNull().defaultNow(),
-  votedForId: integer("voted_for_id")
-    .notNull()
-    .references(() => pokemon.id),
-  votedAgainstId: integer("voted_against_id")
-    .notNull()
-    .references(() => pokemon.id),
-});
-
-export type Vote = typeof vote.$inferSelect;
-export type NewVote = typeof vote.$inferInsert;
-
-export const voteRelation = relations(vote, ({ one }) => ({
-  votedFor: one(pokemon, {
-    relationName: "votesFor",
-    fields: [vote.votedForId],
-    references: [pokemon.id],
-  }),
-  votedAgainst: one(pokemon, {
-    relationName: "votesAgainst",
-    fields: [vote.votedAgainstId],
-    references: [pokemon.id],
-  }),
-}));
-
-export const pokemonRelation = relations(pokemon, ({ many }) => ({
-  votesFor: many(vote, {
-    relationName: "votesFor",
-  }),
-  votesAgainst: many(vote, {
-    relationName: "votesAgainst",
-  }),
-}));
 
 export const message = pgTable("messages", {
   id: text("id")

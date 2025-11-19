@@ -1,5 +1,6 @@
 import { db } from "@acme/db/client";
-import { betterAuth, env } from "better-auth";
+import { env } from "@acme/config";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI } from "better-auth/plugins";
 
@@ -12,8 +13,8 @@ const fallbackOrigins = [env.FRONTEND_URL, env.BACKEND_URL].filter(
 );
 
 const trustedOrigins: string[] =
-  configuredOrigins && configuredOrigins.length > 0
-    ? configuredOrigins
+  (configuredOrigins?.length ?? 0) > 0
+    ? (configuredOrigins ?? [])
     : fallbackOrigins;
 
 export const auth = betterAuth({
@@ -33,6 +34,12 @@ export const auth = betterAuth({
     password: {
       hash: (input: string) => Bun.password.hash(input),
       verify: ({ password, hash }) => Bun.password.verify(password, hash),
+    },
+  },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5, // Cache for 5 minutes
     },
   },
   trustedOrigins,

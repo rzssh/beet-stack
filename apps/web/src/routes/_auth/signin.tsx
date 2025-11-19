@@ -16,13 +16,14 @@ import {
 import { Input } from "~/components/ui/input";
 import { authToast } from "~/lib/sonner-toast";
 import {
-  authKeys,
   emailSignInMutationOptions,
   SignInCredentials,
   SocialSignInCredentials,
   socialSignInMutationOptions,
 } from "~/lib/tanstack-query/auth-queries";
 import { cn } from "~/components/ui/utils";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 const REDIRECT_URL = "/dashboard";
 
@@ -49,9 +50,10 @@ function SignInForm() {
     ...emailSignInMutationOptions,
     onSuccess: async () => {
       authToast.signInSuccess();
-      await queryClient.invalidateQueries({ queryKey: authKeys.user });
+      // Wait for router invalidation to complete before navigation
       await router.invalidate();
-      router.navigate({ to: REDIRECT_URL });
+      // Use window.location for a hard redirect to ensure proper state
+      window.location.href = REDIRECT_URL;
     },
     onError: (error) => {
       authToast.error(error instanceof Error ? error.message : "Failed to sign in");
@@ -189,8 +191,8 @@ const SignInButton = ({ provider, label, className, ...props }: SignInButtonProp
     ...socialSignInMutationOptions,
     onSuccess: async () => {
       authToast.signInSuccess();
-      await queryClient.invalidateQueries({ queryKey: authKeys.user });
       await router.invalidate();
+      window.location.href = REDIRECT_URL;
     },
     onError: (error) => {
       authToast.error(
@@ -225,8 +227,9 @@ const SignInButton = ({ provider, label, className, ...props }: SignInButtonProp
 
 export const Route = createFileRoute("/_auth/signin")({
   component: AuthPage,
-  beforeLoad: async ({ context }) => {
-    if (context.session?.user) {
+  beforeLoad: async () => {
+    const session = await getSessionFn();
+    if (session?.user) {
       throw redirect({
         to: REDIRECT_URL,
       });

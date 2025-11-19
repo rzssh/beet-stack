@@ -26,10 +26,17 @@ export class ElysiaCountApiRepo implements CountRepository {
     count: number;
   }> => {
     try {
-      const response = await api.count.get();
+      const response = await api.count.get({
+        $fetch: {
+          signal,
+        },
+      });
       console.log("API Response:", response);
       return extractElysiaCount(response);
     } catch (error) {
+      if (signal?.aborted) {
+        throw new Error("Request was aborted");
+      }
       console.error("Failed to load count:", error);
       return { count: 0 };
     }

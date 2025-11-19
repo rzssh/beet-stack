@@ -10,6 +10,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   ROOT_DIR: z.string().default(process.env.ROOT_DIR ?? process.cwd()),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
+  CORS_ORIGINS: z.string().default("http://localhost:3000,http://127.0.0.1:3000"),
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),

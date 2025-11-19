@@ -168,6 +168,106 @@ See `docs/NEON_SETUP.md` for detailed setup instructions.
 - **Direct imports**: Avoid barrel files
 - **Short, descriptive names**: Avoid overly descriptive file names
 
+## Critical Coding Standards
+
+### Import Standards
+
+**ALWAYS use absolute imports with `~` prefix:**
+```typescript
+// ✅ Correct
+import { logger } from "~/core/logger";
+import { AppError } from "~/core/errors";
+
+// ❌ Wrong - relative imports
+import { logger } from "../core/logger";
+import { AppError } from "./errors";
+```
+
+**Frontend specific:**
+```typescript
+// ✅ Correct
+import { Button } from "~/components/ui/button";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+
+// ❌ Wrong
+import { Button } from "src/components/ui/button";
+import { authClientRepo } from "../lib/better-auth/auth-client-repo";
+```
+
+### Nullish Coalescing Standards
+
+**ALWAYS use nullish coalescing (??) instead of logical OR (||):**
+```typescript
+// ✅ Correct - nullish coalescing
+const value = config.timeout ?? DEFAULT_TIMEOUT;
+const requestId = headers.get('x-request-id') ?? crypto.randomUUID();
+const user = session?.user ?? null;
+
+// ❌ Wrong - logical OR (treats 0, false, "" as nullish)
+const value = config.timeout || DEFAULT_TIMEOUT;
+const requestId = headers.get('x-request-id') || crypto.randomUUID();
+const user = session?.user || null;
+```
+
+**When logical OR is appropriate (rare cases):**
+```typescript
+// ✅ OK - when you explicitly want falsy fallback
+const shouldShow = userPreference || defaultPreference;
+```
+
+### Logging Standards (Backend Only)
+
+**ALWAYS use logger from `~/core/logger`:**
+```typescript
+// ✅ Correct
+import { logger } from "~/core/logger";
+
+logger.info("User created", { userId, email });
+logger.error({ error, requestId }, "Failed to process request");
+
+// ❌ Wrong - console.log or console.error
+console.log("User created");
+console.error(error);
+```
+
+### Error Handling Standards (Backend)
+
+**Use structured error classes:**
+```typescript
+// ✅ Correct
+import { NotFoundError, ValidationError } from "~/core/errors";
+
+throw new NotFoundError("Message", { messageId: id });
+throw new ValidationError("Invalid email format", { email });
+
+// ❌ Wrong - generic Error
+throw new Error("Message not found");
+throw new Error("Validation failed");
+```
+
+### Type Safety Standards
+
+**Prefer type guards and proper narrowing:**
+```typescript
+// ✅ Correct - proper type checking
+if (typeof error === 'object' && error && 'message' in error) {
+  return error.message;
+}
+
+// ❌ Wrong - unsafe casting
+return (error as Error).message;
+```
+
+**Use optional chaining extensively:**
+```typescript
+// ✅ Correct
+const userName = user?.profile?.name ?? "Anonymous";
+const count = data?.results?.length ?? 0;
+
+// ❌ Wrong
+const userName = user && user.profile ? user.profile.name : "Anonymous";
+```
+
 ### File Organization
 
 - Keep related code together

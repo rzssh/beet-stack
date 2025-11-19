@@ -7,23 +7,31 @@ import {
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { ThemeToggle } from "~/components/ThemeToggle";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
-  beforeLoad: async ({ context }) => {
-    if (!context.session?.user) {
+  beforeLoad: async () => {
+    // Use server function for session check
+    const session = await getSessionFn();
+    if (!session?.user) {
       throw redirect({ to: "/signin" });
     }
-
-    // `context.queryClient` is also available in our loaders
-    // https://tanstack.com/start/latest/docs/framework/react/examples/start-basic-react-query
-    // https://tanstack.com/router/latest/docs/framework/react/guide/external-data-loading
+  },
+  loader: async () => {
+    // Pass session data to components to eliminate flicker
+    const session = await getSessionFn();
+    return { 
+      user: session?.user || null,
+      session: session || null 
+    };
   },
 });
 
 function DashboardLayout() {
-  const { session } = Route.useRouteContext();
-  const user = session?.user;
+  // Use loader data instead of useSession hook to eliminate flicker
+  const { user } = Route.useLoaderData();
 
   return (
     <div className="min-h-screen bg-muted/20">

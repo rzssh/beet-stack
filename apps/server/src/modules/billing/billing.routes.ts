@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "~/core/middleware/auth";
 import { payments } from "~/lib/payments";
+import { ConfigurationError } from "~/core/errors";
 
 const subscriptionInput = t.Object({
   customerId: t.String(),
@@ -19,13 +20,12 @@ export const billingRoutes = new Elysia({ prefix: "/billing" })
     app
       .get(
         "/products",
-        async ({ set }) => {
+        async () => {
           if (!payments.isConfigured) {
-            set.status = 503;
-            return {
-              error:
-                "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
-            };
+            throw new ConfigurationError(
+              "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
+              { service: "stripe" }
+            );
           }
 
           const products = await payments.listProducts();
@@ -41,32 +41,21 @@ export const billingRoutes = new Elysia({ prefix: "/billing" })
       )
       .post(
         "/subscriptions",
-        async ({ body, set }) => {
+        async ({ body }) => {
           if (!payments.isConfigured) {
-            set.status = 503;
-            return {
-              error:
-                "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
-            };
+            throw new ConfigurationError(
+              "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
+              { service: "stripe" }
+            );
           }
 
-          try {
-            const subscription = await payments.createSubscription({
-              customerId: body.customerId,
-              priceId: body.priceId,
-              trialPeriodDays: body.trialPeriodDays,
-            });
+          const subscription = await payments.createSubscription({
+            customerId: body.customerId,
+            priceId: body.priceId,
+            trialPeriodDays: body.trialPeriodDays,
+          });
 
-            return { subscription };
-          } catch (error) {
-            set.status = 400;
-            return {
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Unable to create subscription",
-            };
-          }
+          return { subscription };
         },
         {
           body: subscriptionInput,
@@ -79,30 +68,19 @@ export const billingRoutes = new Elysia({ prefix: "/billing" })
       )
       .post(
         "/portal",
-        async ({ body, set }) => {
+        async ({ body }) => {
           if (!payments.isConfigured) {
-            set.status = 503;
-            return {
-              error:
-                "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
-            };
+            throw new ConfigurationError(
+              "Stripe is not configured. Set STRIPE_SECRET_KEY to enable billing.",
+              { service: "stripe" }
+            );
           }
 
-          try {
-            const session = await payments.createBillingPortalSession({
-              customerId: body.customerId,
-              returnUrl: body.returnUrl,
-            });
-            return { url: session.url };
-          } catch (error) {
-            set.status = 400;
-            return {
-              error:
-                error instanceof Error
-                  ? error.message
-                  : "Unable to create billing portal session",
-            };
-          }
+          const session = await payments.createBillingPortalSession({
+            customerId: body.customerId,
+            returnUrl: body.returnUrl,
+          });
+          return { url: session.url };
         },
         {
           body: portalInput,

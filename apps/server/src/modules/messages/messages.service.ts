@@ -1,4 +1,5 @@
 import { messageRepository } from "./messages.repository";
+import { NotFoundError, AuthorizationError, AppError } from "~/core/errors";
 
 interface MessageInput {
   title: string;
@@ -18,7 +19,12 @@ export class MessagesService {
     const message = await messageRepository.create(input);
 
     if (!message) {
-      throw new Error("Failed to create message");
+      throw new AppError(
+        "Failed to create message", 
+        500, 
+        'MESSAGE_CREATE_FAILED',
+        { userId: input.userId, title: input.title }
+      );
     }
 
     return message;
@@ -27,7 +33,7 @@ export class MessagesService {
   async getById({ id }: { id: string }) {
     const message = await messageRepository.findById(id);
     if (!message) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message", { messageId: id });
     }
     return message;
   }
@@ -35,7 +41,11 @@ export class MessagesService {
   async validateOwnership({ id, userId }: { id: string; userId: string }) {
     const message = await this.getById({ id });
     if (message.userId !== userId) {
-      throw new Error("Unauthorized");
+      throw new AuthorizationError("You don't have permission to access this message", { 
+        messageId: id, 
+        userId, 
+        messageOwnerId: message.userId 
+      });
     }
     return message;
   }
@@ -47,7 +57,7 @@ export class MessagesService {
     });
 
     if (!message) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message", { messageId: input.id });
     }
 
     return message;
@@ -56,7 +66,7 @@ export class MessagesService {
   async delete({ id }: { id: string }) {
     const message = await messageRepository.delete(id);
     if (!message) {
-      throw new Error("Message not found");
+      throw new NotFoundError("Message", { messageId: id });
     }
     return message;
   }

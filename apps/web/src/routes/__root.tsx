@@ -12,20 +12,14 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import "~/styles/app.css";
 
-import { getSessionFn } from "~/lib/better-auth/auth-session";
 import { analytics } from "~/lib/analytics";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
+import type { Session } from "~/lib/better-auth/auth-session";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  session: Awaited<ReturnType<typeof getSessionFn>>;
+  session?: Session | null;
 }>()({
-  beforeLoad: async ({ context }) => {
-    const session = await context.queryClient.fetchQuery({
-      queryKey: ["session"],
-      queryFn: ({ signal }) => getSessionFn({ signal }),
-    }); // we're using react-query for caching, see router.tsx
-    return { session };
-  },
   head: () => ({
     meta: [
       {
@@ -44,6 +38,24 @@ export const Route = createRootRouteWithContext<{
       { rel: "icon", href: "/favicon.ico" },
     ],
   }),
+  beforeLoad: async () => {
+    // Start session fetch early but don't await - this prefetches and caches the session
+    // without blocking the route rendering
+    try {
+      getSessionFn(); // Fire and forget - will populate cache for later use
+    } catch {
+      // Ignore errors in prefetch
+    }
+  },
+  loader: async () => {
+    // Attempt to get session from cache, but don't block if not available
+    try {
+      const session = await getSessionFn();
+      return { session };
+    } catch {
+      return { session: null };
+    }
+  },
   component: RootComponent,
 });
 
@@ -62,7 +74,7 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <ScriptOnce>
           {`document.documentElement.classList.toggle(
             'dark',

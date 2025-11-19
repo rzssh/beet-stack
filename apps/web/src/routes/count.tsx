@@ -3,7 +3,7 @@ import { CountCard } from "~/features/count/_components/count-card";
 import { countElysiaController } from "~/features/count/_controllers/count-elysia-controller";
 import { elysiaCountQueryOptions } from "~/features/count/_lib/count-elysia-queries";
 
-export const Route = createFileRoute("/count/elysia")({
+export const Route = createFileRoute("/count")({
   loader: async ({ context }) => {
     const { count } = await context.queryClient.ensureQueryData(
       elysiaCountQueryOptions(),
@@ -20,7 +20,7 @@ function CountDisplay() {
   return (
     <CountCard.Display
       count={data?.count ?? 0}
-      description="Counter stored in Elysia backend using TanStack Query"
+      description="Backend API integration example"
     />
   );
 }
@@ -45,8 +45,8 @@ function ElysiaCountPage() {
     <div className="container py-10 flex flex-col items-center justify-center min-h-[80vh]">
       <CountCard>
         <CountCard.Header
-          title="Elysia Backend Counter"
-          description="Counter implementation using Elysia backend API with TanStack Query"
+          title="API Demo Counter"
+          description="Simple counter demonstrating backend integration with TanStack Query"
         />
         <CountDisplay />
         <CountActions />

@@ -8,20 +8,29 @@ import { MessageList } from "~/features/message/_components/message-list";
 import { BillingCard } from "~/features/billing/_components/billing-card";
 import { UploadCard } from "~/features/storage/_components/upload-card";
 import { Skeleton } from "~/components/ui/skeleton";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardIndex,
+  loader: async () => {
+    // Get session data from parent or fetch fresh
+    const session = await getSessionFn();
+    return { 
+      user: session?.user || null 
+    };
+  },
 });
 
 function DashboardIndex() {
-  const { session } = Route.useRouteContext();
-  const metadata = (session?.user as { metadata?: Record<string, string> } | undefined)?.metadata;
-  const customerId = metadata?.stripeCustomerId ?? session?.user?.id ?? "";
+  // Use loader data instead of useSession hook to eliminate flicker
+  const { user } = Route.useLoaderData();
+  const metadata = (user as { metadata?: Record<string, string> } | undefined)?.metadata;
+  const customerId = metadata?.stripeCustomerId ?? user?.id ?? "";
 
   return (
     <div className="space-y-10">
       <section className="rounded-xl border bg-background p-6 shadow-sm">
-        <h1 className="text-3xl font-semibold tracking-tight">Welcome back, {session?.user?.name ?? "founder"}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Welcome back, {user?.name ?? "founder"}</h1>
         <p className="mt-2 text-muted-foreground">
           This dashboard stitches together auth, metrics, billing, storage, and CRUD so you can focus on customer value instead of boilerplate.
         </p>

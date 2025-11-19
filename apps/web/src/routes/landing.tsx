@@ -13,15 +13,23 @@ import Services from "~/features/landing/_components/services";
 import Sponsors from "~/features/landing/_components/sponsors";
 import Team from "~/features/landing/_components/team";
 import Testimonials from "~/features/landing/_components/testimonials";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 export const Route = createFileRoute("/landing")({
   component: RouteComponent,
-  loader: async ({ context }) => {
-    return { user: context.session?.user };
+  loader: async () => {
+    // Get session data for conditional rendering (non-blocking)
+    try {
+      const session = await getSessionFn();
+      return { user: session?.user || null };
+    } catch {
+      return { user: null };
+    }
   },
 });
 
 function RouteComponent() {
+  // Use loader data instead of useSession hook to eliminate flicker
   const { user } = Route.useLoaderData();
 
   return (

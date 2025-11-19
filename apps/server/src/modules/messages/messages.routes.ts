@@ -38,27 +38,17 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
     app
       .post(
         "/index",
-        async ({ body, messagesService, status, user }) => {
-          try {
-            const message = await messagesService.create({
-              title: body.title,
-              content: body.content,
-              userId: user.id,
-            });
+        async ({ body, messagesService, user }) => {
+          const message = await messagesService.create({
+            title: body.title,
+            content: body.content,
+            userId: user.id,
+          });
 
-            return {
-              success: true,
-              message,
-            };
-          } catch (err) {
-            console.error("[ERROR]", err);
-
-            return status(500, {
-              success: false,
-              error:
-                err instanceof Error ? err.message : "Failed to create message",
-            });
-          }
+          return {
+            success: true,
+            message,
+          };
         },
         {
           body: "messageInput",
@@ -71,25 +61,9 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
       )
       .get(
         "/:id",
-        async ({ params, messagesService, status }) => {
-          try {
-            const message = await messagesService.getById({ id: params.id });
-            return { success: true, message };
-          } catch (err) {
-            console.error("[ERROR]", err);
-
-            if (err instanceof Error && err.message === "Message not found") {
-              return status(404, {
-                success: false,
-                error: err.message,
-              });
-            }
-
-            return status(500, {
-              success: false,
-              error: err instanceof Error ? err.message : "An error occurred",
-            });
-          }
+        async ({ params, messagesService }) => {
+          const message = await messagesService.getById({ id: params.id });
+          return { success: true, message };
         },
         {
           params: messageIdParams,
@@ -102,45 +76,22 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
       )
       .patch(
         "/:id",
-        async ({ params, body, messagesService, status, user }) => {
-          try {
-            await messagesService.validateOwnership({
-              id: params.id,
-              userId: user.id,
-            });
+        async ({ params, body, messagesService, user }) => {
+          await messagesService.validateOwnership({
+            id: params.id,
+            userId: user.id,
+          });
 
-            const message = await messagesService.update({
-              id: params.id,
-              title: body.title,
-              content: body.content,
-            });
+          const message = await messagesService.update({
+            id: params.id,
+            title: body.title,
+            content: body.content,
+          });
 
-            return {
-              success: true,
-              message,
-            };
-          } catch (err) {
-            console.error("[ERROR]", err);
-
-            if (err instanceof Error && err.message === "Message not found") {
-              return status(404, {
-                success: false,
-                error: err.message,
-              });
-            }
-
-            if (err instanceof Error && err.message === "Unauthorized") {
-              return status(403, {
-                success: false,
-                error: err.message,
-              });
-            }
-
-            return status(500, {
-              success: false,
-              error: err instanceof Error ? err.message : "An error occurred",
-            });
-          }
+          return {
+            success: true,
+            message,
+          };
         },
         {
           params: messageIdParams,
@@ -154,40 +105,17 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
       )
       .delete(
         "/:id",
-        async ({ params, messagesService, status, user }) => {
-          try {
-            await messagesService.validateOwnership({
-              id: params.id,
-              userId: user.id,
-            });
+        async ({ params, messagesService, user }) => {
+          await messagesService.validateOwnership({
+            id: params.id,
+            userId: user.id,
+          });
 
-            await messagesService.delete({ id: params.id });
+          await messagesService.delete({ id: params.id });
 
-            return {
-              success: true,
-            };
-          } catch (err) {
-            console.error("[ERROR]", err);
-
-            if (err instanceof Error && err.message === "Message not found") {
-              return status(404, {
-                success: false,
-                error: err.message,
-              });
-            }
-
-            if (err instanceof Error && err.message === "Unauthorized") {
-              return status(403, {
-                success: false,
-                error: err.message,
-              });
-            }
-
-            return status(500, {
-              success: false,
-              error: err instanceof Error ? err.message : "An error occurred",
-            });
-          }
+          return {
+            success: true,
+          };
         },
         {
           params: messageIdParams,

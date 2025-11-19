@@ -1,44 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 
-import { account, note, pokemon, user } from "./schema";
-
-async function getAllPokemon() {
-  const query = `
-    query GetAllPokemon {
-      pokemon_v2_pokemon(where: {id: {_lte: 1025}}) {
-        id
-        pokemon_v2_pokemonspecy {
-          name
-        }
-      }
-    }
-  `;
-
-  const response = await fetch("https://beta.pokeapi.co/graphql/v1beta", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query }),
-  });
-
-  const responseData = (await response.json()) as {
-    data: {
-      pokemon_v2_pokemon: {
-        id: number;
-        pokemon_v2_pokemonspecy: {
-          name: string;
-        };
-      }[];
-    };
-  };
-
-  return responseData.data.pokemon_v2_pokemon.map((pokemon) => ({
-    id: pokemon.id,
-    name: pokemon.pokemon_v2_pokemonspecy.name,
-  }));
-}
+import { account, note, user } from "./schema";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required");
@@ -86,11 +49,6 @@ async function seed() {
     },
   ]);
 
-  // Seed Pokemon
-  const allPokemon = await getAllPokemon();
-  await db.insert(pokemon).values(allPokemon);
-
-  console.log(`Created ${allPokemon.length} Pokemon`);
   console.log("Database has been seeded. 🌱");
   process.exit(0);
 }

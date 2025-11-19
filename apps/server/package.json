@@ -1,11 +1,11 @@
 {
   "name": "@acme/server",
   "version": "0.0.0",
-  "main": "./src/server.ts",
+  "main": "./src/index.ts",
   "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server ./src/server.ts",
+    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server ./src/index.ts",
     "build:types": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun with-env --watch src/index.ts",

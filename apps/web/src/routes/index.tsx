@@ -1,17 +1,25 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
 
 export const Route = createFileRoute("/")({
   component: Home,
-  loader: ({ context }) => {
-    return { user: context.session?.user };
+  loader: async () => {
+    // Get session data for conditional rendering (non-blocking)
+    try {
+      const session = await getSessionFn();
+      return { user: session?.user || null };
+    } catch {
+      return { user: null };
+    }
   },
 });
 
 function Home() {
   const { queryClient } = Route.useRouteContext();
+  // Use loader data instead of useSession hook to eliminate flicker
   const { user } = Route.useLoaderData();
   const router = useRouter();
 
@@ -29,7 +37,7 @@ function Home() {
         <div className="flex flex-col gap-2">
           <p>Welcome back, {user.name}!</p>
           <Button type="button" asChild className="w-fit" size="lg">
-            {/* <Link to="/dashboard">Go to Dashboard</Link> */}
+            <Link to="/dashboard">Go to Dashboard</Link>
           </Button>
           <div>
             More data:
@@ -39,8 +47,8 @@ function Home() {
           <Button
             onClick={async () => {
               await authClientRepo.signOut();
-              await queryClient.invalidateQueries({ queryKey: ["user"] });
               await router.invalidate();
+              window.location.href = "/";
             }}
             type="button"
             className="w-fit"
@@ -54,7 +62,7 @@ function Home() {
         <div className="flex flex-col gap-2">
           <p>You are not signed in.</p>
           <Button type="button" asChild className="w-fit" size="lg">
-            {/* <Link to="/signin">Sign in</Link> */}
+            <Link to="/signin">Sign in</Link>
           </Button>
         </div>
       )}
