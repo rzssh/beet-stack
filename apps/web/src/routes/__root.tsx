@@ -15,6 +15,7 @@ import "~/styles/app.css";
 import { analytics } from "~/lib/analytics";
 import { getSessionFn } from "~/lib/better-auth/auth-session";
 import type { Session } from "~/lib/better-auth/auth-session";
+import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -91,6 +92,7 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         </ScriptOnce>
 
         {children}
+        <Toaster />
 
         <ReactQueryDevtools buttonPosition="bottom-left" />
         <TanStackRouterDevtools position="bottom-right" />
