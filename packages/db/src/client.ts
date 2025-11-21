@@ -1,14 +1,10 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { sql } from "@vercel/postgres";
+import { drizzle } from "drizzle-orm/vercel-postgres";
 
 import * as schema from "./schema";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required");
-}
-
-export const db = drizzle(process.env.DATABASE_URL, { schema });
-
-await migrate(db, {
-  migrationsFolder: `${process.env.ROOT_DIR}/packages/db/migrations`,
+export const db = drizzle({
+  client: sql,
+  schema,
+  casing: "snake_case",
 });
