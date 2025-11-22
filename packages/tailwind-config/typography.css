@@ -1,0 +1,90 @@
+/*
+ * Typography utilities for consistent text styling and contrast
+ * This ensures proper contrast ratios across light and dark themes
+ */
+
+@layer utilities {
+  /* Heading styles with guaranteed contrast */
+  .text-heading-1 {
+    @apply text-4xl font-bold text-foreground tracking-tight;
+  }
+  
+  .text-heading-2 {
+    @apply text-3xl font-semibold text-foreground tracking-tight;
+  }
+  
+  .text-heading-3 {
+    @apply text-2xl font-semibold text-foreground;
+  }
+  
+  .text-heading-4 {
+    @apply text-xl font-semibold text-foreground;
+  }
+  
+  .text-heading-5 {
+    @apply text-lg font-semibold text-foreground;
+  }
+  
+  .text-heading-6 {
+    @apply text-base font-medium text-foreground;
+  }
+  
+  /* Body text styles */
+  .text-body {
+    @apply text-foreground leading-relaxed;
+  }
+  
+  .text-body-small {
+    @apply text-sm text-foreground leading-relaxed;
+  }
+  
+  .text-caption {
+    @apply text-xs text-muted-foreground;
+  }
+  
+  /* Special text styles */
+  .text-emphasis {
+    @apply text-primary font-medium;
+  }
+  
+  .text-subtle {
+    @apply text-muted-foreground;
+  }
+  
+  .text-danger {
+    @apply text-destructive font-medium;
+  }
+  
+  /* Card-specific text styles */
+  .text-card-title {
+    @apply text-lg font-semibold text-card-foreground;
+  }
+  
+  .text-card-description {
+    @apply text-sm text-muted-foreground;
+  }
+  
+  .text-card-content {
+    @apply text-card-foreground;
+  }
+}
+
+/* Global text defaults to prevent visibility issues */
+@layer base {
+  body {
+    @apply text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
+  }
+  
+  p {
+    @apply text-foreground;
+  }
+  
+  /* Ensure all text elements have proper contrast */
+  [class*="text-"]:not([class*="text-foreground"]):not([class*="text-muted"]):not([class*="text-primary"]):not([class*="text-secondary"]):not([class*="text-accent"]):not([class*="text-destructive"]) {
+    @apply text-foreground;
+  }
+}

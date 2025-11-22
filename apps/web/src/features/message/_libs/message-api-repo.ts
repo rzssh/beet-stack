@@ -9,7 +9,6 @@ import type { MessageRepository } from "../_domain/message-repository";
 export class MessageApiRepo implements MessageRepository {
   getMessages = async (): Promise<Message[]> => {
     const { data } = await api.messages.index.get();
-
     return data?.messages ?? [];
   };
 

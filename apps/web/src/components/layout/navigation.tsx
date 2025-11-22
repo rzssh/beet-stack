@@ -12,7 +12,7 @@ import { cn } from "src/components/ui/utils";
 
 const navigationItems = [
 	{ name: "Home", href: "/" },
-	{ name: "API Demo", href: "/count" },
+	{ name: "Counter Examples", href: "/count" },
 	{ name: "Messages", href: "/messages" },
 ];
 

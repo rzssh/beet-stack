@@ -21,7 +21,7 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
     });
   })
   .get(
-    "/index",
+    "/",
     async ({ messagesService }) => {
       const messages = await messagesService.getAll();
       return { success: true, messages };
@@ -33,9 +33,45 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
       },
     },
   )
+  .get(
+    "/index",
+    async ({ messagesService }) => {
+      const messages = await messagesService.getAll();
+      return { success: true, messages };
+    },
+    {
+      detail: {
+        summary: "Get all messages (index)",
+        tags: ["Messages"],
+      },
+    },
+  )
   .use(authMiddleware)
   .guard({ auth: true }, (app) =>
     app
+      .post(
+        "/",
+        async ({ body, messagesService, user }) => {
+          const message = await messagesService.create({
+            title: body.title,
+            content: body.content,
+            userId: user.id,
+          });
+
+          return {
+            success: true,
+            message,
+          };
+        },
+        {
+          body: "messageInput",
+          detail: {
+            summary: "Create a new message",
+            tags: ["Messages"],
+            security: [{ BearerAuth: [] }],
+          },
+        },
+      )
       .post(
         "/index",
         async ({ body, messagesService, user }) => {
@@ -53,7 +89,7 @@ export const messageRoutes = new Elysia({ prefix: "/messages" })
         {
           body: "messageInput",
           detail: {
-            summary: "Create a new message",
+            summary: "Create a new message (index)",
             tags: ["Messages"],
             security: [{ BearerAuth: [] }],
           },

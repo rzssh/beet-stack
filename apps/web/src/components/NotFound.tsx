@@ -1,21 +1,24 @@
 import { Link } from "@tanstack/react-router";
-import { FileQuestion, ArrowLeft, Home, Search } from "lucide-react";
-import { Button } from "./ui/button";
-import { Alert, AlertDescription } from "./ui/alert";
+import { ArrowLeft, FileQuestion, Home, Search } from "lucide-react";
+import { useEffect } from "react";
 import { analytics } from "~/lib/analytics";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Button } from "./ui/button";
 
 export function NotFound() {
-  // Track 404 in analytics
-  analytics.capture("page_not_found", {
-    location: window.location.pathname,
-    timestamp: new Date().toISOString(),
-  });
+  // Track 404 in analytics (client-side only)
+  useEffect(() => {
+    analytics.events.custom("page_not_found", {
+      location: typeof window !== "undefined" ? window.location.pathname : "",
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-8 p-8 max-w-2xl mx-auto">
+    <div className="mx-auto flex min-w-0 max-w-2xl flex-1 flex-col items-center justify-center gap-8 p-8">
       <div className="flex items-center gap-3 text-muted-foreground">
         <FileQuestion className="h-8 w-8" />
-        <h1 className="text-2xl font-semibold">Page Not Found</h1>
+        <h1 className="font-semibold text-2xl">Page Not Found</h1>
       </div>
 
       <div className="w-full space-y-4">
@@ -26,7 +29,7 @@ export function NotFound() {
           </AlertDescription>
         </Alert>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-muted-foreground text-sm">
           Error 404 • Page Not Found
         </div>
       </div>
@@ -36,7 +39,9 @@ export function NotFound() {
           type="button"
           onClick={() => {
             analytics.capture("not_found_back_clicked");
-            window.history.back();
+            if (typeof window !== "undefined") {
+              window.history.back();
+            }
           }}
           variant="outline"
           className="flex items-center gap-2"
@@ -60,8 +65,9 @@ export function NotFound() {
         </Button>
       </div>
 
-      <div className="text-xs text-muted-foreground text-center max-w-md">
-        If you believe this is an error, please check the URL or return to the homepage.
+      <div className="max-w-md text-center text-muted-foreground text-xs">
+        If you believe this is an error, please check the URL or return to the
+        homepage.
       </div>
     </div>
   );

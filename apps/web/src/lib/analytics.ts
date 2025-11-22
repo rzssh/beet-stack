@@ -34,6 +34,10 @@ class Analytics {
     posthog.capture(event, properties);
   }
 
+  capture(event: string, properties?: Record<string, any>) {
+    return this.track(event, properties);
+  }
+
   pageview(pathname?: string) {
     if (!this.initialized) return;
     posthog.capture("$pageview", {

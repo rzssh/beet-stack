@@ -2,18 +2,12 @@ import { api } from "@acme/api";
 import type { ElysiaCountResponse } from "../_domain/count-model";
 import type { CountRepository } from "../_domain/count-repository";
 
-// Extract Elysia count from response safely
+// Extract count from Eden Treaty response
 const extractElysiaCount = (
-  response: any,
+  response: { data: { count: number } | null; error: any }
 ): { count: number } => {
-  // Eden Treaty response might be wrapped differently
-  if (response && typeof response === "object") {
-    if ("count" in response) {
-      return { count: response.count };
-    }
-    if (response.data && typeof response.data === "object" && "count" in response.data) {
-      return { count: response.data.count };
-    }
+  if (response.data?.count !== undefined) {
+    return { count: response.data.count };
   }
   return { count: 0 };
 };
@@ -27,11 +21,10 @@ export class ElysiaCountApiRepo implements CountRepository {
   }> => {
     try {
       const response = await api.count.get({
-        $fetch: {
+        fetch: {
           signal,
         },
       });
-      console.log("API Response:", response);
       return extractElysiaCount(response);
     } catch (error) {
       if (signal?.aborted) {
@@ -45,7 +38,6 @@ export class ElysiaCountApiRepo implements CountRepository {
   incrementCount = async (): Promise<{ count: number }> => {
     try {
       const response = await api.count.increment.post();
-      console.log("Increment API Response:", response);
       return extractElysiaCount(response);
     } catch (error) {
       console.error("Failed to increment count:", error);

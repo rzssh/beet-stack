@@ -10,25 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LandingRouteImport } from './routes/landing'
-import { Route as CountRouteImport } from './routes/count'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as MessagesRouteRouteImport } from './routes/messages.route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MessagesIndexRouteImport } from './routes/messages.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as CountIndexRouteImport } from './routes/count.index'
 import { Route as MessagesMessageIdRouteImport } from './routes/messages.$messageId'
+import { Route as CountTanstackRouteImport } from './routes/count.tanstack'
+import { Route as CountElysiaRouteImport } from './routes/count.elysia'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/_auth/signin'
 
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CountRoute = CountRouteImport.update({
-  id: '/count',
-  path: '/count',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -60,10 +57,25 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const CountIndexRoute = CountIndexRouteImport.update({
+  id: '/count/',
+  path: '/count/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesMessageIdRoute = MessagesMessageIdRouteImport.update({
   id: '/$messageId',
   path: '/$messageId',
   getParentRoute: () => MessagesRouteRoute,
+} as any)
+const CountTanstackRoute = CountTanstackRouteImport.update({
+  id: '/count/tanstack',
+  path: '/count/tanstack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CountElysiaRoute = CountElysiaRouteImport.update({
+  id: '/count/elysia',
+  path: '/count/elysia',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
@@ -80,21 +92,25 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
-  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/count/elysia': typeof CountElysiaRoute
+  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
+  '/count': typeof CountIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/messages/': typeof MessagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/count/elysia': typeof CountElysiaRoute
+  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
+  '/count': typeof CountIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/messages': typeof MessagesIndexRoute
 }
@@ -104,11 +120,13 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/messages': typeof MessagesRouteRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
-  '/count': typeof CountRoute
   '/landing': typeof LandingRoute
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/count/elysia': typeof CountElysiaRoute
+  '/count/tanstack': typeof CountTanstackRoute
   '/messages/$messageId': typeof MessagesMessageIdRoute
+  '/count/': typeof CountIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/messages/': typeof MessagesIndexRoute
 }
@@ -118,21 +136,25 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/messages'
-    | '/count'
     | '/landing'
     | '/signin'
     | '/signup'
+    | '/count/elysia'
+    | '/count/tanstack'
     | '/messages/$messageId'
+    | '/count'
     | '/dashboard/'
     | '/messages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/count'
     | '/landing'
     | '/signin'
     | '/signup'
+    | '/count/elysia'
+    | '/count/tanstack'
     | '/messages/$messageId'
+    | '/count'
     | '/dashboard'
     | '/messages'
   id:
@@ -141,11 +163,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/messages'
     | '/_auth'
-    | '/count'
     | '/landing'
     | '/_auth/signin'
     | '/_auth/signup'
+    | '/count/elysia'
+    | '/count/tanstack'
     | '/messages/$messageId'
+    | '/count/'
     | '/dashboard/'
     | '/messages/'
   fileRoutesById: FileRoutesById
@@ -155,8 +179,10 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MessagesRouteRoute: typeof MessagesRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  CountRoute: typeof CountRoute
   LandingRoute: typeof LandingRoute
+  CountElysiaRoute: typeof CountElysiaRoute
+  CountTanstackRoute: typeof CountTanstackRoute
+  CountIndexRoute: typeof CountIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -166,13 +192,6 @@ declare module '@tanstack/react-router' {
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/count': {
-      id: '/count'
-      path: '/count'
-      fullPath: '/count'
-      preLoaderRoute: typeof CountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -217,12 +236,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/count/': {
+      id: '/count/'
+      path: '/count'
+      fullPath: '/count'
+      preLoaderRoute: typeof CountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages/$messageId': {
       id: '/messages/$messageId'
       path: '/$messageId'
       fullPath: '/messages/$messageId'
       preLoaderRoute: typeof MessagesMessageIdRouteImport
       parentRoute: typeof MessagesRouteRoute
+    }
+    '/count/tanstack': {
+      id: '/count/tanstack'
+      path: '/count/tanstack'
+      fullPath: '/count/tanstack'
+      preLoaderRoute: typeof CountTanstackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/count/elysia': {
+      id: '/count/elysia'
+      path: '/count/elysia'
+      fullPath: '/count/elysia'
+      preLoaderRoute: typeof CountElysiaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_auth/signup': {
       id: '/_auth/signup'
@@ -284,8 +324,10 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MessagesRouteRoute: MessagesRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  CountRoute: CountRoute,
   LandingRoute: LandingRoute,
+  CountElysiaRoute: CountElysiaRoute,
+  CountTanstackRoute: CountTanstackRoute,
+  CountIndexRoute: CountIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

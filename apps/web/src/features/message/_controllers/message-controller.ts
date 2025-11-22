@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { queryClient } from "~/lib/tanstack-query/query-client";
+// Remove logger dependency - keep web app simple
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
@@ -69,7 +70,12 @@ class MessageController {
       },
       onError: (error) => {
         console.error("Failed to create message:", error);
-        toast.error("Failed to create message");
+        
+        const isDev = process.env.NODE_ENV === "development";
+        const message = isDev 
+          ? `Failed to create message: ${error.message}` 
+          : "Failed to create message";
+        toast.error(message);
       },
     });
   };

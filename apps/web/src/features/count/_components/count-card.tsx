@@ -27,7 +27,7 @@ export const CountCard = ({
 CountCard.Header = ({ title, description }: { title: string; description: string }) => {
   return (
     <CardHeader>
-      <CardTitle className="text-center">{title}</CardTitle>
+      <CardTitle className="text-center text-card-foreground">{title}</CardTitle>
       <CardDescription className="text-center">{description}</CardDescription>
     </CardHeader>
   );
@@ -38,7 +38,7 @@ CountCard.Display = ({ count, description }: { count: number; description: strin
   return (
     <CardContent className="pt-6">
       <div className="flex flex-col items-center justify-center space-y-4">
-        <div className="text-6xl font-bold">{count}</div>
+        <div className="text-6xl font-bold text-foreground">{count}</div>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
     </CardContent>

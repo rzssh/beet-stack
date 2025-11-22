@@ -178,3 +178,6 @@ tsconfig.tsbuildinfo
 
 # turbo
 .turbo
+
+# TanStack
+.tanstack/

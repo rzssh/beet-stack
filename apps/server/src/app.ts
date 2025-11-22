@@ -3,6 +3,8 @@ import {
   // securityHeaders,
   // sentryPlugin,
 } from "@acme/config";
+import { createDevLoggingMiddleware, create404Handler } from "~/lib/logger/src/elysia-debug";
+import { createElysiaContext } from "~/lib/context";
 import cors from "@elysiajs/cors";
 import { opentelemetry } from "@elysiajs/opentelemetry";
 import swagger from "@elysiajs/swagger";
@@ -37,13 +39,23 @@ const securityHeaders = () =>
     },
   );
 
-export const app = new Elysia()
+const devLogging = createDevLoggingMiddleware();
+
+const baseApp = new Elysia()
   .state("env", env)
   .decorate("logger", logger)
   // Add request ID tracking first
   .use(requestId())
   // Add error handling early
   .use(errorHandler())
+  // Add enhanced context with common utilities
+  .use(createElysiaContext())
+  // Add development logging
+  .onRequest(devLogging.onRequest)
+  .onAfterHandle(devLogging.onAfterHandle)
+  .onError(devLogging.onError)
+  // Mount Better Auth handler
+  .mount(auth.handler)
   .use(
     cors({
       origin: (request) => {
@@ -66,8 +78,6 @@ export const app = new Elysia()
       allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
     }),
   )
-  // Mount Better Auth handler
-  .mount(auth.handler)
   .use(opentelemetry())
   .use(
     swagger({
@@ -111,5 +121,7 @@ export const app = new Elysia()
   .use(billingRoutes)
   .use(fileRoutes)
   .use(metricsRoutes);
+
+export const app = baseApp.all("*", create404Handler(baseApp));
 
 export type App = typeof app;

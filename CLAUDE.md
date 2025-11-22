@@ -8,7 +8,7 @@ This is a production-ready full-stack monorepo built with bleeding-edge tech for
 
 ### Tech Stack
 
-- **Frontend**: TanStack Start (React Router + SSR), TanStack Query, Jotai (state), shadcn/ui, PostHog analytics
+- **Frontend**: TanStack Start (React Router + SSR), TanStack Query, Jotai (atomic state management), shadcn/ui, PostHog analytics
 - **Mobile**: React Native + Expo with shared API types via Eden Treaty
 - **Backend**: Elysia.js with Better Auth, Swagger docs
 - **Database**: Drizzle ORM with PostgreSQL (local via Docker or Neon cloud)
@@ -17,8 +17,9 @@ This is a production-ready full-stack monorepo built with bleeding-edge tech for
 - **Email**: Resend integration
 - **Storage**: AWS S3 integration
 - **Analytics**: PostHog
-- **Runtime**: Bun
-- **Styling**: Tailwind CSS with shared config across web and mobile (NativeWind)
+- **Runtime**: Bun with workspace catalogs for centralized dependency management
+- **Styling**: Tailwind CSS v4 with oklch color space, shared config across web and mobile (NativeWind)
+- **Logging**: Structured logging with Pino, enhanced Elysia debugging with route introspection
 
 ## Common Commands
 
@@ -80,6 +81,32 @@ bun build
 bun clean
 ```
 
+### Dependency Management
+
+This project uses **Bun workspace catalogs** for centralized dependency management. All dependencies are defined in the root `package.json` catalog and referenced by individual packages.
+
+```bash
+# Add new dependencies to the catalog (root package.json)
+# Then reference them in package.json with "catalog:" prefix
+
+# Example:
+# In root package.json catalog:
+# "react-query": "^5.90.10"
+
+# In app package.json:
+# "dependencies": {
+#   "@tanstack/react-query": "catalog:"
+# }
+
+# Always add new dependencies to the catalog first
+# This ensures consistency across all packages
+```
+
+**IMPORTANT**: When adding dependencies, always:
+1. Add to the catalog in root `package.json` 
+2. Reference with `"catalog:"` in individual packages
+3. Never add dependencies directly to individual packages
+
 ## Architecture
 
 ### Monorepo Structure
@@ -116,7 +143,8 @@ Backend modules live under `apps/backend/src/modules/*` with `repository → ser
 
 ### Frontend (TanStack Start)
 
-- Class-based controllers with Jotai atoms for state
+- **State Management**: Jotai atomic state management for modern, efficient state handling
+- Class-based controllers with Jotai atoms for reactive state
 - All hooks return objects (even single values): `return { isPending }`
 - Component composition following shadcn/ui patterns
 - Multiple components per file is acceptable for productivity
@@ -132,6 +160,14 @@ Backend modules live under `apps/backend/src/modules/*` with `repository → ser
 - Drizzle ORM with PostgreSQL (local Docker or Neon cloud)
 - Direct database operations for simplicity
 - Migrations managed via Drizzle Kit
+
+### Logging (Backend)
+
+Backend uses **Pino** for structured logging with development-friendly formatting:
+- Located in `apps/server/src/lib/logger/`
+- API request/response logging with route introspection
+- Enhanced 404 handler with available routes listing  
+- Development middleware for request/response tracking
 
 ### Expo + Elysia Integration
 
@@ -191,6 +227,35 @@ See `docs/NEON_SETUP.md` for detailed setup instructions.
 - **kebab-case** for all files and directories
 - **Direct imports**: Avoid barrel files
 - **Short, descriptive names**: Avoid overly descriptive file names
+
+### State Management Patterns
+
+#### Jotai Atomic State Management
+Use Jotai atoms for all state management - both global and local:
+
+```typescript
+// ✅ Correct - Basic atoms
+export const countAtom = atom(0);
+export const sidebarOpenAtom = atom(false);
+
+// ✅ Correct - Derived atoms
+export const doubledCountAtom = atom((get) => get(countAtom) * 2);
+
+// ✅ Correct - Write-only atoms for actions
+export const incrementCountAtom = atom(
+  null,
+  (get, set) => set(countAtom, get(countAtom) + 1)
+);
+
+// ✅ Correct - Async atoms with suspense support
+export const userAtom = atom(async () => {
+  const response = await fetch('/api/user');
+  return response.json();
+});
+
+// ✅ Correct - Persistent atoms for settings
+export const themeAtom = atomWithStorage('theme', 'system');
+```
 
 ## Critical Coding Standards
 
