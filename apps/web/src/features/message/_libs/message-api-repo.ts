@@ -1,4 +1,4 @@
-import { api } from "@acme/api";
+import { api } from "~/lib/api-client";
 import type {
   Message,
   MessageCreateParams,
@@ -10,18 +10,13 @@ export class MessageApiRepo implements MessageRepository {
   getMessages = async (): Promise<Message[]> => {
     const { data } = await api.messages.index.get();
 
-    return data?.messages || [];
+    return data?.messages ?? [];
   };
 
   getMessage = async ({ id }: { id: string }): Promise<Message> => {
-    const route = api.messages[id];
-    if (!route) {
-      throw new Error("Messages route not available");
-    }
+    const { data, error } = await api.messages({ id }).get();
 
-    const { data } = await route.get();
-
-    if (!data?.message) {
+    if (error ?? !data?.message) {
       throw new Error("Message not found");
     }
 
@@ -33,12 +28,12 @@ export class MessageApiRepo implements MessageRepository {
   }: {
     params: MessageCreateParams;
   }): Promise<Message> => {
-    const { data } = await api.messages.index.post({
+    const { data, error } = await api.messages.index.post({
       content: params.content,
       title: params.title,
     });
 
-    if (!data?.message) {
+    if (error ?? !data?.message) {
       throw new Error("Failed to create message");
     }
 
@@ -52,17 +47,12 @@ export class MessageApiRepo implements MessageRepository {
   }): Promise<Message> => {
     const { id, ...updateData } = params;
 
-    const route = api.messages[id];
-    if (!route) {
-      throw new Error("Messages route not available");
-    }
-
-    const { data } = await route.patch({
+    const { data, error } = await api.messages({ id }).patch({
       content: updateData.content,
       title: updateData.title,
     });
 
-    if (!data?.message) {
+    if (error ?? !data?.message) {
       throw new Error("Failed to update message");
     }
 
@@ -72,12 +62,12 @@ export class MessageApiRepo implements MessageRepository {
   deleteMessage = async ({
     id,
   }: { id: string }): Promise<{ success: boolean }> => {
-    const route = api.messages[id];
-    if (!route) {
-      throw new Error("Messages route not available");
+    const { error } = await api.messages({ id }).delete();
+
+    if (error) {
+      throw new Error("Failed to delete message");
     }
 
-    await route.delete();
     return { success: true };
   };
 }

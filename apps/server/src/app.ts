@@ -44,13 +44,30 @@ export const app = new Elysia()
   .use(requestId())
   // Add error handling early
   .use(errorHandler())
-  .mount(auth.handler)
   .use(
     cors({
-      origin: env.CORS_ORIGINS.split(",").map((origin) => origin.trim()),
+      origin: (request) => {
+        const origin = request.headers.get('origin');
+        if (!origin) return true; // Allow requests with no origin (mobile apps)
+        
+        const allowedOrigins = env.CORS_ORIGINS.split(",").map((origin) => origin.trim());
+        
+        // Check exact matches first
+        if (allowedOrigins.includes(origin)) return true;
+        
+        // Check wildcard patterns for Expo development
+        const isLocalNetwork = /^http:\/\/(192\.168\.|10\.0\.|172\.(1[6-9]|2\d|3[01])\.).+/.test(origin);
+        const isExpoScheme = /^(expo|exp):\/\//.test(origin);
+        
+        return isLocalNetwork || isExpoScheme;
+      },
       credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
     }),
   )
+  // Mount Better Auth handler
+  .mount(auth.handler)
   .use(opentelemetry())
   .use(
     swagger({
@@ -59,8 +76,17 @@ export const app = new Elysia()
           title: "SaaS Boilerplate API",
           version: "1.0.0",
           description:
-            "Foundation API showcasing auth, billing, messaging, files, and analytics integrations.",
+            "Production-ready API with auth, billing, messaging, files, and analytics.",
         },
+        tags: [
+          { name: "Health", description: "Health check endpoints" },
+          { name: "Auth", description: "Authentication endpoints" },
+          { name: "Users", description: "User management" },
+          { name: "Messages", description: "Message CRUD operations" },
+          { name: "Files", description: "File upload and storage" },
+          { name: "Billing", description: "Stripe payment integration" },
+          { name: "Metrics", description: "Application metrics" },
+        ],
       },
     }),
   )
@@ -76,6 +102,8 @@ export const app = new Elysia()
   .get("/", () => ({
     status: "ok",
     version: "1.0.0",
+    timestamp: new Date().toISOString(),
+    environment: env.NODE_ENV,
   }))
   .use(healthRoutes)
   .use(userRoutes)

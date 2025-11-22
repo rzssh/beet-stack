@@ -1,4 +1,4 @@
-import { createAuthClient } from "better-auth/react";
+import { createWebAuthClient } from "@acme/auth/client";
 
 const resolveBaseUrl = () => {
   const metaEnv = (import.meta as ImportMeta & {
@@ -16,12 +16,6 @@ const resolveBaseUrl = () => {
   return "http://localhost:3001";
 };
 
-const authClientRepo = createAuthClient({
-  baseURL: resolveBaseUrl(),
-  fetchOptions: {
-    credentials: "include",
-    mode: "cors",
-  },
-});
+const authClientRepo = createWebAuthClient(resolveBaseUrl());
 
 export { authClientRepo };

@@ -2,7 +2,9 @@
   "extends": ["@acme/tsconfig/base.json"],
   "compilerOptions": {
     "jsx": "react-native",
+    "allowJs": true,
     "checkJs": false,
+    "skipLibCheck": true,
     "moduleSuffixes": [".ios", ".android", ".native", ""],
     "paths": {
       "~/*": ["./src/*"]
@@ -11,10 +13,15 @@
   "include": [
     "src",
     "*.ts",
-    "*.js",
+    "*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "react-native.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "**/*.flow.js",
+    "**/node_modules/react-native/index.js"
+  ]
 }

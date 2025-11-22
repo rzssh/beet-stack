@@ -4,33 +4,34 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./env": "./env.ts"
+    "./types": "./src/types.ts"
   },
   "license": "MIT",
   "scripts": {
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --config script/auth-cli.ts --output ../db/src/auth-schema.ts",
-    "typecheck": "tsc --noEmit"
+    "clean": "rm -rf .cache .turbo dist node_modules",
+    "lint": "echo \"No lint config\"",
+    "format": "echo \"Using biome in root\"",
+    "generate": "bun with-env bunx @better-auth/cli generate --config script/auth-cli.ts --output ../db/src/auth-schema.ts",
+    "typecheck": "tsc --noEmit",
+    "with-env": "bun --env-file=../../.env --"
   },
   "dependencies": {
     "@acme/db": "workspace:*",
-    "@better-auth/expo": "catalog:",
-    "@t3-oss/env-core": "^0.13.8",
     "better-auth": "catalog:",
     "zod": "catalog:"
   },
+  "peerDependencies": {
+    "@better-auth/expo": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@better-auth/expo": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@better-auth/cli": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

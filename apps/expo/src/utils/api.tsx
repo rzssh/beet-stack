@@ -1,9 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import superjson from "superjson";
-
-import type { AppRouter } from "@acme/api";
+import { createApiClient } from "@acme/api";
 
 import { authClient } from "./auth";
 import { getBaseUrl } from "./base-url";
@@ -11,40 +7,29 @@ import { getBaseUrl } from "./base-url";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // ...
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 3,
     },
   },
 });
 
 /**
- * A set of typesafe hooks for consuming your API.
+ * Type-safe API client using Eden Treaty.
+ * Automatically includes auth cookies for authenticated requests.
  */
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-  client: createTRPCClient({
-    links: [
-      loggerLink({
-        enabled: (opts) =>
-          process.env.NODE_ENV === "development" ||
-          (opts.direction === "down" && opts.result instanceof Error),
-        colorMode: "ansi",
-      }),
-      httpBatchLink({
-        transformer: superjson,
-        url: `${getBaseUrl()}/api/trpc`,
-        headers() {
-          const headers = new Map<string, string>();
-          headers.set("x-trpc-source", "expo-react");
-
-          const cookies = authClient.getCookie();
-          if (cookies) {
-            headers.set("Cookie", cookies);
-          }
-          return headers;
-        },
-      }),
-    ],
-  }),
-  queryClient,
+export const api = createApiClient({
+  baseUrl: getBaseUrl(),
+  headers: async () => {
+    const headers: Record<string, string> = {};
+    
+    // Include auth cookies if available
+    const cookies = authClient.getCookie();
+    if (cookies) {
+      headers.Cookie = cookies;
+    }
+    
+    return headers;
+  },
 });
 
-export type { RouterInputs, RouterOutputs } from "@acme/api";
+export type { App, Session, User } from "@acme/api";

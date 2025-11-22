@@ -1,14 +1,22 @@
+import "dotenv/config";
+
 import type { Config } from "drizzle-kit";
 
-if (!process.env.POSTGRES_URL) {
-  throw new Error("Missing POSTGRES_URL");
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is required");
 }
 
-const nonPoolingUrl = process.env.POSTGRES_URL.replace(":6543", ":5432");
-
 export default {
-  schema: "./src/schema.ts",
+  out: "./migrations",
+  schema: ["./src/schema.ts", "./src/auth-schema.ts"],
+  breakpoints: true,
   dialect: "postgresql",
-  dbCredentials: { url: nonPoolingUrl },
+  // Set driver only if you are using aws-data-api, turso, d1-http, or expo
+  // driver: 'turso',
+  dbCredentials: {
+    url: process.env.DATABASE_URL,
+    // token: process.env.DATABASE_AUTH_TOKEN,
+  },
+  verbose: true,
   casing: "snake_case",
 } satisfies Config;

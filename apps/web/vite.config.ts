@@ -14,4 +14,19 @@ export default defineConfig({
     tailwindcss(),
     viteReact(),
   ],
+  optimizeDeps: {
+    exclude: [
+      "react-native",
+      "@expo/*",
+      "expo",
+      "expo-*",
+      "@better-auth/expo",
+      "nativewind",
+      "react-native-*"
+    ],
+  },
+  define: {
+    // Prevent React Native from being processed
+    "process.env.REACT_NATIVE": JSON.stringify(undefined),
+  },
 });

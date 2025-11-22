@@ -1,26 +1,33 @@
 import Constants from "expo-constants";
 
 /**
- * Extend this function when going to production by
- * setting the baseUrl to your production API URL.
+ * Get the base URL for the API server.
+ * 
+ * Supports multiple integration patterns:
+ * 1. Standalone Elysia server (default): Auto-detects host IP and connects to port 3001
+ * 2. Embedded Expo API routes: Falls back to current app's API routes
+ * 3. Production: Use EXPO_PUBLIC_API_URL environment variable
  */
 export const getBaseUrl = () => {
-  /**
-   * Gets the IP address of your host-machine. If it cannot automatically find it,
-   * you'll have to manually set it. NOTE: Port 3000 should work for most but confirm
-   * you don't have anything else running on it, or you'd have to change it.
-   *
-   * **NOTE**: This is only for development. In production, you'll want to set the
-   * baseUrl to your production API URL.
-   */
+  // Production URL from environment variable
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // Development: auto-detect host IP for Expo Go (standalone server)
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(":")[0];
 
   if (!localhost) {
-    // return "https://turbo.t3.gg";
-    throw new Error(
-      "Failed to get localhost. Please point to your production server.",
+    console.warn(
+      "Failed to get localhost for standalone server. Falling back to embedded API routes. " +
+      "Set EXPO_PUBLIC_API_URL for production or ensure Expo development server is running."
     );
+    
+    // Fallback to embedded API routes within the Expo app
+    return "";
   }
-  return `http://${localhost}:3000`;
+
+  // Connect to standalone Elysia server on port 3001
+  return `http://${localhost}:3001`;
 };

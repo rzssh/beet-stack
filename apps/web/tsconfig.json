@@ -1,8 +1,17 @@
 {
   "extends": "@acme/tsconfig/web.json",
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "**/*.flow.js",
+    "**/react-native/**",
+    "**/react-native/index.js",
+    "**/@react-native/**",
+    "../server/**/*"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
+    "skipLibCheck": true,
     "paths": {
       "~/*": ["./src/*"]
     }

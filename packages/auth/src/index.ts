@@ -1,52 +1,90 @@
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
-import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import { oAuthProxy, openAPI } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
 
-export function initAuth<
-  TExtraPlugins extends BetterAuthPlugin[] = [],
->(options: {
+export interface AuthConfig {
   baseUrl: string;
-  productionUrl: string;
-  secret: string | undefined;
+  secret: string;
+  discordClientId?: string;
+  discordClientSecret?: string;
+  githubClientId?: string;
+  githubClientSecret?: string;
+  trustedOrigins?: string[];
+  enableExpoPlugin?: boolean;
+  extraPlugins?: BetterAuthPlugin[];
+}
 
-  discordClientId: string;
-  discordClientSecret: string;
-  extraPlugins?: TExtraPlugins;
-}) {
-  const config = {
+export function createAuth(options: AuthConfig) {
+  const plugins: BetterAuthPlugin[] = [
+    openAPI(),
+    oAuthProxy(),
+    ...(options.extraPlugins ?? []),
+  ];
+
+  // Only load expo plugin if explicitly enabled
+  if (options.enableExpoPlugin) {
+    try {
+      const { expo } = require("@better-auth/expo");
+      plugins.push(expo());
+    } catch (error) {
+      console.warn("Failed to load @better-auth/expo plugin:", error);
+    }
+  }
+
+  const config: BetterAuthOptions = {
     database: drizzleAdapter(db, {
       provider: "pg",
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
-    plugins: [
-      oAuthProxy({
-        productionURL: options.productionUrl,
-      }),
-      expo(),
-      ...(options.extraPlugins ?? []),
-    ],
-    socialProviders: {
-      discord: {
-        clientId: options.discordClientId,
-        clientSecret: options.discordClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
+    plugins,
+    socialProviders: {},
+    emailAndPassword: {
+      enabled: true,
+      password: {
+        hash: (input: string) => Bun.password.hash(input),
+        verify: ({ password, hash }) => Bun.password.verify(password, hash),
       },
     },
-    trustedOrigins: ["expo://", "exp://"],
+    session: {
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 5, // Cache for 5 minutes
+      },
+    },
+    trustedOrigins: [
+      "expo://",
+      "exp://",
+      options.baseUrl,
+      ...(options.trustedOrigins ?? []),
+    ],
     onAPIError: {
       onError(error, ctx) {
         console.error("BETTER AUTH API ERROR", error, ctx);
       },
     },
-  } satisfies BetterAuthOptions;
+  };
+
+  // Add Discord OAuth if credentials provided
+  if (options.discordClientId && options.discordClientSecret) {
+    config.socialProviders!.discord = {
+      clientId: options.discordClientId,
+      clientSecret: options.discordClientSecret,
+    };
+  }
+
+  // Add GitHub OAuth if credentials provided  
+  if (options.githubClientId && options.githubClientSecret) {
+    config.socialProviders!.github = {
+      clientId: options.githubClientId,
+      clientSecret: options.githubClientSecret,
+    };
+  }
 
   return betterAuth(config);
 }
 
-export type Auth = ReturnType<typeof initAuth>;
-export type Session = Auth["$Infer"]["Session"];
+export type Auth = ReturnType<typeof createAuth>;

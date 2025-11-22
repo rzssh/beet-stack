@@ -9,14 +9,16 @@ This is a production-ready full-stack monorepo built with bleeding-edge tech for
 ### Tech Stack
 
 - **Frontend**: TanStack Start (React Router + SSR), TanStack Query, Jotai (state), shadcn/ui, PostHog analytics
+- **Mobile**: React Native + Expo with shared API types via Eden Treaty
 - **Backend**: Elysia.js with Better Auth, Swagger docs
 - **Database**: Drizzle ORM with PostgreSQL (local via Docker or Neon cloud)
+- **API Client**: Eden Treaty for end-to-end type safety across web and mobile
 - **Payments**: Stripe integration
 - **Email**: Resend integration
 - **Storage**: AWS S3 integration
 - **Analytics**: PostHog
 - **Runtime**: Bun
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with shared config across web and mobile (NativeWind)
 
 ## Common Commands
 
@@ -84,12 +86,16 @@ bun clean
 
 ```
 apps/
-├── backend/          # Elysia.js API server
-└── web/              # TanStack Start frontend
+├── expo/            # React Native + Expo mobile app
+├── server/          # Elysia.js API server  
+└── web/             # TanStack Start frontend
 packages/
+├── api/             # Eden Treaty API client with shared types
+├── auth/            # Better Auth configuration (server + client)
 ├── db/              # Drizzle ORM schemas and migrations
-└── platform/        # Env, logger, auth, billing, storage, email, Eden client
-tooling/             # Shared configs (ESLint, Prettier, TypeScript, Tailwind)
+├── tailwind-config/ # Shared Tailwind CSS theme and configuration
+├── tsconfig/        # TypeScript configurations
+└── validators/      # Zod schemas for shared validation
 ```
 
 ### Feature Organization
@@ -126,6 +132,24 @@ Backend modules live under `apps/backend/src/modules/*` with `repository → ser
 - Drizzle ORM with PostgreSQL (local Docker or Neon cloud)
 - Direct database operations for simplicity
 - Migrations managed via Drizzle Kit
+
+### Expo + Elysia Integration
+
+**Hybrid Integration Pattern**:
+1. **Standalone Server** (Primary): Expo app connects to separate Elysia server on port 3001
+2. **Embedded API Routes** (Fallback): Expo API routes at `src/app/api/[...slugs]+api.ts` for offline development
+
+**Key Features**:
+- Auto-detection of development host IP for Expo Go
+- Cross-platform authentication with Better Auth + Expo plugin
+- Shared type safety via Eden Treaty
+- CORS configured for Expo schemes (`expo://`, `exp://`) and local network IPs
+- NativeWind for cross-platform Tailwind CSS styling
+
+**Configuration**:
+- Development: Auto-detects host IP from Expo's `hostUri` 
+- Production: Uses `EXPO_PUBLIC_API_URL` environment variable
+- Authentication: Uses `@better-auth/expo` client plugin with secure storage
 
 ## Production Features
 
@@ -169,6 +193,27 @@ See `docs/NEON_SETUP.md` for detailed setup instructions.
 - **Short, descriptive names**: Avoid overly descriptive file names
 
 ## Critical Coding Standards
+
+### Type Safety Standards
+
+**NEVER use `any` type to solve TypeScript errors:**
+```typescript
+// ❌ NEVER do this
+export function createApiClient(): any {
+  return edenTreaty<any>(baseUrl);
+}
+
+// ✅ Correct - proper type inference or explicit types
+export function createApiClient<T = App>(): EdenTreaty<T> {
+  return edenTreaty<T>(baseUrl);
+}
+```
+
+**Always maintain type safety:**
+- Fix the root cause of type errors, don't mask them
+- Use proper type inference and generic constraints
+- Prefer `unknown` over `any` if you must use a top type
+- Use type guards and proper narrowing
 
 ### Import Standards
 
