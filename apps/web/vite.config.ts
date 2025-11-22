@@ -6,14 +6,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   server: { port: 3000 },
-  plugins: [
-    tsConfigPaths(),
-    tanstackStart({
-      srcDirectory: "src",
-    }),
-    tailwindcss(),
-    viteReact(),
-  ],
+  plugins: [tsConfigPaths(), tanstackStart(), tailwindcss(), viteReact()],
   optimizeDeps: {
     exclude: [
       "react-native",
@@ -22,7 +15,7 @@ export default defineConfig({
       "expo-*",
       "@better-auth/expo",
       "nativewind",
-      "react-native-*"
+      "react-native-*",
     ],
   },
   define: {

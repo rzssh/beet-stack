@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "tailwindcss": "catalog:"
+    "tailwindcss": "catalog:ui"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",

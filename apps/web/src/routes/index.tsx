@@ -1,21 +1,26 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ThemeToggle } from "~/components/ThemeToggle";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { getSessionFn } from "~/lib/better-auth/auth-session";
-import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
-import { 
-  Code2, 
-  Zap, 
-  Shield, 
-  Database, 
-  Smartphone,
-  Server,
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import {
   ArrowRight,
   CheckCircle2,
+  Code2,
+  Database,
   Github,
-  LogOut
+  LogOut,
+  Server,
+  Shield,
+  Smartphone,
+  Zap,
 } from "lucide-react";
+import { ThemeToggle } from "~/components/ThemeToggle";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { authClientRepo } from "~/lib/better-auth/auth-client-repo";
+import { getSessionFn } from "~/lib/better-auth/auth-session";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -39,18 +44,20 @@ function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Navigation Bar */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container flex items-center justify-between h-16">
+      <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
+        <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Code2 className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl text-foreground">TanStack × Elysia</span>
+            <span className="font-bold text-foreground text-xl">
+              TanStack × Elysia
+            </span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   Welcome, {user.name}
                 </span>
                 <Button asChild variant="outline">
@@ -84,23 +91,24 @@ function Home() {
 
       {/* Hero Section */}
       <section className="container py-20">
-        <div className="text-center max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+        <div className="mx-auto max-w-4xl space-y-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 font-medium text-primary text-sm">
             <Zap className="h-4 w-4" />
             Production-Ready Full-Stack Boilerplate
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground">
+
+          <h1 className="font-bold text-5xl text-foreground md:text-7xl">
             Build <span className="text-primary">blazing fast</span> apps
-            <br />with modern tech
+            <br />
+            with modern tech
           </h1>
-          
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            TanStack Start + Elysia.js + Better Auth + Drizzle ORM. 
-            Everything you need to ship production apps with confidence.
+
+          <p className="mx-auto max-w-2xl text-muted-foreground text-xl">
+            TanStack Start + Elysia.js + Better Auth + Drizzle ORM. Everything
+            you need to ship production apps with confidence.
           </p>
-          
-          <div className="flex gap-4 justify-center pt-4">
+
+          <div className="flex justify-center gap-4 pt-4">
             <Button asChild size="lg" className="gap-2">
               <Link to="/count">
                 Live Demo
@@ -108,7 +116,11 @@ function Home() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="gap-2">
-              <a href="https://github.com/yourusername/yourrepo" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://github.com/yourusername/yourrepo"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Github className="h-4 w-4" />
                 View on GitHub
               </a>
@@ -119,11 +131,11 @@ function Home() {
 
       {/* Features Grid */}
       <section className="container py-20">
-        <h2 className="text-3xl font-bold text-center mb-12 text-foreground">
+        <h2 className="mb-12 text-center font-bold text-3xl text-foreground">
           Everything included, zero configuration
         </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <FeatureCard
             icon={<Server className="h-6 w-6" />}
             title="TanStack Start + Elysia"
@@ -159,39 +171,49 @@ function Home() {
 
       {/* Tech Stack Section */}
       <section className="container py-20">
-        <div className="bg-card rounded-2xl border p-8 md:p-12">
-          <h2 className="text-3xl font-bold mb-8 text-card-foreground">Modern Tech Stack</h2>
-          
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="rounded-2xl border bg-card p-8 md:p-12">
+          <h2 className="mb-8 font-bold text-3xl text-card-foreground">
+            Modern Tech Stack
+          </h2>
+
+          <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <h3 className="font-semibold mb-4 text-primary">Frontend</h3>
+              <h3 className="mb-4 font-semibold text-primary">Frontend</h3>
               <ul className="space-y-2">
                 {[
                   "TanStack Start (React + SSR)",
                   "TanStack Query for data fetching",
                   "Tailwind CSS v4 + shadcn/ui",
                   "Jotai for state management",
-                  "PostHog analytics"
-                ].map(item => (
-                  <li key={item} className="flex items-center gap-2 text-muted-foreground">
+                  "PostHog analytics",
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 text-muted-foreground"
+                  >
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            
+
             <div>
-              <h3 className="font-semibold mb-4 text-primary">Backend & Infrastructure</h3>
+              <h3 className="mb-4 font-semibold text-primary">
+                Backend & Infrastructure
+              </h3>
               <ul className="space-y-2">
                 {[
                   "Elysia.js with Better Auth",
                   "Drizzle ORM + PostgreSQL",
                   "Eden Treaty for type-safe APIs",
                   "Stripe payments integration",
-                  "AWS S3 file storage"
-                ].map(item => (
-                  <li key={item} className="flex items-center gap-2 text-muted-foreground">
+                  "AWS S3 file storage",
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 text-muted-foreground"
+                  >
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                     {item}
                   </li>
@@ -204,14 +226,14 @@ function Home() {
 
       {/* CTA Section */}
       <section className="container py-20 text-center">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold text-foreground">
+        <div className="mx-auto max-w-2xl space-y-6">
+          <h2 className="font-bold text-3xl text-foreground">
             Ready to build something amazing?
           </h2>
           <p className="text-muted-foreground">
             Get started in minutes with our production-ready boilerplate
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex justify-center gap-4">
             {user ? (
               <Button asChild size="lg" className="gap-2">
                 <Link to="/dashboard">
@@ -234,15 +256,19 @@ function Home() {
   );
 }
 
-function FeatureCard({ icon, title, description }: { 
-  icon: React.ReactNode; 
-  title: string; 
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
   description: string;
 }) {
   return (
-    <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-200">
+    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg">
       <CardHeader>
-        <div className="p-2 bg-primary/10 rounded-lg w-fit mb-2 text-primary">
+        <div className="mb-2 w-fit rounded-lg bg-primary/10 p-2 text-primary">
           {icon}
         </div>
         <CardTitle className="text-lg">{title}</CardTitle>
