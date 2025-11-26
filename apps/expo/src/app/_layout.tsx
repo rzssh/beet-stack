@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { queryClient } from "~/utils/api";
 
@@ -12,20 +13,22 @@ import "../styles.css";
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <QueryClientProvider client={queryClient}>
-      {/*
-          The Stack component displays the current page.
-          It also allows you to configure your screens
-        */}
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: "#c03484" },
-          contentStyle: {
-            backgroundColor: colorScheme === "dark" ? "#09090B" : "#FFFFFF",
-          },
-        }}
-      />
-      <StatusBar />
-    </QueryClientProvider>
+    <KeyboardProvider>
+      <QueryClientProvider client={queryClient}>
+        {/*
+            The Stack component displays the current page.
+            It also allows you to configure your screens
+          */}
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: "#c03484" },
+            contentStyle: {
+              backgroundColor: colorScheme === "dark" ? "#09090B" : "#FFFFFF",
+            },
+          }}
+        />
+        <StatusBar />
+      </QueryClientProvider>
+    </KeyboardProvider>
   );
 }

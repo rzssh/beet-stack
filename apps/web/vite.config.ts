@@ -16,6 +16,7 @@ export default defineConfig({
       "@better-auth/expo",
       "nativewind",
       "react-native-*",
+      "@tanstack/start-server-core",
     ],
   },
   define: {

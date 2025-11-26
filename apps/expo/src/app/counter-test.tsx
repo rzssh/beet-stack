@@ -10,37 +10,21 @@ export default function CounterTest() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Query for getting count
   const {
     data: countData,
     isLoading: isCountLoading,
     error: countError,
   } = useQuery({
     queryKey: ["count"],
-    queryFn: async () => {
-      try {
-        const response = await api.count.get();
-        console.log("Count response:", response);
-        return response;
-      } catch (error) {
-        console.error("Count query error:", error);
-        throw error;
-      }
-    },
+    queryFn: () => api.count.get(),
     refetchInterval: false,
   });
 
-  // Mutation for incrementing count
   const incrementMutation = useMutation({
     mutationFn: async () => {
       setIsLoading(true);
       try {
-        const response = await api.count.post();
-        console.log("Increment response:", response);
-        return response;
-      } catch (error) {
-        console.error("Increment mutation error:", error);
-        throw error;
+        return await api.count.post();
       } finally {
         setIsLoading(false);
       }

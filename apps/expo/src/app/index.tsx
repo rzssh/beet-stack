@@ -1,8 +1,19 @@
-import { LegendList } from "@legendapp/list";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
-import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  type TextInput as TextInputType,
+  View,
+} from "react-native";
+import {
+  KeyboardAvoidingView,
+  KeyboardToolbar,
+} from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { messageMutations, messageQueries } from "~/utils/api";
@@ -43,6 +54,8 @@ function CreateMessage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
+  const contentRef = useRef<TextInputType>(null);
+
   const { mutate, error, isPending } = useMutation({
     ...messageMutations.create(),
     async onSuccess() {
@@ -52,25 +65,34 @@ function CreateMessage() {
     },
   });
 
+  const handleSubmit = () => {
+    if (title.trim() && content.trim()) {
+      mutate({ title, content });
+    }
+  };
+
   return (
-    <View className="mt-4 flex gap-2">
+    <View className="flex gap-2 border-input border-t bg-background p-4 pb-6">
       <TextInput
         className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
         value={title}
         onChangeText={setTitle}
         placeholder="Title"
+        returnKeyType="next"
+        onSubmitEditing={() => contentRef.current?.focus()}
       />
       <TextInput
+        ref={contentRef}
         className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
         value={content}
         onChangeText={setContent}
         placeholder="Content"
+        returnKeyType="done"
+        onSubmitEditing={handleSubmit}
       />
       <Pressable
         className="flex items-center rounded-sm bg-primary p-2"
-        onPress={() => {
-          mutate({ title, content });
-        }}
+        onPress={handleSubmit}
         disabled={isPending}
       >
         <Text className="text-foreground">
@@ -124,37 +146,58 @@ export default function Index() {
   });
 
   return (
-    <SafeAreaView>
-      {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "Home Page" }} />
-      <View className="h-full w-full bg-background p-4">
-        <Text className="pb-2 text-center font-bold text-5xl text-foreground">
-          Create <Text className="text-primary">T3</Text> Turbo
-        </Text>
+    <>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
+        <Stack.Screen options={{ title: "Home Page" }} />
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={140}
+          style={{ flex: 1 }}
+        >
+          {/* Header */}
+          <View className="p-4">
+            <Text className="pb-2 text-center font-bold text-5xl text-foreground">
+              Create <Text className="text-primary">T3</Text> Turbo
+            </Text>
 
-        <MobileAuth />
+            <MobileAuth />
 
-        <View className="py-2">
-          <Text className="font-semibold text-primary italic">
-            Press on a message
-          </Text>
-        </View>
+            <View className="py-2">
+              <Text className="font-semibold text-primary italic">
+                Press on a message
+              </Text>
+            </View>
+          </View>
 
-        <LegendList<Message>
-          data={messages}
-          estimatedItemSize={20}
-          keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <View className="h-2" />}
-          renderItem={(p) => (
-            <MessageCard
-              message={p.item}
-              onDelete={() => deleteMessageMutation.mutate(p.item.id)}
-            />
-          )}
+          {/* Messages - scrollable, takes remaining space */}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 8, padding: 16, paddingTop: 0 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {messages.map((message) => (
+              <MessageCard
+                key={message.id}
+                message={message}
+                onDelete={() => deleteMessageMutation.mutate(message.id)}
+              />
+            ))}
+          </ScrollView>
+
+          {/* Input at bottom */}
+          <CreateMessage />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+      <KeyboardToolbar>
+        <KeyboardToolbar.Next />
+        <KeyboardToolbar.Prev />
+        <KeyboardToolbar.Done
+          onPress={(e) => {
+            e.preventDefault();
+            Keyboard.dismiss();
+          }}
         />
-
-        <CreateMessage />
-      </View>
-    </SafeAreaView>
+      </KeyboardToolbar>
+    </>
   );
 }

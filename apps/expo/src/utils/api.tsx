@@ -52,10 +52,6 @@ export const messageMutations = {
   create: () => ({
     mutationFn: async (data: { title: string; content: string }) => {
       const response = await api.messages.post(data);
-      console.log(response.status);
-      console.log(response.data);
-      console.log(response.error);
-      console.log(response.headers);
       if (response.error) {
         throw new Error("Failed to create message");
       }

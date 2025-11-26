@@ -5,7 +5,10 @@ import { Elysia } from "elysia";
 import type { Auth } from "~/auth";
 import { env } from "~/env";
 import { rateLimit } from "~/server";
-import { createAttachMiddleware, type Logger } from "~/server/middleware/attach";
+import {
+  createAttachMiddleware,
+  type Logger,
+} from "~/server/middleware/attach";
 
 type CreateServerConfigurationParams = {
   serviceName?: string;
@@ -34,6 +37,7 @@ export const createServerConfiguration = ({
     .use(opentelemetry())
     .use(
       swagger({
+        path: "/docs",
         documentation: {
           info: {
             title: `${serviceName} API`,

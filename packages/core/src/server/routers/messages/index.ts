@@ -15,12 +15,6 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
     messageInput: messageInputModel,
     messageIdParams,
   })
-  .onTransform(({ body, params, path, request: { method } }) => {
-    console.log(`${method} ${path}`, {
-      body,
-      params,
-    });
-  })
   .get(
     "/",
     async ({ messagesService }) => {

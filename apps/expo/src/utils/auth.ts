@@ -5,8 +5,11 @@ import * as SecureStore from "expo-secure-store";
 /**
  * Auth client for Expo
  *
- * Uses local dev server URL which has oAuthProxy configured to handle OAuth flows.
- * The local server proxies OAuth through production (where callbacks are registered).
+ * Uses production URL for authentication because OAuth callbacks must be registered
+ * with a fixed URL (production). The user will be synced to local DB on first
+ * authenticated API request (see auth middleware in @acme/core).
+ *
+ * For API calls, use the api client which points to localhost in development.
  */
 export const authClient = createAuthClient({
   baseURL: process.env.EXPO_PUBLIC_APP_URL,

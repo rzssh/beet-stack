@@ -13,6 +13,5 @@ export const auth = initAuth({
       clientSecret: env.DISCORD_CLIENT_SECRET,
     },
   },
-
   extraPlugins: [tanstackStartCookies()],
 });

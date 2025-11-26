@@ -3,7 +3,7 @@ import { expo } from "@better-auth/expo";
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import { oAuthProxy, openAPI } from "better-auth/plugins";
 import { env } from "~/env";
 
 export function initAuth<
@@ -32,9 +32,9 @@ export function initAuth<
       },
     },
     plugins: [
-      oAuthProxy({
-        productionURL: options.productionUrl,
-      }),
+      // /api/auth/reference
+      openAPI(),
+      oAuthProxy({ productionURL: options.productionUrl }),
       expo(),
       ...(options.extraPlugins ?? []),
     ],
