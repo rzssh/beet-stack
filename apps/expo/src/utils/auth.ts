@@ -2,8 +2,6 @@ import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 
-import { getBaseUrl } from "./base-url";
-
 /**
  * Auth client for Expo
  *
@@ -11,7 +9,7 @@ import { getBaseUrl } from "./base-url";
  * The local server proxies OAuth through production (where callbacks are registered).
  */
 export const authClient = createAuthClient({
-  baseURL: getBaseUrl(),
+  baseURL: process.env.EXPO_PUBLIC_APP_URL,
   plugins: [
     expoClient({
       scheme: "expo",
