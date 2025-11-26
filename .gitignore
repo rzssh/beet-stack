@@ -1,0 +1,22 @@
+logs
+_.log
+npm-debug.log_
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+dist
+tsc-build
+node_modules/
+# TODO: weird logs are spawning, should debug
+apps/server/server
+
+.env
+.env.production
+
+.expo
+.DS_Store
+.turbo
+.cache
+.tanstack

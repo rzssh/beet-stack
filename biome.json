@@ -1,0 +1,119 @@
+{
+  "$schema": "node_modules/@biomejs/biome/configuration_schema.json",
+  "css": { "parser": { "tailwindDirectives": true } },
+  "assist": {
+    "enabled": true,
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noMisleadingCharacterClass": "warn",
+        "noDuplicateClassMembers": "off",
+        "noRedeclare": "off",
+        "noDoubleEquals": "warn",
+        "noAssignInExpressions": "warn",
+        "noControlCharactersInRegex": "warn",
+        "noDuplicateParameters": "warn",
+        "noDuplicateObjectKeys": "warn",
+        "noDuplicateCase": "warn",
+        "noCatchAssign": "warn",
+        "noFallthroughSwitchClause": "warn",
+        "noFunctionAssign": "warn",
+        "noLabelVar": "warn",
+        "noConfusingLabels": "warn",
+        "noUnsafeNegation": "warn",
+        "noSelfCompare": "warn",
+        "noShadowRestrictedNames": "warn",
+        "useGetterReturn": "warn",
+        "noCommentText": "warn",
+        "noDuplicateJsxProps": "warn",
+        "noExplicitAny": "warn",
+        "noUnsafeDeclarationMerging": "warn",
+        "noArrayIndexKey": "off"
+      },
+      "correctness": {
+        "noUndeclaredVariables": "off",
+        "noUnusedVariables": "off",
+        "noUnusedImports": "error",
+        "noConstAssign": "warn",
+        "noEmptyCharacterClassInRegex": "warn",
+        "noEmptyPattern": "warn",
+        "noGlobalObjectCalls": "warn",
+        "noSelfAssign": "warn",
+        "noUnreachableSuper": "warn",
+        "noUnreachable": "warn",
+        "noUnusedLabels": "warn",
+        "useExhaustiveDependencies": "warn",
+        "useYield": "warn",
+        "useIsNan": "warn",
+        "useHookAtTopLevel": "error",
+        "useJsxKeyInIterable": "warn"
+      },
+      "complexity": {
+        "noUselessConstructor": "off",
+        "noUselessLabel": "warn",
+        "noUselessRename": "warn",
+        "noForEach": "off"
+      },
+      "style": {
+        "noUnusedTemplateLiteral": "off",
+        "noRestrictedGlobals": "error",
+        "useLiteralEnumMembers": "off",
+        "noNonNullAssertion": "warn"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "warn",
+        "useAltText": "warn",
+        "useAnchorContent": "warn",
+        "useValidAnchor": "warn",
+        "useAriaActivedescendantWithTabindex": "warn",
+        "useValidAriaProps": "warn",
+        "useValidAriaValues": "warn",
+        "useValidAriaRole": "warn",
+        "noAriaUnsupportedElements": "warn",
+        "useHeadingContent": "warn",
+        "useIframeTitle": "warn",
+        "noAccessKey": "warn",
+        "noDistractingElements": "warn",
+        "noRedundantAlt": "warn",
+        "useAriaPropsForRole": "warn",
+        "noHeaderScope": "warn",
+        "useButtonType": "warn",
+        "useKeyWithClickEvents": "off",
+        "noNoninteractiveTabindex": "warn"
+      },
+      "performance": { "noDelete": "off", "noAccumulatingSpread": "warn" },
+      "security": { "noDangerouslySetInnerHtml": "warn" },
+      "nursery": { "useSortedClasses": { "level": "warn", "fix": "safe" } }
+    },
+    "includes": [
+      "**/*.{ts,tsx,json,css}",
+      "!node_modules/**",
+      "!bun.lock",
+      "!dist/**"
+    ]
+  },
+  "formatter": {
+    "useEditorconfig": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "expand": "auto",
+    "includes": [
+      "**/*.{ts,tsx,json,css}",
+      "!node_modules/**",
+      "!bun.lock",
+      "!dist/**"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": [
+        "packages/tsconfig/**/*.{json}",
+        "apps/web/src/routeTree.gen.ts"
+      ],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@acme/server",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./app": {
+      "types": "./src/app.d.ts",
+      "default": "./src/app.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server ./src/index.ts",
+    "build:types": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "PORT=3001 bun with-env --watch src/index.ts",
+    "start": "bun run --filter=@acme/db db:migrate && bunx dotenv-cli -e ../../.env ./server",
+    "with-env": "bun --env-file=../../.env --bun",
+    "fixall": "biome check --write --diagnostic-level=error .",
+    "lint": "biome lint --write --diagnostic-level=error .",
+    "format": "biome format --write --diagnostic-level=error .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules dist"
+  },
+  "dependencies": {
+    "@acme/core": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@elysiajs/cors": "catalog:",
+    "@elysiajs/opentelemetry": "catalog:",
+    "@elysiajs/swagger": "catalog:",
+    "@sentry/bun": "catalog:",
+    "elysia": "catalog:",
+    "pino": "catalog:",
+    "pino-pretty": "catalog:",
+    "postgres": "catalog:",
+    "resend": "catalog:",
+    "stripe": "catalog:"
+  },
+  "module": "src/index.ts",
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "@acme/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./src/index.ts" },
+    "./env": { "types": "./dist/env.d.ts", "default": "./src/env.ts" },
+    "./auth": { "types": "./dist/auth.d.ts", "default": "./src/auth.ts" },
+    "./integrations": {
+      "types": "./dist/integrations/index.d.ts",
+      "default": "./src/integrations/index.ts"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "default": "./src/server/index.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules dist",
+    "fixall": "biome check --write --diagnostic-level=error .",
+    "lint": "biome lint --write --diagnostic-level=error .",
+    "format": "biome format --write --diagnostic-level=error ."
+  },
+  "dependencies": {
+    "@acme/db": "workspace:*",
+    "@better-auth/expo": "catalog:",
+    "@elysiajs/cors": "catalog:",
+    "@elysiajs/opentelemetry": "catalog:",
+    "@elysiajs/swagger": "catalog:",
+    "@sentry/bun": "catalog:",
+    "@t3-oss/env-core": "catalog:",
+    "better-auth": "catalog:",
+    "elysia": "catalog:",
+    "pino": "catalog:",
+    "resend": "catalog:",
+    "stripe": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

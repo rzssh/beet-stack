@@ -1,0 +1,10 @@
+{
+  "extends": "@acme/tsconfig/compiled-package.json",
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "~/*": ["./src/*"] }
+  },
+  "references": [{ "path": "../../packages/core" }]
+}

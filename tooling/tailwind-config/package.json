@@ -1,0 +1,20 @@
+{
+  "name": "@acme/tailwind-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme": "./theme.css",
+    "./postcss-config": "./postcss-config.js"
+  },
+  "license": "MIT",
+  "scripts": { "clean": "rm -rf .cache .turbo node_modules" },
+  "dependencies": {
+    "@tailwindcss/postcss": "catalog:react",
+    "tailwindcss": "catalog:react"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

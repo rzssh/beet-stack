@@ -1,0 +1,54 @@
+{
+  "name": "@acme/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./src/client.ts"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./src/schema.ts"
+    },
+    "./auth-schema": {
+      "types": "./dist/auth-schema.d.ts",
+      "default": "./src/auth-schema.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "bun run --watch tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules dist",
+    "fixall": "biome check --write --diagnostic-level=error .",
+    "lint": "biome lint --write --diagnostic-level=error .",
+    "format": "biome format --write --diagnostic-level=error .",
+    "db:generate": "bun with-env drizzle-kit generate",
+    "db:migrate": "bun with-env drizzle-kit migrate",
+    "db:push": "bun with-env drizzle-kit push",
+    "db:reset": "bun with-env ./reset-db.ts",
+    "db:seed": "bun with-env ./src/seed.ts",
+    "db:studio": "bun with-env drizzle-kit studio",
+    "with-env": "bun --env-file=../../.env --"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "catalog:",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "postgres": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "drizzle-kit": "catalog:",
+    "typescript": "catalog:"
+  }
+}

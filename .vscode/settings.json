@@ -1,0 +1,17 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.paths": true,
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports": "explicit",
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  // AI Assistant Configuration Comments
+  "// AI_IMPORT_STYLE": "Use ~/path absolute imports, never relative imports",
+  "// AI_NULL_CHECKS": "Use ?? nullish coalescing, not || logical OR",
+  "// AI_BACKEND_LOGGING": "Use logger from @acme/core/logger, never console",
+  "// AI_BACKEND_ERRORS": "Use structured errors from ~/core/errors",
+  "// AI_FRONTEND_AUTH": "Use Route.useLoaderData() or authClientRepo.useSession()"
+}

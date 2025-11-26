@@ -1,0 +1,106 @@
+# Serverless Framework configuration for AWS Lambda deployment
+service: elysia-better-auth-api
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 1024
+  timeout: 30
+  environment:
+    NODE_ENV: production
+    STAGE: ${self:provider.stage}
+    DATABASE_URL: ${env:DATABASE_URL}
+    AUTH_SECRET: ${env:AUTH_SECRET}
+    AUTH_URL: ${env:AUTH_URL}
+    DISCORD_CLIENT_ID: ${env:DISCORD_CLIENT_ID}
+    DISCORD_CLIENT_SECRET: ${env:DISCORD_CLIENT_SECRET}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+
+package:
+  exclude:
+    - "**"
+  include:
+    - "lambda-handler.js"
+    - "node_modules/**"
+    - "apps/server/dist/**"
+
+functions:
+  api:
+    handler: lambda-handler.handler
+    events:
+      - http:
+          path: "/{proxy+}"
+          method: ANY
+          cors:
+            origin: "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      - http:
+          path: "/"
+          method: ANY
+          cors:
+            origin: "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+plugins:
+  - serverless-offline
+  - serverless-bundle
+
+custom:
+  bundle:
+    linting: false
+  serverless-offline:
+    httpPort: 3001
+    host: 0.0.0.0
+
+# CloudFormation resources
+resources:
+  Resources:
+    # API Gateway Custom Domain (optional)
+    ApiDomainName:
+      Type: AWS::ApiGateway::DomainName
+      Condition: HasCustomDomain
+      Properties:
+        DomainName: ${env:CUSTOM_DOMAIN, ''}
+        CertificateArn: ${env:SSL_CERTIFICATE_ARN, ''}
+
+  Conditions:
+    HasCustomDomain: !Not [!Equals [${env:CUSTOM_DOMAIN, ''}, '']]
+
+  Outputs:
+    ApiUrl:
+      Description: "API Gateway endpoint URL"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: "ApiGatewayRestApi"
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - ${self:provider.stage}
