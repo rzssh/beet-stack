@@ -17,32 +17,30 @@ class Analytics {
     posthog.init(key, {
       api_host: host,
       person_profiles: "identified_only",
-      capture_pageview: false, // We'll manually capture pageviews
+      capture_pageview: false,
       capture_pageleave: true,
     });
 
     this.initialized = true;
   }
 
-  identify(userId: string, properties?: Record<string, any>) {
+  identify(userId: string, properties?: Record<string, unknown>) {
     if (!this.initialized) return;
     posthog.identify(userId, properties);
   }
 
-  track(event: string, properties?: Record<string, any>) {
+  track(event: string, properties?: Record<string, unknown>) {
     if (!this.initialized) return;
     posthog.capture(event, properties);
   }
 
-  capture(event: string, properties?: Record<string, any>) {
+  capture(event: string, properties?: Record<string, unknown>) {
     return this.track(event, properties);
   }
 
   pageview(pathname?: string) {
     if (!this.initialized) return;
-    posthog.capture("$pageview", {
-      $current_url: pathname || window.location.href,
-    });
+    posthog.capture("$pageview", { $current_url: pathname ?? window.location.href });
   }
 
   reset() {
@@ -50,25 +48,15 @@ class Analytics {
     posthog.reset();
   }
 
-  // Common events for SaaS apps
   events = {
     signUp: (method: string) => this.track("user_signed_up", { method }),
     signIn: (method: string) => this.track("user_signed_in", { method }),
     signOut: () => this.track("user_signed_out"),
-
-    // Payment events
     planSelected: (plan: string) => this.track("plan_selected", { plan }),
-    paymentStarted: (plan: string, amount: number) =>
-      this.track("payment_started", { plan, amount }),
-    paymentCompleted: (plan: string, amount: number) =>
-      this.track("payment_completed", { plan, amount }),
-
-    // Feature usage
+    paymentStarted: (plan: string, amount: number) => this.track("payment_started", { plan, amount }),
+    paymentCompleted: (plan: string, amount: number) => this.track("payment_completed", { plan, amount }),
     featureUsed: (feature: string) => this.track("feature_used", { feature }),
-
-    // Custom events
-    custom: (event: string, properties?: Record<string, any>) =>
-      this.track(event, properties),
+    custom: (event: string, properties?: Record<string, unknown>) => this.track(event, properties),
   };
 }
 

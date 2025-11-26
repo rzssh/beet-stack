@@ -1,11 +1,9 @@
 import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
-
 import { getMicroserviceUrl } from "./base-url";
 
-// Use production URL if set, otherwise fall back to local microservice
-const authBaseUrl = process.env.EXPO_PUBLIC_APP_URL || getMicroserviceUrl();
+const authBaseUrl = process.env.EXPO_PUBLIC_APP_URL ?? getMicroserviceUrl();
 
 export const authClient = createAuthClient({
   baseURL: authBaseUrl,

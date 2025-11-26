@@ -78,7 +78,6 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
 
         <ScriptOnce>
           {`
-            // Initialize PostHog
             window.POSTHOG_KEY = '${import.meta.env.VITE_POSTHOG_KEY || ""}';
             window.POSTHOG_HOST = '${import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com"}';
           `}
