@@ -5,13 +5,23 @@ import Constants from "expo-constants";
  * - Development: Auto-detects local dev server IP
  * - Production: Uses EXPO_PUBLIC_APP_URL
  */
-export const getBaseUrl = () => {
+export const getLocalhost = () => {
   const debuggerHost = Constants.expoConfig?.hostUri;
   const localhost = debuggerHost?.split(":")[0];
 
   if (!localhost) {
-    throw new Error("Failed to get localhost. Please set EXPO_PUBLIC_APP_URL.");
+    throw new Error("Failed to get localhost.");
   }
 
+  return localhost;
+};
+
+export const getBaseUrl = () => {
+  const localhost = getLocalhost();
   return `http://${localhost}:3000`;
+};
+
+export const getMicroserviceUrl = () => {
+  const localhost = getLocalhost();
+  return `http://${localhost}:3001`;
 };

@@ -1,21 +1,25 @@
 import { db } from "@acme/db/client";
-import { user as userTable, eq } from "@acme/db";
+import { eq, user as userTable } from "@acme/db";
 import { Elysia } from "elysia";
 import type { Auth } from "~/auth";
 import { env } from "~/env";
+import type { Logger } from "./attach";
 
 /**
  * Ensures user exists in local database when authenticated via external auth.
  * Required for Expo: authenticates against production but makes API calls to localhost.
  * Only runs in development mode.
  */
-async function ensureUserExistsLocally(sessionUser: {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  image?: string | null;
-}) {
+async function ensureUserExistsLocally(
+  sessionUser: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image?: string | null;
+  },
+  logger?: Logger,
+) {
   if (env.NODE_ENV !== "development") return;
 
   try {
@@ -34,6 +38,7 @@ async function ensureUserExistsLocally(sessionUser: {
       .limit(1);
 
     if (existingByEmail.length > 0) {
+      logger?.debug({ email: sessionUser.email }, "Syncing user by email");
       await db
         .update(userTable)
         .set({
@@ -46,6 +51,7 @@ async function ensureUserExistsLocally(sessionUser: {
       return;
     }
 
+    logger?.debug({ id: sessionUser.id, email: sessionUser.email }, "Creating local user");
     await db.insert(userTable).values({
       id: sessionUser.id,
       name: sessionUser.name,
@@ -58,28 +64,29 @@ async function ensureUserExistsLocally(sessionUser: {
   }
 }
 
-export const createAuthMiddleware = (auth: Auth) =>
-  new Elysia({ name: "better-auth" }).mount(auth.handler).macro({
-    auth: {
-      async resolve({ status, request: { headers } }) {
-        const session = await auth.api.getSession({
-          headers,
-        });
+export const createAuthMiddleware = (auth: Auth, logger?: Logger) =>
+  new Elysia({ name: "better-auth" })
+    .mount(auth.handler)
+    .macro({
+      auth: {
+        async resolve({ status, request: { headers } }) {
+          const session = await auth.api.getSession({ headers });
 
-        if (!session)
-          return status(401, {
-            success: false,
-            message:
-              "Unauthorized: Please check your credentials and permissions",
-          });
+          if (!session) {
+            logger?.debug("No session found");
+            return status(401, {
+              success: false,
+              message: "Unauthorized: Please check your credentials and permissions",
+            });
+          }
 
-        // Sync user to local DB if needed (for oAuthProxy flow in development)
-        await ensureUserExistsLocally(session.user);
+          logger?.debug({ userId: session.user.id }, "Session valid");
+          await ensureUserExistsLocally(session.user, logger);
 
-        return {
-          user: session.user,
-          session: session.session,
-        };
+          return {
+            user: session.user,
+            session: session.session,
+          };
+        },
       },
-    },
-  });
+    });

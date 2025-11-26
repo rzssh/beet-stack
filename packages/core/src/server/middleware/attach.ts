@@ -26,7 +26,7 @@ export type ElysiaWithCore = ReturnType<typeof createAttachMiddlewareBase>;
 const createAttachMiddlewareBase = (auth: Auth, logger: Logger) =>
   new Elysia()
     .use(requestLogger(logger))
-    .use(createAuthMiddleware(auth))
+    .use(createAuthMiddleware(auth, logger))
     .state("env", env)
     .decorate("logger", logger)
     .decorate("auth", auth)

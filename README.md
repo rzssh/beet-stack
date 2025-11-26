@@ -85,11 +85,41 @@ bun --filter=@acme/expo dev     # Just mobile app
 
 ## 🎯 Key Features
 
-### 🔐 **Smart Authentication**
+### 🔐 **Authentication**
 
-- **Better Auth** with email/password + OAuth (Discord, GitHub, Google)
-- **Context-aware**: server-side session handling, client-side React hooks
-- **Cross-platform**: same auth flow works on web and mobile
+Built with **Better Auth** supporting email/password and OAuth (Discord, GitHub, Google).
+
+#### Local Development Setup
+
+**Web + Expo with shared local database:**
+
+```bash
+# .env
+APP_URL="http://localhost:3000"           # Web app
+MICROSERVICE_URL="http://192.168.0.4:3001" # Microservice at local IP for Expo
+
+# apps/expo/.env
+EXPO_PUBLIC_APP_URL="http://192.168.0.4:3001" # Or leave unset
+```
+
+- Web: Uses localhost:3000, gets its own session cookie
+- Expo: Uses microservice at local IP, gets its own session cookie
+- Both share the same local database - sessions are valid across both
+- Register `http://192.168.0.4:3001/api/auth/callback/<provider>` in OAuth app
+- Phone must be on same network as dev machine
+
+**Production OAuth (alternative):**
+
+For OAuth providers with single callback URL, use production for auth:
+
+```bash
+# .env
+AUTH_DATABASE_URL="postgres://..."  # Production DB for shared auth state
+BETTER_AUTH_URL="https://your-app.com"
+
+# apps/expo/.env
+EXPO_PUBLIC_APP_URL="https://your-app.com"
+```
 
 ### 🌐 **Type-Safe APIs**
 

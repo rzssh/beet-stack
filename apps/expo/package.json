@@ -51,6 +51,7 @@
     "@acme/web": "workspace:*",
     "@tailwindcss/postcss": "catalog:react",
     "@types/react": "catalog:react",
+    "elysia": "catalog:",
     "tailwindcss": "catalog:react",
     "typescript": "catalog:"
   }

@@ -22,6 +22,8 @@ export const sharedEnvSchema = z.object({
 const serverEnvSchema = z.object({
   // Database
   DATABASE_URL: z.url(),
+  // Auth database - uses production DB for OAuth state sharing across environments
+  AUTH_DATABASE_URL: z.url().optional(),
 
   // Server
   PORT: z.coerce.number().default(3000),
