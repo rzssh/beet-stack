@@ -10,48 +10,36 @@ interface ApiErrorResponse {
     requestId?: string;
     timestamp?: string;
     path?: string;
-    context?: Record<string, any>;
+    context?: Record<string, unknown>;
   };
 }
 
-function isApiError(error: any): error is ApiErrorResponse {
+function isApiError(error: unknown): error is ApiErrorResponse {
   return (
     typeof error === "object" &&
-    error?.error &&
-    typeof error.error.message === "string" &&
-    typeof error.error.code === "string"
+    error !== null &&
+    "error" in error &&
+    typeof (error as ApiErrorResponse).error?.message === "string" &&
+    typeof (error as ApiErrorResponse).error?.code === "string"
   );
 }
 
 function getErrorMessage(error: unknown): string {
-  if (isApiError(error)) {
-    return error.error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === "string") {
-    return error;
-  }
-
+  if (isApiError(error)) return error.error.message;
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
   return "An unexpected error occurred";
 }
 
 function getErrorCode(error: unknown): string | undefined {
-  if (isApiError(error)) {
-    return error.error.code;
-  }
+  if (isApiError(error)) return error.error.code;
   return undefined;
 }
 
-// Global error handler for mutations
 function handleMutationError(error: unknown) {
   const errorMessage = getErrorMessage(error);
   const errorCode = getErrorCode(error);
 
-  // Track API errors in analytics
   analytics.capture("api_error", {
     error_message: errorMessage,
     error_code: errorCode,
@@ -59,33 +47,22 @@ function handleMutationError(error: unknown) {
     timestamp: new Date().toISOString(),
   });
 
-  // Show user-friendly error toast
   toast.error(errorMessage);
-
   console.error("API Error:", error);
 }
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60, // 1 minute
+      staleTime: 1000 * 60,
       retry: (failureCount, error) => {
-        // Don't retry client errors (4xx) except for 408, 429
         if (isApiError(error)) {
           const statusCode = error.error.statusCode;
-          if (
-            statusCode >= 400 &&
-            statusCode < 500 &&
-            statusCode !== 408 &&
-            statusCode !== 429
-          ) {
+          if (statusCode >= 400 && statusCode < 500 && statusCode !== 408 && statusCode !== 429) {
             return false;
           }
         }
-
-        // Retry up to 3 times for server errors
         return failureCount < 3;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

@@ -2,13 +2,11 @@ import type { MutationOptions } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { authClient } from "~/lib/auth/client";
 
-// Query keys
 export const authKeys = {
   user: ["user"] as const,
   session: ["session"] as const,
 };
 
-// Types
 export type SignInCredentials = {
   email: string;
   password: string;
@@ -27,13 +25,11 @@ export type SocialSignInCredentials = {
   callbackURL?: string;
 };
 
-// Query options
 export const userQueryOptions = queryOptions({
   queryKey: authKeys.user,
   queryFn: () => authClient.getSession(),
 });
 
-// Mutation options
 export const emailSignInMutationOptions: MutationOptions<
   unknown,
   Error,
@@ -42,11 +38,7 @@ export const emailSignInMutationOptions: MutationOptions<
   mutationKey: [...authKeys.user, "signin"],
   mutationFn: async (credentials: SignInCredentials) => {
     const res = await authClient.signIn.email(credentials);
-
-    if (res.error) {
-      throw new Error(res.error.message);
-    }
-
+    if (res.error) throw new Error(res.error.message);
     return res;
   },
 };

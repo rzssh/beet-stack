@@ -21,11 +21,8 @@ new Elysia()
     staticPlugin({
       assets: "dist/client",
       prefix: "/",
-      alwaysStatic: true,
-      // alwaysFallback: true, // Let TanStack Start handle if file doesn't exist
+      alwaysStatic: true, // Let TanStack Start handle if file doesn't exist (?)
     }),
   )
-  .all("*", async ({ request }) => {
-    return handler.fetch(request);
-  })
+  .all("*", async ({ request }) => handler.fetch(request))
   .listen({ port, hostname: host });

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Auth validation schemas
 export const signInSchema = z.object({
   email: z.email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -21,7 +20,6 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-// Types
 export type SignIn = z.infer<typeof signInSchema>;
 export type SignUp = z.infer<typeof signUpSchema>;
 export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
