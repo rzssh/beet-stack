@@ -9,7 +9,7 @@ export const Route = createFileRoute("/messages/$messageId")({
     // Server-side prefetching following TanStack Start best practices
     try {
       const { data } = await api().messages({ id: params.messageId }).get();
-      return { message: data?.message ?? null };
+      return { message: data ?? null };
     } catch {
       return { message: null };
     }

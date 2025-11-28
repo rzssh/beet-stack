@@ -11,7 +11,7 @@ export const useMessagesQuery = () => {
     queryKey: messageKeys.all,
     queryFn: async () => {
       const response = await api().messages.get();
-      return response.data?.messages ?? [];
+      return response.data ?? [];
     },
   });
 };
@@ -21,7 +21,7 @@ export const useMessageQuery = ({ id }: { id: string }) => {
     queryKey: messageKeys.detail(id),
     queryFn: async () => {
       const { data } = await api().messages({ id }).get();
-      return data?.message ?? null;
+      return data ?? null;
     },
     enabled: !!id,
   });

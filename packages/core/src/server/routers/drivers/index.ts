@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, status } from "elysia";
 import { createAttachMiddleware } from "~/server/middleware/attach";
 import {
   createDriverProfileInput,
@@ -35,7 +35,11 @@ export const driversRoutes = new Elysia({ prefix: "/drivers" })
   .guard({ auth: true }, (app) =>
     app
       .get("/profile", async ({ user, driversService }) => {
-        return driversService.getProfile(user.id);
+        const profile = await driversService.getProfile(user.id);
+        if (!profile) {
+          return status(400, { message: "Driver profile not found" });
+        }
+        return profile;
       })
       .post(
         "/profile",
@@ -58,19 +62,22 @@ export const driversRoutes = new Elysia({ prefix: "/drivers" })
         "/profile",
         async ({ body, user, driversService, status }) => {
           const profile = await driversService.updateProfile(user.id, body);
-          if (!profile) return status(400, { message: "Driver profile not found" });
+          if (!profile)
+            return status(400, { message: "Driver profile not found" });
           return profile;
         },
         { body: "updateDriverProfile" },
       )
       .post("/go-online", async ({ user, driversService, status }) => {
         const profile = await driversService.goOnline(user.id);
-        if (!profile) return status(400, { message: "Driver profile not found" });
+        if (!profile)
+          return status(400, { message: "Driver profile not found" });
         return profile;
       })
       .post("/go-offline", async ({ user, driversService, status }) => {
         const profile = await driversService.goOffline(user.id);
-        if (!profile) return status(400, { message: "Driver profile not found" });
+        if (!profile)
+          return status(400, { message: "Driver profile not found" });
         return profile;
       })
       .post(
@@ -82,7 +89,9 @@ export const driversRoutes = new Elysia({ prefix: "/drivers" })
               return status(400, { message: "Driver profile not found" });
             }
             if (result.error === "not_online") {
-              return status(400, { message: "Driver must be online to update location" });
+              return status(400, {
+                message: "Driver must be online to update location",
+              });
             }
           }
           return result.location;

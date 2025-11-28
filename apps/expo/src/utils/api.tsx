@@ -52,7 +52,9 @@ export const messageQueries = {
     queryFn: async () => {
       const response = await api.messages.get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch messages"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch messages"),
+        );
       }
       return response.data ?? [];
     },
@@ -62,7 +64,9 @@ export const messageQueries = {
     queryFn: async () => {
       const response = await api.messages({ id }).get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch message"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch message"),
+        );
       }
       return response.data;
     },
@@ -74,7 +78,9 @@ export const messageMutations = {
     mutationFn: async (data: { title: string; content: string }) => {
       const response = await api.messages.post(data);
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to create message"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to create message"),
+        );
       }
       return response.data;
     },
@@ -83,7 +89,9 @@ export const messageMutations = {
     mutationFn: async (id: string) => {
       const response = await api.messages({ id }).delete();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to delete message"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to delete message"),
+        );
       }
       return response.data;
     },
@@ -96,7 +104,9 @@ export const driverQueries = {
     queryFn: async () => {
       const response = await api.drivers.profile.get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch driver profile"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch driver profile"),
+        );
       }
       return response.data;
     },
@@ -108,7 +118,9 @@ export const driverQueries = {
         query: { lat, lng, radius },
       });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch nearby drivers"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch nearby drivers"),
+        );
       }
       return response.data ?? [];
     },
@@ -127,7 +139,12 @@ export const driverMutations = {
     }) => {
       const response = await api.drivers.profile.post(data);
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to create driver profile"));
+        throw new Error(
+          extractErrorMessage(
+            response.error,
+            "Failed to create driver profile",
+          ),
+        );
       }
       return response.data;
     },
@@ -136,7 +153,9 @@ export const driverMutations = {
     mutationFn: async () => {
       const response = await api.drivers["go-online"].post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to go online"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to go online"),
+        );
       }
       return response.data;
     },
@@ -145,7 +164,9 @@ export const driverMutations = {
     mutationFn: async () => {
       const response = await api.drivers["go-offline"].post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to go offline"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to go offline"),
+        );
       }
       return response.data;
     },
@@ -159,7 +180,9 @@ export const driverMutations = {
     }) => {
       const response = await api.drivers.location.post(data);
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to update location"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to update location"),
+        );
       }
       return response.data;
     },
@@ -172,7 +195,9 @@ export const rideQueries = {
     queryFn: async () => {
       const response = await api.rides.active.get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch active ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch active ride"),
+        );
       }
       return response.data;
     },
@@ -182,7 +207,9 @@ export const rideQueries = {
     queryFn: async () => {
       const response = await api.rides.history.get({ query: { mode } });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch ride history"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch ride history"),
+        );
       }
       return response.data ?? [];
     },
@@ -194,7 +221,9 @@ export const rideQueries = {
         query: { lat, lng },
       });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch pending rides"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch pending rides"),
+        );
       }
       return response.data ?? [];
     },
@@ -205,7 +234,9 @@ export const rideQueries = {
     queryFn: async () => {
       const response = await api.rides({ id }).get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch ride"),
+        );
       }
       return response.data;
     },
@@ -224,7 +255,9 @@ export const rideMutations = {
     }) => {
       const response = await api.rides.request.post(data);
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to request ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to request ride"),
+        );
       }
       return response.data;
     },
@@ -233,7 +266,9 @@ export const rideMutations = {
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).accept.post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to accept ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to accept ride"),
+        );
       }
       return response.data;
     },
@@ -242,7 +277,9 @@ export const rideMutations = {
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).arrived.post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to mark arrived"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to mark arrived"),
+        );
       }
       return response.data;
     },
@@ -251,7 +288,9 @@ export const rideMutations = {
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).start.post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to start ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to start ride"),
+        );
       }
       return response.data;
     },
@@ -260,7 +299,9 @@ export const rideMutations = {
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).complete.post({});
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to complete ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to complete ride"),
+        );
       }
       return response.data;
     },
@@ -271,7 +312,9 @@ export const rideMutations = {
         .rides({ id: data.rideId })
         .cancel.post({ reason: data.reason });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to cancel ride"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to cancel ride"),
+        );
       }
       return response.data;
     },
@@ -287,7 +330,9 @@ export const rideMutations = {
         feedback: data.feedback,
       });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to rate driver"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to rate driver"),
+        );
       }
       return response.data;
     },
@@ -300,7 +345,9 @@ export const flagQueries = {
     queryFn: async () => {
       const response = await api.flags.get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch flags"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch flags"),
+        );
       }
       return response.data ?? [];
     },
@@ -310,7 +357,9 @@ export const flagQueries = {
     queryFn: async () => {
       const response = await api.flags.me.get();
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to fetch user flags"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch user flags"),
+        );
       }
       return response.data ?? [];
     },
@@ -324,7 +373,9 @@ export const flagMutations = {
         isEnabled: data.isEnabled,
       });
       if (response.error) {
-        throw new Error(extractErrorMessage(response.error, "Failed to set flag"));
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to set flag"),
+        );
       }
       return response.data;
     },

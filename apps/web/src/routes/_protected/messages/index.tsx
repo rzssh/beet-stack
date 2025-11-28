@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_protected/messages/")({
     try {
       const response = await context.api().messages.get();
       return {
-        initialMessages: response.data?.messages ?? [],
+        initialMessages: response.data ?? [],
         user: context.user,
       };
     } catch {
@@ -164,13 +164,13 @@ function MessagesIndex() {
 }
 
 const MessagesList = ({ initialData }: { initialData: any[] }) => {
-  const { data = { messages: initialData } } =
+  const { data = initialData } =
     messageController.useMessagesQuery();
   const deleteMutation = messageController.useDeleteMessageMutation();
 
   return (
     <MessageList
-      messages={data.messages || []}
+      messages={data || []}
       emptyMessage="No messages yet. Create your first message to get started."
       onDelete={({ id }) => deleteMutation.mutate({ id })}
       isDeleting={deleteMutation.isPending}

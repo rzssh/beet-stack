@@ -1,4 +1,4 @@
-import { db, eq, and } from "@acme/db";
+import { and, db, eq } from "@acme/db";
 import * as schema from "@acme/db/schema";
 
 export class FeatureFlagsService {

@@ -65,7 +65,7 @@ export const Route = createFileRoute("/_protected/dashboard/")({
     // });
     return {
       user: context.user,
-      initialMessages: messagesResponse.data?.messages ?? [],
+      initialMessages: messagesResponse.data ?? [],
       initialCount: countResponse.data?.count ?? 0,
     };
   },

@@ -12,7 +12,7 @@ export const messageController = {
       queryKey: messageKeys.all,
       queryFn: async () => {
         const response = await api().messages.get();
-        return response.data ?? { messages: [] };
+        return response.data ?? [];
       },
     });
   },
@@ -22,7 +22,7 @@ export const messageController = {
       queryKey: messageKeys.detail(id),
       queryFn: async () => {
         const response = await api().messages({ id }).get();
-        return response.data ?? { message: null };
+        return response.data ?? null;
       },
       enabled: !!id,
     });
