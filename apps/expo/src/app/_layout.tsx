@@ -1,3 +1,4 @@
+import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -26,6 +27,7 @@ export default function RootLayout() {
               }}
             />
             <StatusBar />
+            <PortalHost />
           </LocationProvider>
         </QueryClientProvider>
       </KeyboardProvider>

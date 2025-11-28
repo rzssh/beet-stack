@@ -120,7 +120,12 @@ export const driverMutations = {
     },
   }),
   updateLocation: () => ({
-    mutationFn: async (data: { lat: number; lng: number; heading?: number; speed?: number }) => {
+    mutationFn: async (data: {
+      lat: number;
+      lng: number;
+      heading?: number;
+      speed?: number;
+    }) => {
       const response = await api.drivers.location.post(data);
       if (response.error) throw new Error("Failed to update location");
       return response.data?.location;
@@ -133,6 +138,7 @@ export const rideQueries = {
     queryKey: ["rides", "active"] as const,
     queryFn: async () => {
       const response = await api.rides.active.get();
+      console.log("Active ride response:", response);
       if (response.error) throw new Error("Failed to fetch active ride");
       return response.data?.ride;
     },
@@ -211,13 +217,19 @@ export const rideMutations = {
   }),
   cancel: () => ({
     mutationFn: async (data: { rideId: string; reason?: string }) => {
-      const response = await api.rides({ id: data.rideId }).cancel.post({ reason: data.reason });
+      const response = await api
+        .rides({ id: data.rideId })
+        .cancel.post({ reason: data.reason });
       if (response.error) throw new Error("Failed to cancel ride");
       return response.data?.ride;
     },
   }),
   rateDriver: () => ({
-    mutationFn: async (data: { rideId: string; rating: number; feedback?: string }) => {
+    mutationFn: async (data: {
+      rideId: string;
+      rating: number;
+      feedback?: string;
+    }) => {
       const response = await api.rides({ id: data.rideId }).rate.driver.post({
         rating: data.rating,
         feedback: data.feedback,
