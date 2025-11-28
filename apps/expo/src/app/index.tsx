@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -113,31 +112,39 @@ function MobileAuth() {
   const { data: session } = authClient.useSession();
 
   return (
-    <>
+    <View className="gap-3">
       <Text className="pb-2 text-center font-semibold text-foreground text-xl">
         {session?.user.name ? `Hello, ${session.user.name}` : "Not logged in"}
       </Text>
-      <Pressable
-        onPress={() =>
-          session
-            ? authClient.signOut()
-            : authClient.signIn.social({
-                provider: "discord",
-                callbackURL: "/",
-              })
-        }
-        className="flex items-center rounded-sm bg-primary p-2"
-      >
-        <Text>{session ? "Sign Out" : "Sign In With Discord"}</Text>
-      </Pressable>
-      {session && (
-        <Link asChild href="/taxi">
-          <Pressable className="mt-3 flex items-center rounded-lg bg-green-600 p-3">
-            <Text className="font-semibold text-white">Open Taxi App</Text>
+
+      {session ? (
+        <>
+          <Link asChild href="/taxi">
+            <Pressable className="flex items-center rounded-lg bg-green-600 p-4">
+              <Text className="text-lg font-semibold text-white">🚕 Open Taxi App</Text>
+            </Pressable>
+          </Link>
+          <Pressable
+            onPress={() => authClient.signOut()}
+            className="flex items-center rounded-lg bg-zinc-700 p-3"
+          >
+            <Text className="text-zinc-300">Sign Out</Text>
           </Pressable>
-        </Link>
+        </>
+      ) : (
+        <Pressable
+          onPress={() =>
+            authClient.signIn.social({
+              provider: "discord",
+              callbackURL: "/",
+            })
+          }
+          className="flex items-center rounded-lg bg-indigo-600 p-4"
+        >
+          <Text className="text-lg font-semibold text-white">Sign In With Discord</Text>
+        </Pressable>
       )}
-    </>
+    </View>
   );
 }
 
@@ -162,7 +169,6 @@ export default function Index() {
           keyboardVerticalOffset={140}
           style={{ flex: 1 }}
         >
-          {/* Header */}
           <View className="p-4">
             <Text className="pb-2 text-center font-bold text-5xl text-foreground">
               Create <Text className="text-primary">T3</Text> Turbo
@@ -177,7 +183,6 @@ export default function Index() {
             </View>
           </View>
 
-          {/* Messages - scrollable, takes remaining space */}
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ gap: 8, padding: 16, paddingTop: 0 }}
@@ -192,7 +197,6 @@ export default function Index() {
             ))}
           </ScrollView>
 
-          {/* Input at bottom */}
           <CreateMessage />
         </KeyboardAvoidingView>
       </SafeAreaView>

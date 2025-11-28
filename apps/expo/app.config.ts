@@ -2,13 +2,22 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo",
-  slug: "expo",
+  name: "taxi-app",
+  slug: "taxi-app",
   scheme: "expo",
   version: "0.1.0",
   orientation: "portrait",
   icon: "./assets/icon-light.png",
   userInterfaceStyle: "automatic",
+
+  // EAS-related
+  extra: {
+    eas: {
+      projectId: "42f03b18-b022-49e3-8285-41b4eb1ff4c2",
+    },
+  },
+  owner: "r4zen2k",
+
   updates: {
     fallbackToCacheTimeout: 0,
   },
@@ -30,11 +39,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
   },
-  // extra: {
-  //   eas: {
-  //     projectId: "your-eas-project-id",
-  //   },
-  // },
   experiments: {
     tsconfigPaths: true,
     typedRoutes: true,
@@ -56,17 +60,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    [
-      "@rnmapbox/maps",
-      {
-        RNMapboxMapsVersion: "11.13.4",
-      },
-    ],
-    [
-      "expo-location",
-      {
-        locationWhenInUsePermission: "Show current location on map.",
-      },
-    ],
+    // [
+    //   "expo-location",
+    //   {
+    //     locationWhenInUsePermission: "Show current location on map.",
+    //   },
+    // ],
+    // [
+    //   "@rnmapbox/maps",
+    //   {
+    //     RNMapboxMapsVersion: "11.13.4",
+    //   },
+    // ],
   ],
 });

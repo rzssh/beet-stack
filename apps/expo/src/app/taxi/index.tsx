@@ -1,4 +1,3 @@
-import Mapbox from "@rnmapbox/maps";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
@@ -10,10 +9,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useLocation } from "~/hooks/useLocation";
+import { useLocationContext } from "~/providers/LocationProvider";
 import { useTaxiSocket } from "~/hooks/useTaxiSocket";
 import {
   driverMutations,
@@ -22,8 +21,6 @@ import {
   rideQueries,
 } from "~/utils/api";
 import { authClient } from "~/utils/auth";
-
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? "");
 
 type UserMode = "rider" | "driver";
 
@@ -44,26 +41,26 @@ export default function TaxiScreen() {
   const [pickupAddress, setPickupAddress] = useState("");
   const [dropoffAddress, setDropoffAddress] = useState("");
 
+  const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
 
   const {
     location,
-    error: locationError,
     isLoading: locationLoading,
     hasPermission,
-    requestPermission,
+    isTracking,
     startTracking,
     stopTracking,
-    isTracking,
-  } = useLocation({ trackingInterval: 5000 });
+  } = useLocationContext();
 
   const userId = session?.user?.id ?? "";
+  const isReady = !!userId && !!location && hasPermission === true;
 
   const { isConnected, sendLocation } = useTaxiSocket({
     userId,
     role: mode,
-    autoConnect: !!userId,
+    autoConnect: isReady,
     onDriverLocation: (loc) => {
       setDriverMarkers((prev) => {
         const existing = prev.findIndex((m) => m.driverId === loc.driverId);
@@ -75,26 +72,26 @@ export default function TaxiScreen() {
         return [...prev, loc];
       });
     },
-    onRideStatus: (status) => {
+    onRideStatus: () => {
       queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
     },
   });
 
   const driverProfileQuery = useQuery({
     ...driverQueries.profile(),
-    enabled: mode === "driver" && !!userId,
+    enabled: mode === "driver" && isReady,
   });
 
   const activeRideQuery = useQuery({
     ...rideQueries.active(),
-    enabled: !!userId,
-    refetchInterval: 5000,
+    enabled: isReady,
+    refetchInterval: isReady ? 5000 : false,
   });
 
   const nearbyDriversQuery = useQuery({
     ...driverQueries.nearby(location?.latitude ?? 0, location?.longitude ?? 0),
-    enabled: mode === "rider" && !!location,
-    refetchInterval: 10000,
+    enabled: mode === "rider" && isReady,
+    refetchInterval: isReady ? 10000 : false,
   });
 
   const goOnlineMutation = useMutation({
@@ -143,15 +140,28 @@ export default function TaxiScreen() {
   useEffect(() => {
     if (nearbyDriversQuery.data) {
       setDriverMarkers(
-        nearbyDriversQuery.data.map((d: any) => ({
-          driverId: d.driverId,
-          lat: d.location.lat,
-          lng: d.location.lng,
-          heading: d.location.heading,
-        })),
+        nearbyDriversQuery.data
+          .filter((d): d is NonNullable<typeof d> => d !== null)
+          .map((d) => ({
+            driverId: d.driverId,
+            lat: d.location.lat,
+            lng: d.location.lng,
+            heading: d.location.heading ?? undefined,
+          })),
       );
     }
   }, [nearbyDriversQuery.data]);
+
+  useEffect(() => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [location?.latitude, location?.longitude]);
 
   const handleRequestRide = useCallback(() => {
     if (!location || !pickupAddress || !dropoffAddress) return;
@@ -188,24 +198,37 @@ export default function TaxiScreen() {
     );
   }
 
-  if (!hasPermission) {
+  if (hasPermission === null || locationLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <Stack.Screen options={{ headerShown: false }} />
+        <ActivityIndicator size="large" color="#c03484" />
+        <Text className="mt-4 text-foreground">Setting up location...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (hasPermission === false) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <Stack.Screen options={{ headerShown: false }} />
         <Text className="mb-4 text-center text-xl text-foreground">
           Location permission required
         </Text>
+        <Text className="mb-4 px-8 text-center text-zinc-400">
+          Please enable location in your device settings to use the taxi app.
+        </Text>
         <Pressable
-          onPress={requestPermission}
-          className="rounded-lg bg-primary px-6 py-3"
+          onPress={() => router.push("/")}
+          className="rounded-lg bg-zinc-700 px-6 py-3"
         >
-          <Text className="font-semibold text-white">Grant Permission</Text>
+          <Text className="text-white">Go Back</Text>
         </Pressable>
       </SafeAreaView>
     );
   }
 
-  if (locationLoading || !location) {
+  if (!location) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <Stack.Screen options={{ headerShown: false }} />
@@ -220,11 +243,26 @@ export default function TaxiScreen() {
   const activeRide = activeRideQuery.data;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View className="absolute left-4 right-4 top-16 z-10 flex-row items-center justify-between">
-        <View className="flex-row rounded-full bg-white shadow-lg">
+      <View className="absolute left-4 right-4 top-16 z-10 gap-3">
+        <View className="flex-row items-center justify-between">
+          <Pressable
+            onPress={() => router.push("/")}
+            className="rounded-full bg-white/90 px-4 py-2 shadow-lg"
+          >
+            <Text className="font-medium text-gray-700">← Back</Text>
+          </Pressable>
+
+          <View
+            className={`rounded-full px-3 py-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+          >
+            <Text className="text-xs text-white">{isConnected ? "Live" : "Offline"}</Text>
+          </View>
+        </View>
+
+        <View className="flex-row self-center rounded-full bg-white shadow-lg">
           <Pressable
             onPress={() => mode !== "rider" && toggleMode()}
             className={`rounded-full px-6 py-3 ${mode === "rider" ? "bg-primary" : "bg-white"}`}
@@ -242,51 +280,35 @@ export default function TaxiScreen() {
             </Text>
           </Pressable>
         </View>
-
-        <View
-          className={`rounded-full px-3 py-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-        >
-          <Text className="text-xs text-white">{isConnected ? "Live" : "Offline"}</Text>
-        </View>
       </View>
 
-      <Mapbox.MapView
+      <MapView
+        ref={mapRef}
         style={{ flex: 1 }}
-        styleURL={Mapbox.StyleURL.Street}
-        logoEnabled={false}
-        attributionEnabled={false}
+        provider={PROVIDER_GOOGLE}
+        showsUserLocation
+        showsMyLocationButton={false}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
       >
-        <Mapbox.Camera
-          zoomLevel={14}
-          centerCoordinate={[location.longitude, location.latitude]}
-          animationMode="flyTo"
-          animationDuration={1000}
-        />
-
-        <Mapbox.PointAnnotation
-          id="user-location"
-          coordinate={[location.longitude, location.latitude]}
-        >
-          <View
-            className={`h-6 w-6 items-center justify-center rounded-full border-2 border-white ${mode === "rider" ? "bg-blue-500" : "bg-green-500"}`}
-          >
-            <View className="h-2 w-2 rounded-full bg-white" />
-          </View>
-        </Mapbox.PointAnnotation>
-
         {mode === "rider" &&
           driverMarkers.map((marker) => (
-            <Mapbox.PointAnnotation
+            <Marker
               key={marker.driverId}
-              id={`driver-${marker.driverId}`}
-              coordinate={[marker.lng, marker.lat]}
+              identifier={`driver-${marker.driverId}`}
+              coordinate={{ latitude: marker.lat, longitude: marker.lng }}
+              title="Driver"
             >
-              <View className="h-8 w-8 items-center justify-center rounded-full bg-yellow-500 shadow-lg">
-                <Text className="text-sm">🚗</Text>
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-yellow-500 shadow-lg">
+                <Text className="text-lg">🚗</Text>
               </View>
-            </Mapbox.PointAnnotation>
+            </Marker>
           ))}
-      </Mapbox.MapView>
+      </MapView>
 
       <BottomSheet
         ref={bottomSheetRef}
@@ -437,6 +459,6 @@ export default function TaxiScreen() {
           )}
         </BottomSheetView>
       </BottomSheet>
-    </GestureHandlerRootView>
+    </>
   );
 }
