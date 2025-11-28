@@ -1,80 +1,35 @@
-import * as React from "react";
-import { Platform, TextInput, View } from "react-native";
+import { Platform, TextInput, type TextInputProps } from "react-native";
 
 import { cn } from "~/lib/utils";
-import { Text } from "~/components/ui/text";
 
-interface InputProps extends React.ComponentPropsWithoutRef<typeof TextInput> {
-  label?: string;
-  error?: string;
-}
-
-const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
-  ({ className, label, error, ...props }, ref) => {
-    return (
-      <View className="gap-1.5">
-        {label && (
-          <Text className="text-sm font-medium text-foreground">{label}</Text>
-        )}
-        <TextInput
-          ref={ref}
-          className={cn(
-            "h-12 w-full rounded-lg border border-input bg-background px-4 text-base text-foreground shadow-sm shadow-black/5",
-            "placeholder:text-muted-foreground",
-            props.editable === false && "opacity-50",
-            error && "border-destructive",
+function Input({
+  className,
+  ...props
+}: TextInputProps & React.RefAttributes<TextInput>) {
+  return (
+    <TextInput
+      className={cn(
+        "flex h-10 w-full min-w-0 flex-row items-center rounded-md border border-input bg-background px-3 py-1 text-base text-foreground leading-5 shadow-black/5 shadow-sm sm:h-9 dark:bg-input/30",
+        props.editable === false &&
+          cn(
+            "opacity-50",
             Platform.select({
-              web: "outline-none focus:border-ring focus:ring-2 focus:ring-ring/20",
-              default: "",
+              web: "disabled:pointer-events-none disabled:cursor-not-allowed",
             }),
-            className,
-          )}
-          placeholderTextColor="#71717a"
-          {...props}
-        />
-        {error && (
-          <Text className="text-sm text-destructive">{error}</Text>
-        )}
-      </View>
-    );
-  },
-);
-Input.displayName = "Input";
-
-interface TextAreaProps extends React.ComponentPropsWithoutRef<typeof TextInput> {
-  label?: string;
-  error?: string;
+          ),
+        Platform.select({
+          web: cn(
+            "outline-none transition-[color,box-shadow] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm",
+            "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+            "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+          ),
+          native: "placeholder:text-muted-foreground/50",
+        }),
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
-const TextArea = React.forwardRef<React.ElementRef<typeof TextInput>, TextAreaProps>(
-  ({ className, label, error, ...props }, ref) => {
-    return (
-      <View className="gap-1.5">
-        {label && (
-          <Text className="text-sm font-medium text-foreground">{label}</Text>
-        )}
-        <TextInput
-          ref={ref}
-          multiline
-          textAlignVertical="top"
-          className={cn(
-            "min-h-24 w-full rounded-lg border border-input bg-background px-4 py-3 text-base text-foreground shadow-sm shadow-black/5",
-            "placeholder:text-muted-foreground",
-            props.editable === false && "opacity-50",
-            error && "border-destructive",
-            className,
-          )}
-          placeholderTextColor="#71717a"
-          {...props}
-        />
-        {error && (
-          <Text className="text-sm text-destructive">{error}</Text>
-        )}
-      </View>
-    );
-  },
-);
-TextArea.displayName = "TextArea";
-
-export { Input, TextArea };
-export type { InputProps, TextAreaProps };
+export { Input };

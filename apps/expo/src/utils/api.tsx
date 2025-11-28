@@ -239,3 +239,34 @@ export const rideMutations = {
     },
   }),
 };
+
+export const flagQueries = {
+  all: () => ({
+    queryKey: ["flags"] as const,
+    queryFn: async () => {
+      const response = await api.flags.get();
+      if (response.error) throw new Error("Failed to fetch flags");
+      return response.data?.flags ?? [];
+    },
+  }),
+  me: () => ({
+    queryKey: ["flags", "me"] as const,
+    queryFn: async () => {
+      const response = await api.flags.me.get();
+      if (response.error) throw new Error("Failed to fetch user flags");
+      return response.data?.flags ?? [];
+    },
+  }),
+};
+
+export const flagMutations = {
+  setFlag: () => ({
+    mutationFn: async (data: { flagId: string; isEnabled: boolean }) => {
+      const response = await api.flags.me({ flagId: data.flagId }).post({
+        isEnabled: data.isEnabled,
+      });
+      if (response.error) throw new Error("Failed to set flag");
+      return response.data?.flag;
+    },
+  }),
+};

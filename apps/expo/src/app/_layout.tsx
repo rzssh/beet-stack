@@ -21,11 +21,23 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerStyle: { backgroundColor: "#c03484" },
+                headerTintColor: "#FFFFFF",
                 contentStyle: {
                   backgroundColor: colorScheme === "dark" ? "#09090B" : "#FFFFFF",
                 },
               }}
-            />
+            >
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="profile"
+                options={{
+                  title: "Profile",
+                  presentation: "modal",
+                }}
+              />
+              <Stack.Screen name="taxi" options={{ headerShown: false }} />
+            </Stack>
             <StatusBar />
             <PortalHost />
           </LocationProvider>

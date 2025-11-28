@@ -2,6 +2,7 @@ import {
   countRoutes,
   createServerConfiguration,
   driversRoutes,
+  featureFlagsRoutes,
   ridesRoutes,
 } from "@acme/core/server";
 import { Elysia } from "elysia";
@@ -216,7 +217,8 @@ export const app = new Elysia()
   })
   .use(countRoutes)
   .use(driversRoutes)
-  .use(ridesRoutes);
+  .use(ridesRoutes)
+  .use(featureFlagsRoutes);
 
 // Export helpers for use in API routes if needed
 export { broadcastToRide, sendToUser };

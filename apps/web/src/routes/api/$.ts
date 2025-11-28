@@ -2,6 +2,7 @@ import {
   countRoutes,
   createServerConfiguration,
   driversRoutes,
+  featureFlagsRoutes,
   messagesRoutes,
   ridesRoutes,
 } from "@acme/core/server";
@@ -14,7 +15,8 @@ export const app = new Elysia({ prefix: "/api" })
   .use(countRoutes)
   .use(messagesRoutes)
   .use(driversRoutes)
-  .use(ridesRoutes);
+  .use(ridesRoutes)
+  .use(featureFlagsRoutes);
 
 const handle = ({ request }: { request: Request }) => app.fetch(request);
 

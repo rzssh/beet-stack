@@ -1,215 +1,523 @@
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack } from "expo-router";
-import { useRef, useState } from "react";
-import {
-  Keyboard,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  type TextInput as TextInputType,
-  View,
-} from "react-native";
-import {
-  KeyboardAvoidingView,
-  KeyboardToolbar,
-} from "react-native-keyboard-controller";
+import { router, Stack } from "expo-router";
+import * as React from "react";
+import { Pressable, TextInput, View } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { messageMutations, messageQueries } from "~/utils/api";
+import { Button, Card, CardContent, Spinner, Text } from "~/components/ui";
+import { useTaxiSocket } from "~/hooks/useTaxiSocket";
+import { useLocationContext } from "~/providers/LocationProvider";
+import {
+  driverMutations,
+  driverQueries,
+  rideMutations,
+  rideQueries,
+} from "~/utils/api";
 import { authClient } from "~/utils/auth";
 
-type MessagesQuery = ReturnType<typeof messageQueries.all>;
-type Messages = Awaited<ReturnType<MessagesQuery["queryFn"]>>;
-type Message = Messages[number];
+type UserMode = "rider" | "driver";
 
-function MessageCard(props: { message: Message; onDelete: () => void }) {
-  return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
-      <View className="grow">
-        <Link
-          asChild
-          href={{ pathname: "/message/[id]", params: { id: props.message.id } }}
-        >
-          <Pressable className="">
-            <Text className="font-semibold text-primary text-xl">
-              {props.message.title}
-            </Text>
-            <Text className="mt-2 text-foreground">
-              {props.message.content}
-            </Text>
-          </Pressable>
-        </Link>
-      </View>
-      <Pressable onPress={props.onDelete}>
-        <Text className="font-bold text-primary uppercase">Delete</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function CreateMessage() {
-  const queryClient = useQueryClient();
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  const contentRef = useRef<TextInputType>(null);
-
-  const { mutate, error, isPending } = useMutation({
-    ...messageMutations.create(),
-    async onSuccess() {
-      setTitle("");
-      setContent("");
-      await queryClient.invalidateQueries({ queryKey: ["messages", "all"] });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (title.trim() && content.trim()) {
-      mutate({ title, content });
-    }
-  };
-
-  return (
-    <View className="flex gap-2 border-input border-t bg-background p-4 pb-6">
-      <TextInput
-        className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Title"
-        returnKeyType="next"
-        onSubmitEditing={() => contentRef.current?.focus()}
-      />
-      <TextInput
-        ref={contentRef}
-        className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
-        value={content}
-        onChangeText={setContent}
-        placeholder="Content"
-        returnKeyType="done"
-        onSubmitEditing={handleSubmit}
-      />
-      <Pressable
-        className="flex items-center rounded-sm bg-primary p-2"
-        onPress={handleSubmit}
-        disabled={isPending}
-      >
-        <Text className="text-foreground">
-          {isPending ? "Creating..." : "Create"}
-        </Text>
-      </Pressable>
-      {error && (
-        <Text className="mt-2 text-destructive">
-          {error instanceof Error ? error.message : "Failed to create message"}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-function MobileAuth() {
-  const { data: session } = authClient.useSession();
-
-  return (
-    <View className="gap-3">
-      <Text className="pb-2 text-center font-semibold text-foreground text-xl">
-        {session?.user.name ? `Hello, ${session.user.name}` : "Not logged in"}
-      </Text>
-
-      {session ? (
-        <>
-          <Link asChild href="/taxi">
-            <Pressable className="flex items-center rounded-lg bg-green-600 p-4">
-              <Text className="text-lg font-semibold text-white">🚕 Open Taxi App</Text>
-            </Pressable>
-          </Link>
-          <Pressable
-            onPress={() => authClient.signOut()}
-            className="flex items-center rounded-lg bg-zinc-700 p-3"
-          >
-            <Text className="text-zinc-300">Sign Out</Text>
-          </Pressable>
-        </>
-      ) : (
-        <Pressable
-          onPress={() =>
-            authClient.signIn.social({
-              provider: "discord",
-              callbackURL: "/",
-            })
-          }
-          className="flex items-center rounded-lg bg-indigo-600 p-4"
-        >
-          <Text className="text-lg font-semibold text-white">Sign In With Discord</Text>
-        </Pressable>
-      )}
-    </View>
-  );
+interface DriverMarker {
+  driverId: string;
+  lat: number;
+  lng: number;
+  heading?: number;
 }
 
 export default function Index() {
   const queryClient = useQueryClient();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const isAuthenticated = !!session?.user;
 
-  const messagesQuery = useQuery(messageQueries.all());
-  const messages = messagesQuery.data ?? [];
+  const [mode, setMode] = React.useState<UserMode>("rider");
+  const [driverMarkers, setDriverMarkers] = React.useState<DriverMarker[]>([]);
+  const [pickupAddress, setPickupAddress] = React.useState("");
+  const [dropoffAddress, setDropoffAddress] = React.useState("");
 
-  const deleteMessageMutation = useMutation({
-    ...messageMutations.delete(),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["messages", "all"] }),
+  const mapRef = React.useRef<MapView>(null);
+  const bottomSheetRef = React.useRef<BottomSheet>(null);
+  const snapPoints = React.useMemo(() => ["25%", "50%", "90%"], []);
+
+  const {
+    location,
+    isLoading: locationLoading,
+    hasPermission,
+    isTracking,
+    startTracking,
+    stopTracking,
+  } = useLocationContext();
+
+  const userId = session?.user?.id ?? "";
+  const isReady = !!userId && !!location && hasPermission === true;
+
+  const { isConnected, sendLocation } = useTaxiSocket({
+    userId,
+    role: mode,
+    autoConnect: isReady,
+    onDriverLocation: (loc) => {
+      setDriverMarkers((prev) => {
+        const existing = prev.findIndex((m) => m.driverId === loc.driverId);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = loc;
+          return updated;
+        }
+        return [...prev, loc];
+      });
+    },
+    onRideStatus: () => {
+      queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
+    },
   });
+
+  const driverProfileQuery = useQuery({
+    ...driverQueries.profile(),
+    enabled: mode === "driver" && isReady,
+  });
+
+  const activeRideQuery = useQuery({
+    ...rideQueries.active(),
+    enabled: isReady,
+    refetchInterval: isReady ? 5000 : false,
+  });
+
+  const nearbyDriversQuery = useQuery({
+    ...driverQueries.nearby(location?.latitude ?? 0, location?.longitude ?? 0),
+    enabled: mode === "rider" && isReady,
+    refetchInterval: isReady ? 10000 : false,
+  });
+
+  const goOnlineMutation = useMutation({
+    ...driverMutations.goOnline(),
+    onSuccess: () => {
+      startTracking();
+      queryClient.invalidateQueries({ queryKey: ["driver", "profile"] });
+    },
+  });
+
+  const goOfflineMutation = useMutation({
+    ...driverMutations.goOffline(),
+    onSuccess: () => {
+      stopTracking();
+      queryClient.invalidateQueries({ queryKey: ["driver", "profile"] });
+    },
+  });
+
+  const updateLocationMutation = useMutation(driverMutations.updateLocation());
+
+  const requestRideMutation = useMutation({
+    ...rideMutations.request(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
+      bottomSheetRef.current?.snapToIndex(0);
+    },
+  });
+
+  React.useEffect(() => {
+    if (mode === "driver" && isTracking && location) {
+      sendLocation(
+        location.latitude,
+        location.longitude,
+        location.heading ?? undefined,
+        location.speed ?? undefined,
+      );
+      updateLocationMutation.mutate({
+        lat: location.latitude,
+        lng: location.longitude,
+        heading: location.heading ?? undefined,
+        speed: location.speed ?? undefined,
+      });
+    }
+  }, [location, mode, isTracking]);
+
+  React.useEffect(() => {
+    if (nearbyDriversQuery.data) {
+      setDriverMarkers(
+        nearbyDriversQuery.data
+          .filter((d): d is NonNullable<typeof d> => d !== null)
+          .map((d) => ({
+            driverId: d.driverId,
+            lat: d.location.lat,
+            lng: d.location.lng,
+            heading: d.location.heading ?? undefined,
+          })),
+      );
+    }
+  }, [nearbyDriversQuery.data]);
+
+  React.useEffect(() => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [location?.latitude, location?.longitude]);
+
+  const handleRequestRide = React.useCallback(() => {
+    if (!isAuthenticated) {
+      router.push("/(auth)/login");
+      return;
+    }
+    if (!location || !pickupAddress || !dropoffAddress) return;
+
+    requestRideMutation.mutate({
+      pickupLat: location.latitude,
+      pickupLng: location.longitude,
+      pickupAddress,
+      dropoffLat: location.latitude + 0.01,
+      dropoffLng: location.longitude + 0.01,
+      dropoffAddress,
+    });
+  }, [
+    isAuthenticated,
+    location,
+    pickupAddress,
+    dropoffAddress,
+    requestRideMutation,
+  ]);
+
+  const toggleMode = React.useCallback(() => {
+    if (!isAuthenticated) {
+      router.push("/(auth)/login");
+      return;
+    }
+    if (mode === "driver" && driverProfileQuery.data?.isOnline) {
+      goOfflineMutation.mutate();
+    }
+    setMode((prev) => (prev === "rider" ? "driver" : "rider"));
+  }, [
+    isAuthenticated,
+    mode,
+    driverProfileQuery.data?.isOnline,
+    goOfflineMutation,
+  ]);
+
+  const handleBottomSheetInteraction = React.useCallback(() => {
+    if (!isAuthenticated) {
+      router.push("/(auth)/login");
+    }
+  }, [isAuthenticated]);
+
+  if (sessionLoading || hasPermission === null || locationLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <Stack.Screen options={{ headerShown: false }} />
+        <Spinner label="Setting up..." />
+      </SafeAreaView>
+    );
+  }
+
+  if (hasPermission === false) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background px-6">
+        <Stack.Screen options={{ headerShown: false }} />
+        <Text variant="h2" className="mb-4 text-center">
+          Location Required
+        </Text>
+        <Text variant="muted" className="mb-6 text-center">
+          Please enable location in your device settings to use the taxi app.
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!location) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <Stack.Screen options={{ headerShown: false }} />
+        <Spinner label="Getting your location..." />
+      </SafeAreaView>
+    );
+  }
+
+  const isDriverOnline = driverProfileQuery.data?.isOnline ?? false;
+  const hasDriverProfile = !!driverProfileQuery.data;
+  const activeRide = activeRideQuery.data;
 
   return (
     <>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
-        <Stack.Screen options={{ title: "Home Page" }} />
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={140}
-          style={{ flex: 1 }}
-        >
-          <View className="p-4">
-            <Text className="pb-2 text-center font-bold text-5xl text-foreground">
-              Create <Text className="text-primary">T3</Text> Turbo
-            </Text>
+      <Stack.Screen options={{ headerShown: false }} />
 
-            <MobileAuth />
+      <View className="absolute left-4 right-4 top-16 z-10 gap-3">
+        <View className="flex-row items-center justify-between">
+          {isAuthenticated ? (
+            <Pressable
+              onPress={() => router.push("/profile")}
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg"
+            >
+              <Text className="text-lg">
+                {session.user.name?.[0]?.toUpperCase() ?? "?"}
+              </Text>
+            </Pressable>
+          ) : (
+            <Button
+              size="sm"
+              onPress={() => router.push("/(auth)/login")}
+              className="shadow-lg"
+            >
+              <Text>Sign In</Text>
+            </Button>
+          )}
 
-            <View className="py-2">
-              <Text className="font-semibold text-primary italic">
-                Press on a message
+          {isAuthenticated && (
+            <View
+              className={`rounded-full px-3 py-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+            >
+              <Text className="text-xs text-white">
+                {isConnected ? "Live" : "Offline"}
               </Text>
             </View>
-          </View>
+          )}
+        </View>
 
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ gap: 8, padding: 16, paddingTop: 0 }}
-            keyboardShouldPersistTaps="handled"
+        <View className="flex-row self-center rounded-full bg-white shadow-lg">
+          <Pressable
+            onPress={() => mode !== "rider" && toggleMode()}
+            className={`rounded-full px-6 py-3 ${mode === "rider" ? "bg-primary" : "bg-white"}`}
           >
-            {messages.map((message) => (
-              <MessageCard
-                key={message.id}
-                message={message}
-                onDelete={() => deleteMessageMutation.mutate(message.id)}
-              />
-            ))}
-          </ScrollView>
+            <Text
+              className={
+                mode === "rider" ? "font-semibold text-white" : "text-gray-600"
+              }
+            >
+              Rider
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => mode !== "driver" && toggleMode()}
+            className={`rounded-full px-6 py-3 ${mode === "driver" ? "bg-primary" : "bg-white"}`}
+          >
+            <Text
+              className={
+                mode === "driver" ? "font-semibold text-white" : "text-gray-600"
+              }
+            >
+              Driver
+            </Text>
+          </Pressable>
+        </View>
+      </View>
 
-          <CreateMessage />
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-      <KeyboardToolbar>
-        <KeyboardToolbar.Next />
-        <KeyboardToolbar.Prev />
-        <KeyboardToolbar.Done
-          onPress={(e) => {
-            e.preventDefault();
-            Keyboard.dismiss();
-          }}
-        />
-      </KeyboardToolbar>
+      <MapView
+        ref={mapRef}
+        style={{ flex: 1 }}
+        provider={PROVIDER_GOOGLE}
+        showsUserLocation
+        showsMyLocationButton={false}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+      >
+        {mode === "rider" &&
+          driverMarkers.map((marker) => (
+            <Marker
+              key={marker.driverId}
+              identifier={`driver-${marker.driverId}`}
+              coordinate={{ latitude: marker.lat, longitude: marker.lng }}
+              title="Driver"
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-yellow-500 shadow-lg">
+                <Text className="text-lg">🚗</Text>
+              </View>
+            </Marker>
+          ))}
+      </MapView>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        backgroundStyle={{ backgroundColor: "#18181b" }}
+        handleIndicatorStyle={{ backgroundColor: "#71717a" }}
+        onAnimate={handleBottomSheetInteraction}
+      >
+        <BottomSheetView className="flex-1 px-4">
+          {mode === "rider" ? (
+            <View className="gap-4">
+              <Text variant="h3" className="text-white" asChild>
+                {activeRide ? "Active Ride" : "Request a Ride"}
+              </Text>
+
+              {!isAuthenticated ? (
+                <Card className="border-zinc-700 bg-zinc-800">
+                  <CardContent className="gap-3 pt-4">
+                    <Text className="text-center text-white">
+                      Sign in to request rides
+                    </Text>
+                    <Button onPress={() => router.push("/(auth)/login")}>
+                      <Text>Sign In</Text>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : activeRide ? (
+                <View className="gap-3">
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardContent className="pt-4">
+                      <Text variant="muted">Status</Text>
+                      <Text variant="large" className="capitalize text-white">
+                        {activeRide.status.replace("_", " ")}
+                      </Text>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardContent className="pt-4">
+                      <Text variant="muted">Pickup</Text>
+                      <Text className="text-white">
+                        {activeRide.pickupAddress}
+                      </Text>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardContent className="pt-4">
+                      <Text variant="muted">Dropoff</Text>
+                      <Text className="text-white">
+                        {activeRide.dropoffAddress}
+                      </Text>
+                    </CardContent>
+                  </Card>
+                  {activeRide.estimatedPrice && (
+                    <Card className="border-zinc-700 bg-zinc-800">
+                      <CardContent className="pt-4">
+                        <Text variant="muted">Estimated Price</Text>
+                        <Text variant="h2" className="text-green-400">
+                          ${activeRide.estimatedPrice.toFixed(2)}
+                        </Text>
+                      </CardContent>
+                    </Card>
+                  )}
+                </View>
+              ) : (
+                <View className="gap-3">
+                  <TextInput
+                    className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
+                    placeholder="Pickup location"
+                    placeholderTextColor="#71717a"
+                    value={pickupAddress}
+                    onChangeText={setPickupAddress}
+                  />
+                  <TextInput
+                    className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
+                    placeholder="Where to?"
+                    placeholderTextColor="#71717a"
+                    value={dropoffAddress}
+                    onChangeText={setDropoffAddress}
+                  />
+                  <Button
+                    onPress={handleRequestRide}
+                    disabled={
+                      requestRideMutation.isPending ||
+                      !pickupAddress ||
+                      !dropoffAddress
+                    }
+                  >
+                    {requestRideMutation.isPending ? (
+                      <Spinner size="small" color="white" />
+                    ) : (
+                      <Text>Request Ride</Text>
+                    )}
+                  </Button>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View className="gap-4">
+              <Text variant="h3" className="text-white">
+                Driver Mode
+              </Text>
+
+              {!isAuthenticated ? (
+                <Card className="border-zinc-700 bg-zinc-800">
+                  <CardContent className="gap-3 pt-4">
+                    <Text className="text-center text-white">
+                      Sign in to drive
+                    </Text>
+                    <Button onPress={() => router.push("/(auth)/login")}>
+                      <Text>Sign In</Text>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : !hasDriverProfile ? (
+                <View className="gap-3">
+                  <Text variant="muted">
+                    You need to register as a driver first
+                  </Text>
+                  <Button onPress={() => router.push("/taxi/register-driver")}>
+                    <Text>Register as Driver</Text>
+                  </Button>
+                </View>
+              ) : (
+                <View className="gap-4">
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardContent className="flex-row items-center justify-between pt-4">
+                      <View>
+                        <Text className="text-white">
+                          {driverProfileQuery.data?.vehicleMake}{" "}
+                          {driverProfileQuery.data?.vehicleModel}
+                        </Text>
+                        <Text variant="muted">
+                          {driverProfileQuery.data?.licensePlate}
+                        </Text>
+                      </View>
+                      <View
+                        className={`rounded-full px-3 py-1 ${isDriverOnline ? "bg-green-500" : "bg-zinc-600"}`}
+                      >
+                        <Text className="text-xs text-white">
+                          {isDriverOnline ? "Online" : "Offline"}
+                        </Text>
+                      </View>
+                    </CardContent>
+                  </Card>
+
+                  <Button
+                    variant={isDriverOnline ? "destructive" : "default"}
+                    onPress={() =>
+                      isDriverOnline
+                        ? goOfflineMutation.mutate()
+                        : goOnlineMutation.mutate()
+                    }
+                    disabled={
+                      goOnlineMutation.isPending || goOfflineMutation.isPending
+                    }
+                    className={!isDriverOnline ? "bg-green-500" : undefined}
+                  >
+                    {goOnlineMutation.isPending ||
+                    goOfflineMutation.isPending ? (
+                      <Spinner size="small" color="white" />
+                    ) : (
+                      <Text>{isDriverOnline ? "Go Offline" : "Go Online"}</Text>
+                    )}
+                  </Button>
+
+                  {isDriverOnline && (
+                    <Card className="border-zinc-700 bg-zinc-800">
+                      <CardContent className="pt-4">
+                        <Text variant="muted">Your Location</Text>
+                        <Text className="text-white">
+                          {location.latitude.toFixed(5)},{" "}
+                          {location.longitude.toFixed(5)}
+                        </Text>
+                        {isTracking && (
+                          <Text variant="small" className="mt-1 text-green-400">
+                            Location tracking active
+                          </Text>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
+        </BottomSheetView>
+      </BottomSheet>
     </>
   );
 }

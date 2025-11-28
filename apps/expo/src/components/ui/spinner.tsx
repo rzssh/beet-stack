@@ -1,8 +1,7 @@
-import * as React from "react";
 import { ActivityIndicator, View } from "react-native";
+import { Text } from "~/components/ui/text";
 
 import { cn } from "~/lib/utils";
-import { Text } from "~/components/ui/text";
 
 interface SpinnerProps {
   size?: "small" | "large";
@@ -11,7 +10,12 @@ interface SpinnerProps {
   label?: string;
 }
 
-function Spinner({ size = "large", color = "#c03484", className, label }: SpinnerProps) {
+function Spinner({
+  size = "large",
+  color = "#c03484",
+  className,
+  label,
+}: SpinnerProps) {
   return (
     <View className={cn("items-center justify-center gap-3", className)}>
       <ActivityIndicator size={size} color={color} />

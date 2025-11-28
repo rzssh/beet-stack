@@ -18,10 +18,11 @@ export function initAuth<
 
   providers?: {
     discord?: { clientId?: string; clientSecret?: string };
+    google?: { clientId?: string; clientSecret?: string };
   };
   extraPlugins?: TExtraPlugins;
 }) {
-  const { discord } = options.providers ?? {};
+  const { discord, google } = options.providers ?? {};
   const oauthCallbackBase = useOAuthProxy ? options.productionUrl : options.baseUrl;
 
   const config = {
@@ -48,6 +49,14 @@ export function initAuth<
             clientId: discord.clientId,
             clientSecret: discord.clientSecret,
             redirectURI: `${oauthCallbackBase}/api/auth/callback/discord`,
+          },
+        }),
+      ...(google?.clientId &&
+        google.clientSecret && {
+          google: {
+            clientId: google.clientId,
+            clientSecret: google.clientSecret,
+            redirectURI: `${oauthCallbackBase}/api/auth/callback/google`,
           },
         }),
     },
