@@ -44,8 +44,12 @@ export const ridesRoutes = new Elysia({ prefix: "/rides" })
         },
         { body: "requestRide" },
       )
-      .get("/active", async ({ user, ridesService }) => {
-        return ridesService.getActiveRide(user.id);
+      .get("/active", async ({ user, ridesService, status }) => {
+        const activeRide = await ridesService.getActiveRide(user.id);
+        if (!activeRide) {
+          return status(400, { message: "No active ride found" });
+        }
+        return activeRide;
       })
       .get(
         "/history",

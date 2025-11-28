@@ -3,8 +3,8 @@ import BottomSheet, {
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { router, Stack } from "expo-router";
 import * as Linking from "expo-linking";
+import { router, Stack } from "expo-router";
 import * as React from "react";
 import { Pressable, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -257,7 +257,7 @@ export default function Index() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View className="absolute left-4 right-4 top-16 z-10 gap-3">
+      <View className="absolute top-16 right-4 left-4 z-10 gap-3">
         <View className="flex-row items-center justify-between">
           {isAuthenticated ? (
             <Pressable
@@ -282,7 +282,7 @@ export default function Index() {
             <View
               className={`rounded-full px-3 py-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}
             >
-              <Text className="text-xs text-white">
+              <Text className="text-white text-xs">
                 {isConnected ? "Live" : "Offline"}
               </Text>
             </View>
@@ -362,7 +362,7 @@ export default function Index() {
         >
           {mode === "rider" ? (
             <View className="gap-4">
-              <Text variant="h3" className="text-white" asChild>
+              <Text variant="h3" className="text-white">
                 {activeRide ? "Active Ride" : "Request a Ride"}
               </Text>
 
@@ -382,7 +382,7 @@ export default function Index() {
                   <Card className="border-zinc-700 bg-zinc-800">
                     <CardContent className="pt-4">
                       <Text variant="muted">Status</Text>
-                      <Text variant="large" className="capitalize text-white">
+                      <Text variant="large" className="text-white capitalize">
                         {activeRide.status.replace("_", " ")}
                       </Text>
                     </CardContent>
@@ -503,7 +503,7 @@ export default function Index() {
                       <View
                         className={`rounded-full px-3 py-1 ${isDriverOnline ? "bg-green-500" : "bg-zinc-600"}`}
                       >
-                        <Text className="text-xs text-white">
+                        <Text className="text-white text-xs">
                           {isDriverOnline ? "Online" : "Offline"}
                         </Text>
                       </View>
