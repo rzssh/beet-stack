@@ -15,145 +15,80 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
     messageInput: messageInputModel,
     messageIdParams,
   })
-  .get(
-    "/",
-    async ({ messagesService }) => {
-      const messages = await messagesService.getAll();
-      return { success: true, messages };
-    },
-    {
-      detail: {
-        summary: "Get all messages",
-        tags: ["Messages"],
-      },
-    },
-  )
-  .get(
-    "/index",
-    async ({ messagesService }) => {
-      const messages = await messagesService.getAll();
-      return { success: true, messages };
-    },
-    {
-      detail: {
-        summary: "Get all messages (index)",
-        tags: ["Messages"],
-      },
-    },
-  )
+  .get("/", async ({ messagesService }) => messagesService.getAll())
+  .get("/index", async ({ messagesService }) => messagesService.getAll())
   .guard({ auth: true }, (app) =>
     app
       .post(
         "/",
-        async ({ body, messagesService, user }) => {
-          const message = await messagesService.create({
+        async ({ body, messagesService, user, status }) => {
+          const result = await messagesService.create({
             title: body.title,
             content: body.content,
             userId: user.id,
           });
-
-          return {
-            success: true,
-            message,
-          };
+          if ("error" in result) return status(500, { message: "Failed to create message" });
+          return result.message;
         },
-        {
-          body: "messageInput",
-          detail: {
-            summary: "Create a new message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "messageInput" },
       )
       .post(
         "/index",
-        async ({ body, messagesService, user }) => {
-          const message = await messagesService.create({
+        async ({ body, messagesService, user, status }) => {
+          const result = await messagesService.create({
             title: body.title,
             content: body.content,
             userId: user.id,
           });
-
-          return {
-            success: true,
-            message,
-          };
+          if ("error" in result) return status(500, { message: "Failed to create message" });
+          return result.message;
         },
-        {
-          body: "messageInput",
-          detail: {
-            summary: "Create a new message (index)",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "messageInput" },
       )
       .get(
         "/:id",
-        async ({ params, messagesService }) => {
+        async ({ params, messagesService, status }) => {
           const message = await messagesService.getById({ id: params.id });
-          return { success: true, message };
+          if (!message) return status(400, { message: "Message not found" });
+          return message;
         },
-        {
-          params: messageIdParams,
-          detail: {
-            summary: "Get a message by ID",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: messageIdParams },
       )
       .patch(
         "/:id",
-        async ({ params, body, messagesService, user }) => {
-          await messagesService.validateOwnership({
+        async ({ params, body, messagesService, user, status }) => {
+          const validation = await messagesService.validateOwnership({
             id: params.id,
             userId: user.id,
           });
-
+          if ("error" in validation) {
+            if (validation.error === "not_found") return status(400, { message: "Message not found" });
+            if (validation.error === "not_authorized") return status(403, { message: "Not authorized" });
+          }
           const message = await messagesService.update({
             id: params.id,
             title: body.title,
             content: body.content,
           });
-
-          return {
-            success: true,
-            message,
-          };
+          if (!message) return status(400, { message: "Failed to update message" });
+          return message;
         },
-        {
-          params: messageIdParams,
-          body: "messageInput",
-          detail: {
-            summary: "Update a message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: messageIdParams, body: "messageInput" },
       )
       .delete(
         "/:id",
-        async ({ params, messagesService, user }) => {
-          await messagesService.validateOwnership({
+        async ({ params, messagesService, user, status }) => {
+          const validation = await messagesService.validateOwnership({
             id: params.id,
             userId: user.id,
           });
-
+          if ("error" in validation) {
+            if (validation.error === "not_found") return status(400, { message: "Message not found" });
+            if (validation.error === "not_authorized") return status(403, { message: "Not authorized" });
+          }
           await messagesService.delete({ id: params.id });
-
-          return {
-            success: true,
-          };
+          return { deleted: true };
         },
-        {
-          params: messageIdParams,
-          detail: {
-            summary: "Delete a message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: messageIdParams },
       ),
   );

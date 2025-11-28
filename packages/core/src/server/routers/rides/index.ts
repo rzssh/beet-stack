@@ -25,219 +25,197 @@ export const ridesRoutes = new Elysia({ prefix: "/rides" })
   })
   .guard({ auth: true }, (app) =>
     app
-      // Request a new ride (as rider)
       .post(
         "/request",
-        async ({ body, user, ridesService }) => {
-          const ride = await ridesService.requestRide({
+        async ({ body, user, ridesService, status }) => {
+          const result = await ridesService.requestRide({
             riderId: user.id,
             ...body,
           });
-          return { success: true, ride };
+          if (result.error) {
+            if (result.error === "active_ride_exists") {
+              return status(400, {
+                message: "You already have an active ride",
+              });
+            }
+            return status(500, { message: "Failed to create ride" });
+          }
+          return result.ride;
         },
-        {
-          body: "requestRide",
-          detail: {
-            summary: "Request a new ride",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "requestRide" },
       )
-      // Get active ride for current user
-      .get(
-        "/active",
-        async ({ user, ridesService }) => {
-          const ride = await ridesService.getActiveRide(user.id);
-          return { success: true, ride };
-        },
-        {
-          detail: {
-            summary: "Get user's active ride",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
-      // Get ride history
+      .get("/active", async ({ user, ridesService }) => {
+        return ridesService.getActiveRide(user.id);
+      })
       .get(
         "/history",
         async ({ query, user, ridesService }) => {
           const mode = query.mode ?? "rider";
           const limit = query.limit ? Number(query.limit) : undefined;
-          const rides = await ridesService.getHistory(user.id, mode, limit);
-          return { success: true, rides };
+          return ridesService.getHistory(user.id, mode, limit);
         },
-        {
-          query: "rideHistoryQuery",
-          detail: {
-            summary: "Get ride history",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { query: "rideHistoryQuery" },
       )
-      // Get pending ride requests near driver (for driver mode)
       .get(
         "/pending",
         async ({ query, ridesService }) => {
-          const rides = await ridesService.getPendingRequests(
+          return ridesService.getPendingRequests(
             Number(query.lat),
             Number(query.lng),
             query.radius ? Number(query.radius) : undefined,
           );
-          return { success: true, rides };
         },
-        {
-          query: "pendingRequestsQuery",
-          detail: {
-            summary: "Get pending ride requests near location",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { query: "pendingRequestsQuery" },
       )
-      // Get ride by ID
       .get(
         "/:id",
-        async ({ params, ridesService }) => {
-          const ride = await ridesService.getByIdOrFail(params.id);
-          return { success: true, ride };
+        async ({ params, ridesService, status }) => {
+          const ride = await ridesService.getById(params.id);
+          if (!ride) return status(400, { message: "Ride not found" });
+          return ride;
         },
-        {
-          params: "rideIdParams",
-          detail: {
-            summary: "Get ride details",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams" },
       )
-      // Accept a ride (as driver)
       .post(
         "/:id/accept",
-        async ({ params, user, ridesService }) => {
-          const ride = await ridesService.acceptRide(params.id, user.id);
-          return { success: true, ride };
+        async ({ params, user, ridesService, status }) => {
+          const result = await ridesService.acceptRide(params.id, user.id);
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              ride_not_available: "Ride is no longer available",
+              active_ride_exists: "You already have an active ride",
+              no_driver_profile: "Driver profile not found",
+              not_online: "Driver must be online to accept rides",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot accept ride",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          detail: {
-            summary: "Accept a ride request",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams" },
       )
-      // Driver arrived at pickup
       .post(
         "/:id/arrived",
-        async ({ params, user, ridesService }) => {
-          const ride = await ridesService.driverArrived(params.id, user.id);
-          return { success: true, ride };
+        async ({ params, user, ridesService, status }) => {
+          const result = await ridesService.driverArrived(params.id, user.id);
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized for this ride",
+              invalid_status: "Invalid ride status",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot mark arrived",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          detail: {
-            summary: "Mark driver as arrived at pickup",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams" },
       )
-      // Start the ride
       .post(
         "/:id/start",
-        async ({ params, user, ridesService }) => {
-          const ride = await ridesService.startRide(params.id, user.id);
-          return { success: true, ride };
+        async ({ params, user, ridesService, status }) => {
+          const result = await ridesService.startRide(params.id, user.id);
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized for this ride",
+              invalid_status: "Driver must arrive before starting ride",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot start ride",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          detail: {
-            summary: "Start the ride",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams" },
       )
-      // Complete the ride
       .post(
         "/:id/complete",
-        async ({ params, user, ridesService }) => {
-          const ride = await ridesService.completeRide(params.id, user.id);
-          return { success: true, ride };
+        async ({ params, user, ridesService, status }) => {
+          const result = await ridesService.completeRide(params.id, user.id);
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized for this ride",
+              invalid_status: "Ride must be in progress to complete",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot complete ride",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          detail: {
-            summary: "Complete the ride",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams" },
       )
-      // Cancel the ride
       .post(
         "/:id/cancel",
-        async ({ params, body, user, ridesService }) => {
-          const ride = await ridesService.cancelRide(
+        async ({ params, body, user, ridesService, status }) => {
+          const result = await ridesService.cancelRide(
             params.id,
             user.id,
             body.reason,
           );
-          return { success: true, ride };
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized to cancel this ride",
+              cannot_cancel: "Cannot cancel this ride",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot cancel ride",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          body: "cancelRide",
-          detail: {
-            summary: "Cancel the ride",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams", body: "cancelRide" },
       )
-      // Rate the ride (as rider - rates driver)
       .post(
         "/:id/rate/driver",
-        async ({ params, body, user, ridesService }) => {
-          const ride = await ridesService.rateRide(
+        async ({ params, body, user, ridesService, status }) => {
+          const result = await ridesService.rateRide(
             { rideId: params.id, ...body },
             user.id,
             "rider",
           );
-          return { success: true, ride };
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized to rate this ride",
+              invalid_status: "Can only rate completed rides",
+              already_rated: "You already rated this ride",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot rate",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          body: "rateRide",
-          detail: {
-            summary: "Rate the driver",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams", body: "rateRide" },
       )
-      // Rate the ride (as driver - rates rider)
       .post(
         "/:id/rate/rider",
-        async ({ params, body, user, ridesService }) => {
-          const ride = await ridesService.rateRide(
+        async ({ params, body, user, ridesService, status }) => {
+          const result = await ridesService.rateRide(
             { rideId: params.id, ...body },
             user.id,
             "driver",
           );
-          return { success: true, ride };
+          if (result.error) {
+            const messages: Record<string, string> = {
+              ride_not_found: "Ride not found",
+              not_authorized: "Not authorized to rate this ride",
+              invalid_status: "Can only rate completed rides",
+              already_rated: "You already rated this ride",
+            };
+            return status(400, {
+              message: messages[result.error] ?? "Cannot rate",
+            });
+          }
+          return result.ride;
         },
-        {
-          params: "rideIdParams",
-          body: "rateRide",
-          detail: {
-            summary: "Rate the rider",
-            tags: ["Rides"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { params: "rideIdParams", body: "rateRide" },
       ),
   );

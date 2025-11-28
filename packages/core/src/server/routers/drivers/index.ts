@@ -21,116 +21,72 @@ export const driversRoutes = new Elysia({ prefix: "/drivers" })
     nearbyDriversQuery: nearbyDriversQuery,
     driverLocation: driverLocationModel,
   })
-  // Public endpoint - get nearby drivers
   .get(
     "/nearby",
     async ({ query, driversService }) => {
-      const drivers = await driversService.getNearbyDrivers(
+      return driversService.getNearbyDrivers(
         Number(query.lat),
         Number(query.lng),
         query.radius ? Number(query.radius) : undefined,
       );
-      return { success: true, drivers };
     },
-    {
-      query: "nearbyDriversQuery",
-      detail: {
-        summary: "Get nearby online drivers",
-        tags: ["Drivers"],
-      },
-    },
+    { query: "nearbyDriversQuery" },
   )
-  // Protected endpoints
   .guard({ auth: true }, (app) =>
     app
-      .get(
-        "/profile",
-        async ({ user, driversService }) => {
-          const profile = await driversService.getProfile(user.id);
-          return { success: true, profile };
-        },
-        {
-          detail: {
-            summary: "Get current user's driver profile",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
+      .get("/profile", async ({ user, driversService }) => {
+        return driversService.getProfile(user.id);
+      })
       .post(
         "/profile",
-        async ({ body, user, driversService }) => {
-          const profile = await driversService.createProfile({
+        async ({ body, user, driversService, status }) => {
+          const result = await driversService.createProfile({
             userId: user.id,
             ...body,
           });
-          return { success: true, profile };
+          if ("error" in result) {
+            if (result.error === "conflict") {
+              return status(409, { message: "Driver profile already exists" });
+            }
+            return status(500, { message: "Failed to create profile" });
+          }
+          return result.profile;
         },
-        {
-          body: "createDriverProfile",
-          detail: {
-            summary: "Create driver profile",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "createDriverProfile" },
       )
       .patch(
         "/profile",
-        async ({ body, user, driversService }) => {
+        async ({ body, user, driversService, status }) => {
           const profile = await driversService.updateProfile(user.id, body);
-          return { success: true, profile };
+          if (!profile) return status(400, { message: "Driver profile not found" });
+          return profile;
         },
-        {
-          body: "updateDriverProfile",
-          detail: {
-            summary: "Update driver profile",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "updateDriverProfile" },
       )
-      .post(
-        "/go-online",
-        async ({ user, driversService }) => {
-          const profile = await driversService.goOnline(user.id);
-          return { success: true, profile };
-        },
-        {
-          detail: {
-            summary: "Set driver status to online",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
-      .post(
-        "/go-offline",
-        async ({ user, driversService }) => {
-          const profile = await driversService.goOffline(user.id);
-          return { success: true, profile };
-        },
-        {
-          detail: {
-            summary: "Set driver status to offline",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
+      .post("/go-online", async ({ user, driversService, status }) => {
+        const profile = await driversService.goOnline(user.id);
+        if (!profile) return status(400, { message: "Driver profile not found" });
+        return profile;
+      })
+      .post("/go-offline", async ({ user, driversService, status }) => {
+        const profile = await driversService.goOffline(user.id);
+        if (!profile) return status(400, { message: "Driver profile not found" });
+        return profile;
+      })
       .post(
         "/location",
-        async ({ body, user, driversService }) => {
-          const location = await driversService.updateLocation(user.id, body);
-          return { success: true, location };
+        async ({ body, user, driversService, status }) => {
+          const result = await driversService.updateLocation(user.id, body);
+          if ("error" in result) {
+            if (result.error === "not_found") {
+              return status(400, { message: "Driver profile not found" });
+            }
+            if (result.error === "not_online") {
+              return status(400, { message: "Driver must be online to update location" });
+            }
+          }
+          return result.location;
         },
-        {
-          body: "updateLocation",
-          detail: {
-            summary: "Update driver location",
-            tags: ["Drivers"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
+        { body: "updateLocation" },
       ),
   );

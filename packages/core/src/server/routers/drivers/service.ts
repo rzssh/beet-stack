@@ -1,6 +1,5 @@
 import { db, eq } from "@acme/db";
 import * as schema from "@acme/db/schema";
-import { AppError, ConflictError, NotFoundError } from "~/server/errors";
 
 interface CreateDriverProfileInput {
   userId: string;
@@ -31,27 +30,14 @@ interface UpdateLocationInput {
 
 export class DriversService {
   async getProfile(userId: string) {
-    const profile = await db.query.driverProfile.findFirst({
+    return db.query.driverProfile.findFirst({
       where: eq(schema.driverProfile.userId, userId),
     });
-    return profile;
-  }
-
-  async getProfileOrFail(userId: string) {
-    const profile = await this.getProfile(userId);
-    if (!profile) {
-      throw new NotFoundError("Driver profile", { userId });
-    }
-    return profile;
   }
 
   async createProfile(input: CreateDriverProfileInput) {
     const existing = await this.getProfile(input.userId);
-    if (existing) {
-      throw new ConflictError("Driver profile already exists", {
-        userId: input.userId,
-      });
-    }
+    if (existing) return { error: "conflict" as const, profile: existing };
 
     const [profile] = await db
       .insert(schema.driverProfile)
@@ -65,16 +51,11 @@ export class DriversService {
       })
       .returning();
 
-    if (!profile) {
-      throw new AppError("Failed to create driver profile", 500, "CREATE_FAILED");
-    }
-
-    return profile;
+    if (!profile) return { error: "create_failed" as const };
+    return { profile };
   }
 
   async updateProfile(userId: string, input: UpdateDriverProfileInput) {
-    await this.getProfileOrFail(userId);
-
     const [profile] = await db
       .update(schema.driverProfile)
       .set(input)
@@ -85,8 +66,6 @@ export class DriversService {
   }
 
   async goOnline(userId: string) {
-    await this.getProfileOrFail(userId);
-
     const [profile] = await db
       .update(schema.driverProfile)
       .set({ isOnline: true })
@@ -97,30 +76,26 @@ export class DriversService {
   }
 
   async goOffline(userId: string) {
-    await this.getProfileOrFail(userId);
-
     const [profile] = await db
       .update(schema.driverProfile)
       .set({ isOnline: false })
       .where(eq(schema.driverProfile.userId, userId))
       .returning();
 
-    // Remove location when going offline
-    await db
-      .delete(schema.driverLocation)
-      .where(eq(schema.driverLocation.driverId, userId));
+    if (profile) {
+      await db
+        .delete(schema.driverLocation)
+        .where(eq(schema.driverLocation.driverId, userId));
+    }
 
     return profile;
   }
 
   async updateLocation(userId: string, input: UpdateLocationInput) {
-    // Verify driver is online
-    const profile = await this.getProfileOrFail(userId);
-    if (!profile.isOnline) {
-      throw new AppError("Driver must be online to update location", 400, "NOT_ONLINE");
-    }
+    const profile = await this.getProfile(userId);
+    if (!profile) return { error: "not_found" as const };
+    if (!profile.isOnline) return { error: "not_online" as const };
 
-    // Upsert location
     const existing = await db.query.driverLocation.findFirst({
       where: eq(schema.driverLocation.driverId, userId),
     });
@@ -136,7 +111,7 @@ export class DriversService {
         })
         .where(eq(schema.driverLocation.driverId, userId))
         .returning();
-      return location;
+      return { location };
     }
 
     const [location] = await db
@@ -150,7 +125,7 @@ export class DriversService {
       })
       .returning();
 
-    return location;
+    return { location };
   }
 
   async getNearbyDrivers(lat: number, lng: number, radiusKm: number = 5) {

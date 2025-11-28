@@ -8,8 +8,7 @@ export const featureFlagsRoutes = new Elysia({ prefix: "/flags" })
   .get(
     "/",
     async ({ featureFlagsService }) => {
-      const flags = await featureFlagsService.getAllGlobal();
-      return { success: true, flags };
+      return featureFlagsService.getAllGlobal();
     },
     {
       detail: {
@@ -23,8 +22,7 @@ export const featureFlagsRoutes = new Elysia({ prefix: "/flags" })
       .get(
         "/me",
         async ({ user, featureFlagsService }) => {
-          const flags = await featureFlagsService.getUserFlags(user.id);
-          return { success: true, flags };
+          return featureFlagsService.getUserFlags(user.id);
         },
         {
           detail: {
@@ -37,12 +35,11 @@ export const featureFlagsRoutes = new Elysia({ prefix: "/flags" })
       .post(
         "/me/:flagId",
         async ({ user, params, body, featureFlagsService }) => {
-          const flag = await featureFlagsService.setUserFlag(
+          return featureFlagsService.setUserFlag(
             user.id,
             params.flagId,
             body.isEnabled,
           );
-          return { success: true, flag };
         },
         {
           params: t.Object({
@@ -62,7 +59,7 @@ export const featureFlagsRoutes = new Elysia({ prefix: "/flags" })
         "/me/:flagId",
         async ({ user, params, featureFlagsService }) => {
           await featureFlagsService.deleteUserFlag(user.id, params.flagId);
-          return { success: true };
+          return { deleted: true };
         },
         {
           params: t.Object({

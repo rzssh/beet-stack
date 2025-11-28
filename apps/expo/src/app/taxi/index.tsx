@@ -1,19 +1,19 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useLocationContext } from "~/providers/LocationProvider";
+import { Text } from "~/components/ui/text";
+import { darkMapStyle } from "~/constants/map-style";
 import { useTaxiSocket } from "~/hooks/useTaxiSocket";
+import { useLocationContext } from "~/providers/LocationProvider";
 import {
   driverMutations,
   driverQueries,
@@ -187,7 +187,9 @@ export default function TaxiScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
         <Stack.Screen options={{ headerShown: false }} />
-        <Text className="mb-4 text-xl text-foreground">Please sign in to continue</Text>
+        <Text className="mb-4 text-foreground text-xl">
+          Please sign in to continue
+        </Text>
         <Pressable
           onPress={() => router.push("/")}
           className="rounded-lg bg-primary px-6 py-3"
@@ -210,19 +212,30 @@ export default function TaxiScreen() {
 
   if (hasPermission === false) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+      <SafeAreaView className="flex-1 items-center justify-center bg-background px-6">
         <Stack.Screen options={{ headerShown: false }} />
-        <Text className="mb-4 text-center text-xl text-foreground">
-          Location permission required
+        <View className="mb-6 h-20 w-20 items-center justify-center rounded-full bg-zinc-800">
+          <Text className="text-4xl">📍</Text>
+        </View>
+        <Text className="mb-4 text-center font-semibold text-foreground text-xl">
+          Location Required
         </Text>
-        <Text className="mb-4 px-8 text-center text-zinc-400">
-          Please enable location in your device settings to use the taxi app.
+        <Text className="mb-6 text-center text-zinc-400">
+          We need your location to show nearby drivers and calculate routes.
         </Text>
         <Pressable
-          onPress={() => router.push("/")}
-          className="rounded-lg bg-zinc-700 px-6 py-3"
+          onPress={() => Linking.openSettings()}
+          className="mb-3 w-full rounded-lg bg-primary px-6 py-4"
         >
-          <Text className="text-white">Go Back</Text>
+          <Text className="text-center font-semibold text-white">
+            Open Settings
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/")}
+          className="w-full rounded-lg px-6 py-3"
+        >
+          <Text className="text-center text-zinc-400">Go Back</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -246,7 +259,7 @@ export default function TaxiScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View className="absolute left-4 right-4 top-16 z-10 gap-3">
+      <View className="absolute top-16 right-4 left-4 z-10 gap-3">
         <View className="flex-row items-center justify-between">
           <Pressable
             onPress={() => router.push("/")}
@@ -258,7 +271,9 @@ export default function TaxiScreen() {
           <View
             className={`rounded-full px-3 py-2 ${isConnected ? "bg-green-500" : "bg-red-500"}`}
           >
-            <Text className="text-xs text-white">{isConnected ? "Live" : "Offline"}</Text>
+            <Text className="text-white text-xs">
+              {isConnected ? "Live" : "Offline"}
+            </Text>
           </View>
         </View>
 
@@ -267,7 +282,11 @@ export default function TaxiScreen() {
             onPress={() => mode !== "rider" && toggleMode()}
             className={`rounded-full px-6 py-3 ${mode === "rider" ? "bg-primary" : "bg-white"}`}
           >
-            <Text className={mode === "rider" ? "font-semibold text-white" : "text-gray-600"}>
+            <Text
+              className={
+                mode === "rider" ? "font-semibold text-white" : "text-gray-600"
+              }
+            >
               Rider
             </Text>
           </Pressable>
@@ -275,7 +294,11 @@ export default function TaxiScreen() {
             onPress={() => mode !== "driver" && toggleMode()}
             className={`rounded-full px-6 py-3 ${mode === "driver" ? "bg-primary" : "bg-white"}`}
           >
-            <Text className={mode === "driver" ? "font-semibold text-white" : "text-gray-600"}>
+            <Text
+              className={
+                mode === "driver" ? "font-semibold text-white" : "text-gray-600"
+              }
+            >
               Driver
             </Text>
           </Pressable>
@@ -286,6 +309,7 @@ export default function TaxiScreen() {
         ref={mapRef}
         style={{ flex: 1 }}
         provider={PROVIDER_GOOGLE}
+        customMapStyle={darkMapStyle}
         showsUserLocation
         showsMyLocationButton={false}
         initialRegion={{
@@ -316,11 +340,14 @@ export default function TaxiScreen() {
         snapPoints={snapPoints}
         backgroundStyle={{ backgroundColor: "#18181b" }}
         handleIndicatorStyle={{ backgroundColor: "#71717a" }}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
       >
-        <BottomSheetView className="flex-1 px-4">
+        <BottomSheetScrollView className="flex-1 px-4">
           {mode === "rider" ? (
             <View className="gap-4">
-              <Text className="text-xl font-bold text-white">
+              <Text className="font-bold text-white text-xl">
                 {activeRide ? "Active Ride" : "Request a Ride"}
               </Text>
 
@@ -328,22 +355,28 @@ export default function TaxiScreen() {
                 <View className="gap-3">
                   <View className="rounded-lg bg-zinc-800 p-4">
                     <Text className="text-sm text-zinc-400">Status</Text>
-                    <Text className="text-lg font-semibold capitalize text-white">
+                    <Text className="font-semibold text-lg text-white capitalize">
                       {activeRide.status.replace("_", " ")}
                     </Text>
                   </View>
                   <View className="rounded-lg bg-zinc-800 p-4">
                     <Text className="text-sm text-zinc-400">Pickup</Text>
-                    <Text className="text-white">{activeRide.pickupAddress}</Text>
+                    <Text className="text-white">
+                      {activeRide.pickupAddress}
+                    </Text>
                   </View>
                   <View className="rounded-lg bg-zinc-800 p-4">
                     <Text className="text-sm text-zinc-400">Dropoff</Text>
-                    <Text className="text-white">{activeRide.dropoffAddress}</Text>
+                    <Text className="text-white">
+                      {activeRide.dropoffAddress}
+                    </Text>
                   </View>
                   {activeRide.estimatedPrice && (
                     <View className="rounded-lg bg-zinc-800 p-4">
-                      <Text className="text-sm text-zinc-400">Estimated Price</Text>
-                      <Text className="text-2xl font-bold text-green-400">
+                      <Text className="text-sm text-zinc-400">
+                        Estimated Price
+                      </Text>
+                      <Text className="font-bold text-2xl text-green-400">
                         ${activeRide.estimatedPrice.toFixed(2)}
                       </Text>
                     </View>
@@ -351,14 +384,14 @@ export default function TaxiScreen() {
                 </View>
               ) : (
                 <View className="gap-3">
-                  <TextInput
+                  <BottomSheetTextInput
                     className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
                     placeholder="Pickup location"
                     placeholderTextColor="#71717a"
                     value={pickupAddress}
                     onChangeText={setPickupAddress}
                   />
-                  <TextInput
+                  <BottomSheetTextInput
                     className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
                     placeholder="Where to?"
                     placeholderTextColor="#71717a"
@@ -368,7 +401,9 @@ export default function TaxiScreen() {
                   <Pressable
                     onPress={handleRequestRide}
                     disabled={
-                      requestRideMutation.isPending || !pickupAddress || !dropoffAddress
+                      requestRideMutation.isPending ||
+                      !pickupAddress ||
+                      !dropoffAddress
                     }
                     className={`rounded-lg py-4 ${
                       !pickupAddress || !dropoffAddress
@@ -377,7 +412,9 @@ export default function TaxiScreen() {
                     }`}
                   >
                     <Text className="text-center font-semibold text-white">
-                      {requestRideMutation.isPending ? "Requesting..." : "Request Ride"}
+                      {requestRideMutation.isPending
+                        ? "Requesting..."
+                        : "Request Ride"}
                     </Text>
                   </Pressable>
                 </View>
@@ -385,7 +422,7 @@ export default function TaxiScreen() {
             </View>
           ) : (
             <View className="gap-4">
-              <Text className="text-xl font-bold text-white">Driver Mode</Text>
+              <Text className="font-bold text-white text-xl">Driver Mode</Text>
 
               {!hasDriverProfile ? (
                 <View className="gap-3">
@@ -416,7 +453,7 @@ export default function TaxiScreen() {
                     <View
                       className={`rounded-full px-3 py-1 ${isDriverOnline ? "bg-green-500" : "bg-zinc-600"}`}
                     >
-                      <Text className="text-xs text-white">
+                      <Text className="text-white text-xs">
                         {isDriverOnline ? "Online" : "Offline"}
                       </Text>
                     </View>
@@ -428,7 +465,9 @@ export default function TaxiScreen() {
                         ? goOfflineMutation.mutate()
                         : goOnlineMutation.mutate()
                     }
-                    disabled={goOnlineMutation.isPending || goOfflineMutation.isPending}
+                    disabled={
+                      goOnlineMutation.isPending || goOfflineMutation.isPending
+                    }
                     className={`rounded-lg py-4 ${isDriverOnline ? "bg-red-500" : "bg-green-500"}`}
                   >
                     <Text className="text-center font-semibold text-white">
@@ -442,12 +481,15 @@ export default function TaxiScreen() {
 
                   {isDriverOnline && (
                     <View className="rounded-lg bg-zinc-800 p-4">
-                      <Text className="text-sm text-zinc-400">Your Location</Text>
+                      <Text className="text-sm text-zinc-400">
+                        Your Location
+                      </Text>
                       <Text className="text-white">
-                        {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
+                        {location.latitude.toFixed(5)},{" "}
+                        {location.longitude.toFixed(5)}
                       </Text>
                       {isTracking && (
-                        <Text className="mt-1 text-xs text-green-400">
+                        <Text className="mt-1 text-green-400 text-xs">
                           Location tracking active
                         </Text>
                       )}
@@ -457,7 +499,7 @@ export default function TaxiScreen() {
               )}
             </View>
           )}
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheet>
     </>
   );

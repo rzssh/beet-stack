@@ -1,12 +1,17 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
+import * as Linking from "expo-linking";
 import * as React from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, Card, CardContent, Spinner, Text } from "~/components/ui";
+import { darkMapStyle } from "~/constants/map-style";
 import { useTaxiSocket } from "~/hooks/useTaxiSocket";
 import { useLocationContext } from "~/providers/LocationProvider";
 import {
@@ -216,12 +221,21 @@ export default function Index() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background px-6">
         <Stack.Screen options={{ headerShown: false }} />
+        <View className="mb-6 h-20 w-20 items-center justify-center rounded-full bg-zinc-800">
+          <Text className="text-4xl">📍</Text>
+        </View>
         <Text variant="h2" className="mb-4 text-center">
           Location Required
         </Text>
         <Text variant="muted" className="mb-6 text-center">
-          Please enable location in your device settings to use the taxi app.
+          We need your location to show nearby drivers and calculate routes.
         </Text>
+        <Button onPress={() => Linking.openSettings()} className="mb-3 w-full">
+          <Text>Open Settings</Text>
+        </Button>
+        <Button variant="ghost" onPress={() => router.back()}>
+          <Text>Go Back</Text>
+        </Button>
       </SafeAreaView>
     );
   }
@@ -307,6 +321,7 @@ export default function Index() {
         ref={mapRef}
         style={{ flex: 1 }}
         provider={PROVIDER_GOOGLE}
+        customMapStyle={darkMapStyle}
         showsUserLocation
         showsMyLocationButton={false}
         initialRegion={{
@@ -335,11 +350,16 @@ export default function Index() {
         ref={bottomSheetRef}
         index={1}
         snapPoints={snapPoints}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
         backgroundStyle={{ backgroundColor: "#18181b" }}
         handleIndicatorStyle={{ backgroundColor: "#71717a" }}
         onAnimate={handleBottomSheetInteraction}
       >
-        <BottomSheetView className="flex-1 px-4">
+        <BottomSheetScrollView
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        >
           {mode === "rider" ? (
             <View className="gap-4">
               <Text variant="h3" className="text-white" asChild>
@@ -396,15 +416,29 @@ export default function Index() {
                 </View>
               ) : (
                 <View className="gap-3">
-                  <TextInput
-                    className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
+                  <BottomSheetTextInput
+                    style={{
+                      backgroundColor: "#27272a",
+                      borderRadius: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      color: "#fff",
+                      fontSize: 16,
+                    }}
                     placeholder="Pickup location"
                     placeholderTextColor="#71717a"
                     value={pickupAddress}
                     onChangeText={setPickupAddress}
                   />
-                  <TextInput
-                    className="rounded-lg bg-zinc-800 px-4 py-3 text-white"
+                  <BottomSheetTextInput
+                    style={{
+                      backgroundColor: "#27272a",
+                      borderRadius: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      color: "#fff",
+                      fontSize: 16,
+                    }}
                     placeholder="Where to?"
                     placeholderTextColor="#71717a"
                     value={dropoffAddress}
@@ -516,7 +550,7 @@ export default function Index() {
               )}
             </View>
           )}
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheet>
     </>
   );

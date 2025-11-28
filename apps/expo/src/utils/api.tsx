@@ -5,6 +5,27 @@ import { QueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth";
 import { getBaseUrl } from "./base-url";
 
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null) {
+    if ("message" in error && typeof error.message === "string") {
+      return error.message;
+    }
+    if ("value" in error && typeof error.value === "string") {
+      return error.value;
+    }
+    if (
+      "value" in error &&
+      typeof error.value === "object" &&
+      error.value !== null &&
+      "message" in error.value &&
+      typeof error.value.message === "string"
+    ) {
+      return error.value.message;
+    }
+  }
+  return fallback;
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -31,9 +52,9 @@ export const messageQueries = {
     queryFn: async () => {
       const response = await api.messages.get();
       if (response.error) {
-        throw new Error("Failed to fetch messages");
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch messages"));
       }
-      return response.data?.messages ?? [];
+      return response.data ?? [];
     },
   }),
   byId: (id: string) => ({
@@ -41,9 +62,9 @@ export const messageQueries = {
     queryFn: async () => {
       const response = await api.messages({ id }).get();
       if (response.error) {
-        throw new Error("Failed to fetch message");
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch message"));
       }
-      return response.data?.message;
+      return response.data;
     },
   }),
 };
@@ -53,16 +74,16 @@ export const messageMutations = {
     mutationFn: async (data: { title: string; content: string }) => {
       const response = await api.messages.post(data);
       if (response.error) {
-        throw new Error("Failed to create message");
+        throw new Error(extractErrorMessage(response.error, "Failed to create message"));
       }
-      return response.data?.message;
+      return response.data;
     },
   }),
   delete: () => ({
     mutationFn: async (id: string) => {
       const response = await api.messages({ id }).delete();
       if (response.error) {
-        throw new Error("Failed to delete message");
+        throw new Error(extractErrorMessage(response.error, "Failed to delete message"));
       }
       return response.data;
     },
@@ -74,8 +95,10 @@ export const driverQueries = {
     queryKey: ["driver", "profile"] as const,
     queryFn: async () => {
       const response = await api.drivers.profile.get();
-      if (response.error) throw new Error("Failed to fetch driver profile");
-      return response.data?.profile;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch driver profile"));
+      }
+      return response.data;
     },
   }),
   nearby: (lat: number, lng: number, radius?: number) => ({
@@ -84,8 +107,10 @@ export const driverQueries = {
       const response = await api.drivers.nearby.get({
         query: { lat, lng, radius },
       });
-      if (response.error) throw new Error("Failed to fetch nearby drivers");
-      return response.data?.drivers ?? [];
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch nearby drivers"));
+      }
+      return response.data ?? [];
     },
     enabled: lat !== 0 && lng !== 0,
   }),
@@ -101,22 +126,28 @@ export const driverMutations = {
       licensePlate: string;
     }) => {
       const response = await api.drivers.profile.post(data);
-      if (response.error) throw new Error("Failed to create driver profile");
-      return response.data?.profile;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to create driver profile"));
+      }
+      return response.data;
     },
   }),
   goOnline: () => ({
     mutationFn: async () => {
       const response = await api.drivers["go-online"].post({});
-      if (response.error) throw new Error("Failed to go online");
-      return response.data?.profile;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to go online"));
+      }
+      return response.data;
     },
   }),
   goOffline: () => ({
     mutationFn: async () => {
       const response = await api.drivers["go-offline"].post({});
-      if (response.error) throw new Error("Failed to go offline");
-      return response.data?.profile;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to go offline"));
+      }
+      return response.data;
     },
   }),
   updateLocation: () => ({
@@ -127,8 +158,10 @@ export const driverMutations = {
       speed?: number;
     }) => {
       const response = await api.drivers.location.post(data);
-      if (response.error) throw new Error("Failed to update location");
-      return response.data?.location;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to update location"));
+      }
+      return response.data;
     },
   }),
 };
@@ -138,17 +171,20 @@ export const rideQueries = {
     queryKey: ["rides", "active"] as const,
     queryFn: async () => {
       const response = await api.rides.active.get();
-      console.log("Active ride response:", response);
-      if (response.error) throw new Error("Failed to fetch active ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch active ride"));
+      }
+      return response.data;
     },
   }),
   history: (mode: "rider" | "driver" = "rider") => ({
     queryKey: ["rides", "history", mode] as const,
     queryFn: async () => {
       const response = await api.rides.history.get({ query: { mode } });
-      if (response.error) throw new Error("Failed to fetch ride history");
-      return response.data?.rides ?? [];
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch ride history"));
+      }
+      return response.data ?? [];
     },
   }),
   pending: (lat: number, lng: number) => ({
@@ -157,8 +193,10 @@ export const rideQueries = {
       const response = await api.rides.pending.get({
         query: { lat, lng },
       });
-      if (response.error) throw new Error("Failed to fetch pending rides");
-      return response.data?.rides ?? [];
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch pending rides"));
+      }
+      return response.data ?? [];
     },
     enabled: lat !== 0 && lng !== 0,
   }),
@@ -166,8 +204,10 @@ export const rideQueries = {
     queryKey: ["rides", id] as const,
     queryFn: async () => {
       const response = await api.rides({ id }).get();
-      if (response.error) throw new Error("Failed to fetch ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch ride"));
+      }
+      return response.data;
     },
   }),
 };
@@ -183,36 +223,46 @@ export const rideMutations = {
       dropoffAddress: string;
     }) => {
       const response = await api.rides.request.post(data);
-      if (response.error) throw new Error("Failed to request ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to request ride"));
+      }
+      return response.data;
     },
   }),
   accept: () => ({
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).accept.post({});
-      if (response.error) throw new Error("Failed to accept ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to accept ride"));
+      }
+      return response.data;
     },
   }),
   arrived: () => ({
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).arrived.post({});
-      if (response.error) throw new Error("Failed to mark arrived");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to mark arrived"));
+      }
+      return response.data;
     },
   }),
   start: () => ({
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).start.post({});
-      if (response.error) throw new Error("Failed to start ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to start ride"));
+      }
+      return response.data;
     },
   }),
   complete: () => ({
     mutationFn: async (rideId: string) => {
       const response = await api.rides({ id: rideId }).complete.post({});
-      if (response.error) throw new Error("Failed to complete ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to complete ride"));
+      }
+      return response.data;
     },
   }),
   cancel: () => ({
@@ -220,8 +270,10 @@ export const rideMutations = {
       const response = await api
         .rides({ id: data.rideId })
         .cancel.post({ reason: data.reason });
-      if (response.error) throw new Error("Failed to cancel ride");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to cancel ride"));
+      }
+      return response.data;
     },
   }),
   rateDriver: () => ({
@@ -234,8 +286,10 @@ export const rideMutations = {
         rating: data.rating,
         feedback: data.feedback,
       });
-      if (response.error) throw new Error("Failed to rate driver");
-      return response.data?.ride;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to rate driver"));
+      }
+      return response.data;
     },
   }),
 };
@@ -245,16 +299,20 @@ export const flagQueries = {
     queryKey: ["flags"] as const,
     queryFn: async () => {
       const response = await api.flags.get();
-      if (response.error) throw new Error("Failed to fetch flags");
-      return response.data?.flags ?? [];
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch flags"));
+      }
+      return response.data ?? [];
     },
   }),
   me: () => ({
     queryKey: ["flags", "me"] as const,
     queryFn: async () => {
       const response = await api.flags.me.get();
-      if (response.error) throw new Error("Failed to fetch user flags");
-      return response.data?.flags ?? [];
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to fetch user flags"));
+      }
+      return response.data ?? [];
     },
   }),
 };
@@ -265,8 +323,10 @@ export const flagMutations = {
       const response = await api.flags.me({ flagId: data.flagId }).post({
         isEnabled: data.isEnabled,
       });
-      if (response.error) throw new Error("Failed to set flag");
-      return response.data?.flag;
+      if (response.error) {
+        throw new Error(extractErrorMessage(response.error, "Failed to set flag"));
+      }
+      return response.data;
     },
   }),
 };
