@@ -41,8 +41,8 @@ packages/
 
 - Double quotes, `??` over `||`, no `any`
 - Absolute imports: `~/` for app code, `@acme/` for packages
-- Comments explain WHY, not WHAT
 - Edit existing files, don't create new ones unless necessary
+- NO COMMENTS unless they explain WHY something non-obvious is happening
 
 ## Key Patterns
 
@@ -128,5 +128,5 @@ Key vars:
 - Repository pattern / service layers
 - Single quotes
 - `||` for defaults (use `??`)
-- Comments stating the obvious
+- Comments (unless explaining WHY for non-obvious code)
 - Creating files without necessity

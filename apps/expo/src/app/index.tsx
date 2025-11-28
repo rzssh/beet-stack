@@ -130,6 +130,13 @@ function MobileAuth() {
       >
         <Text>{session ? "Sign Out" : "Sign In With Discord"}</Text>
       </Pressable>
+      {session && (
+        <Link asChild href="/taxi">
+          <Pressable className="mt-3 flex items-center rounded-lg bg-green-600 p-3">
+            <Text className="font-semibold text-white">Open Taxi App</Text>
+          </Pressable>
+        </Link>
+      )}
     </>
   );
 }

@@ -56,5 +56,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    [
+      "@rnmapbox/maps",
+      {
+        RNMapboxMapsVersion: "11.13.4",
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "Show current location on map.",
+      },
+    ],
   ],
 });

@@ -4,7 +4,7 @@
   "type": "module",
   "exports": {
     "./app": {
-      "types": "./src/routes/api/$.ts",
+      "types": "./tsc-build/src/routes/api/$.d.ts",
       "default": "./src/routes/api/$.ts"
     }
   },
