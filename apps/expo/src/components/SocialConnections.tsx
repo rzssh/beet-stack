@@ -1,31 +1,33 @@
-import { useColorScheme } from "nativewind";
 import * as React from "react";
-import { Image, Platform, View } from "react-native";
+import { useColorScheme, View } from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/utils";
 import { authClient } from "~/utils/auth";
 
 const SOCIAL_PROVIDERS = [
   {
-    provider: "discord",
-    label: "Discord",
-    icon: { uri: "https://img.clerk.com/static/discord.png?width=160" },
-    useTint: false,
-  },
-  {
     provider: "google",
     label: "Google",
-    icon: { uri: "https://img.clerk.com/static/google.png?width=160" },
-    useTint: false,
+    Icon: Ionicons,
+    iconName: "logo-google" as const,
+  },
+  {
+    provider: "discord",
+    label: "Discord",
+    Icon: MaterialCommunityIcons,
+    iconName: "discord" as const,
   },
 ] as const;
 
 export function SocialConnections() {
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [loadingProvider, setLoadingProvider] = React.useState<string | null>(null);
+
+  const iconColor = isDark ? "#a1a1aa" : "#52525b";
 
   const handleSocialSignIn = async (provider: string) => {
     setLoadingProvider(provider);
@@ -42,14 +44,15 @@ export function SocialConnections() {
   };
 
   return (
-    <View className="gap-3">
+    <View className="gap-4">
       {SOCIAL_PROVIDERS.map((item) => {
         const isLoading = loadingProvider === item.provider;
         return (
           <Button
             key={item.provider}
+            size="lg"
             variant="outline"
-            className="h-14 gap-3"
+            className="gap-3"
             disabled={loadingProvider !== null}
             onPress={() => handleSocialSignIn(item.provider)}
           >
@@ -57,21 +60,8 @@ export function SocialConnections() {
               <Spinner size="small" />
             ) : (
               <>
-                <Image
-                  source={item.icon}
-                  className={cn(
-                    "h-5 w-5",
-                    item.useTint && Platform.select({ web: "dark:invert" }),
-                  )}
-                  tintColor={Platform.select({
-                    native: item.useTint
-                      ? colorScheme === "dark"
-                        ? "white"
-                        : "black"
-                      : undefined,
-                  })}
-                />
-                <Text className="text-base">Continue with {item.label}</Text>
+                <item.Icon name={item.iconName} size={22} color={iconColor} />
+                <Text className="text-base font-medium">{item.label}</Text>
               </>
             )}
           </Button>

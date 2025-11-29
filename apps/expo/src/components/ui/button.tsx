@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 
 const buttonVariants = cva(
   cn(
-    "group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none",
+    "group shrink-0 flex-row items-center justify-center gap-2 rounded-2xl shadow-none",
     Platform.select({
       web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     }),
@@ -25,7 +25,7 @@ const buttonVariants = cva(
           }),
         ),
         outline: cn(
-          "border-border bg-background active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50 border shadow-sm shadow-black/5",
+          "border-2 border-border bg-background active:bg-accent dark:bg-input/30 dark:border-border dark:active:bg-input/50 shadow-sm shadow-black/5",
           Platform.select({
             web: "hover:bg-accent dark:hover:bg-input/50",
           }),
@@ -50,7 +50,7 @@ const buttonVariants = cva(
           Platform.select({ web: "has-[>svg]:px-2.5" }),
         ),
         lg: cn(
-          "h-11 rounded-md px-6 sm:h-10",
+          "h-16 px-6",
           Platform.select({ web: "has-[>svg]:px-4" }),
         ),
         icon: "h-10 w-10 sm:h-9 sm:w-9",

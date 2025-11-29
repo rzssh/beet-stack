@@ -5,6 +5,7 @@ export * from "./button";
 export * from "./card";
 export * from "./input";
 export * from "./input-accessory";
+export * from "./label";
 export * from "./progress";
 export * from "./separator";
 export * from "./skeleton";
