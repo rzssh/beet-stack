@@ -1,56 +1,21 @@
-import { Link, router } from "expo-router";
-import * as React from "react";
+import { Link } from "expo-router";
+import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button, Input, Separator, Spinner, Text } from "~/components/ui";
+import { FormField, FormInput } from "~/components/forms";
+import { Button, Separator, Spinner, Text } from "~/components/ui";
+import { useSignupForm } from "~/lib/hooks";
 import { authClient } from "~/utils/auth";
 
 export default function SignupScreen() {
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
-
-  const handleSignUp = async () => {
-    if (!name || !email || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await authClient.signUp.email({
-        name,
-        email,
-        password,
-      });
-
-      if (result.error) {
-        setError(result.error.message ?? "Sign up failed");
-        return;
-      }
-
-      router.replace("/");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Sign up failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { form, error } = useSignupForm();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [socialError, setSocialError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    setError(null);
+    setSocialError(null);
 
     try {
       await authClient.signIn.social({
@@ -58,7 +23,7 @@ export default function SignupScreen() {
         callbackURL: "/",
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Google sign in failed");
+      setSocialError(e instanceof Error ? e.message : "Google sign in failed");
     } finally {
       setIsGoogleLoading(false);
     }
@@ -79,33 +44,51 @@ export default function SignupScreen() {
           </View>
 
           <View className="gap-4">
-            <Input
-              label="Name"
-              placeholder="Your name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
+            <form.Field name="name">
+              {(field) => (
+                <FormField field={field} label="Name">
+                  {(field) => (
+                    <FormInput
+                      field={field}
+                      placeholder="Your name"
+                      autoCapitalize="words"
+                      autoComplete="name"
+                    />
+                  )}
+                </FormField>
+              )}
+            </form.Field>
 
-            <Input
-              label="Email"
-              placeholder="you@example.com"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
+            <form.Field name="email">
+              {(field) => (
+                <FormField field={field} label="Email">
+                  {(field) => (
+                    <FormInput
+                      field={field}
+                      placeholder="you@example.com"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      autoComplete="email"
+                    />
+                  )}
+                </FormField>
+              )}
+            </form.Field>
 
-            <Input
-              label="Password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="new-password"
-            />
+            <form.Field name="password">
+              {(field) => (
+                <FormField field={field} label="Password">
+                  {(field) => (
+                    <FormInput
+                      field={field}
+                      placeholder="At least 8 characters"
+                      secureTextEntry
+                      autoComplete="new-password"
+                    />
+                  )}
+                </FormField>
+              )}
+            </form.Field>
 
             {error && (
               <Text variant="small" className="text-destructive">
@@ -113,13 +96,23 @@ export default function SignupScreen() {
               </Text>
             )}
 
-            <Button
-              onPress={handleSignUp}
-              disabled={isLoading || isGoogleLoading}
-              className="mt-2"
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
             >
-              {isLoading ? <Spinner size="small" color="white" /> : <Text>Create Account</Text>}
-            </Button>
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  onPress={form.handleSubmit}
+                  disabled={!canSubmit || isSubmitting || isGoogleLoading}
+                  className="mt-2"
+                >
+                  {isSubmitting ? (
+                    <Spinner size="small" color="white" />
+                  ) : (
+                    <Text>Create Account</Text>
+                  )}
+                </Button>
+              )}
+            </form.Subscribe>
 
             <View className="my-4 flex-row items-center gap-4">
               <Separator className="flex-1" />
@@ -130,7 +123,7 @@ export default function SignupScreen() {
             <Button
               variant="outline"
               onPress={handleGoogleSignIn}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isGoogleLoading}
             >
               {isGoogleLoading ? (
                 <Spinner size="small" />
@@ -138,6 +131,12 @@ export default function SignupScreen() {
                 <Text>Sign up with Google</Text>
               )}
             </Button>
+
+            {socialError && (
+              <Text variant="small" className="text-destructive">
+                {socialError}
+              </Text>
+            )}
 
             <View className="mt-6 flex-row justify-center gap-1">
               <Text variant="muted">Already have an account?</Text>

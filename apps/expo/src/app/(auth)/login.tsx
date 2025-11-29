@@ -1,6 +1,6 @@
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
-import * as React from "react";
+import { Link } from "expo-router";
+import { useRef, useState } from "react";
 import {
   InputAccessoryView,
   Keyboard,
@@ -13,51 +13,22 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
-import { Button, Input, InputAccessory, Text } from "~/components/ui";
+import { FormField, FormInput } from "~/components/forms";
+import { Button, InputAccessory, Text } from "~/components/ui";
 import { Spinner } from "~/components/ui/spinner";
+import { useLoginForm } from "~/lib/hooks";
 import { authClient } from "~/utils/auth";
 
 const INPUT_ACCESSORY_ID = "login-input-accessory";
 
 export default function LoginScreen() {
+  const { form, error } = useLoginForm();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const passwordInputRef = React.useRef<TextInput>(null);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [socialLoading, setSocialLoading] = React.useState<string | null>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const iconColor = isDark ? "#a1a1aa" : "#52525b";
-
-  const handleEmailSignIn = async () => {
-    if (!email || !password) {
-      setError("Please enter email and password");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      if (result.error) {
-        setError(result.error.message ?? "Sign in failed");
-        return;
-      }
-
-      router.replace("/");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Sign in failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSocialSignIn = async (provider: "google" | "discord") => {
     setSocialLoading(provider);
@@ -95,34 +66,49 @@ export default function LoginScreen() {
             </Text>
 
             <View className="mt-12 gap-6">
-              <Input
-                className="border-red-500"
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
-                returnKeyType="next"
-                inputAccessoryViewID={
-                  Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined
-                }
-              />
+              <form.Field name="email">
+                {(field) => (
+                  <FormField field={field}>
+                    {(field) => (
+                      <FormInput
+                        field={field}
+                        placeholder="Email"
+                        keyboardType="email-address"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        onSubmitEditing={() =>
+                          passwordInputRef.current?.focus()
+                        }
+                        returnKeyType="next"
+                        inputAccessoryViewID={
+                          Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined
+                        }
+                      />
+                    )}
+                  </FormField>
+                )}
+              </form.Field>
 
-              <Input
-                ref={passwordInputRef}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-                returnKeyType="go"
-                onSubmitEditing={handleEmailSignIn}
-                inputAccessoryViewID={
-                  Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined
-                }
-              />
+              <form.Field name="password">
+                {(field) => (
+                  <FormField field={field}>
+                    {(field) => (
+                      <FormInput
+                        ref={passwordInputRef}
+                        field={field}
+                        placeholder="Password"
+                        secureTextEntry
+                        autoComplete="password"
+                        returnKeyType="go"
+                        onSubmitEditing={() => form.handleSubmit()}
+                        inputAccessoryViewID={
+                          Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined
+                        }
+                      />
+                    )}
+                  </FormField>
+                )}
+              </form.Field>
 
               <Pressable onPress={() => {}} hitSlop={12} className="self-start">
                 <Text className="text-muted-foreground">Forgot password?</Text>
@@ -130,23 +116,32 @@ export default function LoginScreen() {
 
               {error && <Text className="text-destructive">{error}</Text>}
 
-              <Button
-                size="lg"
-                onPress={handleEmailSignIn}
-                disabled={isLoading}
-                className="mt-2 rounded-xl"
+              <form.Subscribe
+                selector={(state) => [state.canSubmit, state.isSubmitting]}
               >
-                {isLoading ? (
-                  <Spinner size="small" color="white" />
-                ) : (
-                  <Text className="font-semibold text-lg">Sign In</Text>
+                {([canSubmit, isSubmitting]) => (
+                  <Button
+                    size="lg"
+                    onPress={form.handleSubmit}
+                    disabled={
+                      !canSubmit || isSubmitting || socialLoading !== null
+                    }
+                    className="mt-2 rounded-xl"
+                  >
+                    {isSubmitting ? (
+                      <Spinner size="small" color="white" />
+                    ) : (
+                      <Text className="font-semibold text-lg">Sign In</Text>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </form.Subscribe>
             </View>
 
             <View className="my-10 flex-row items-center">
               <View className="h-px flex-1 bg-border" />
-              <Text className="mx-4 text-muted-foreground text-xs uppercase tracking-wider">
+              {/* <Text className="mx-4 text-muted-foreground text-xs uppercase tracking-wider"> */}
+              <Text className="mx-4 text-muted-foreground text-xs uppercase">
                 or continue with
               </Text>
               <View className="h-px flex-1 bg-border" />
