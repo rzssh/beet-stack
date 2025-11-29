@@ -1,17 +1,30 @@
 import { Link, router } from "expo-router";
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import {
+  InputAccessoryView,
+  Keyboard,
+  Platform,
+  Pressable,
+  type TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button, Input, Separator, Spinner, Text } from "~/components/ui";
+import { SocialConnections } from "~/components/SocialConnections";
+import { Button, Input, InputAccessory, Separator, Text } from "~/components/ui";
+import { Spinner } from "~/components/ui/spinner";
 import { authClient } from "~/utils/auth";
 
+const INPUT_ACCESSORY_ID = "login-input-accessory";
+
 export default function LoginScreen() {
+  const passwordInputRef = React.useRef<TextInput>(null);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
   const handleEmailSignIn = async () => {
     if (!email || !password) {
@@ -41,100 +54,112 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    setError(null);
-
-    try {
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Google sign in failed");
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <View className="flex-1 justify-center px-6">
-          <View className="mb-12 items-center">
-            <Text variant="h1" className="mb-2">
-              Taxi App
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}
+          keyboardShouldPersistTaps="handled"
+          bottomOffset={50}
+        >
+          {/* Header */}
+          <View className="mb-10 items-center">
+            <View className="mb-5 h-24 w-24 items-center justify-center rounded-3xl bg-primary shadow-lg">
+              <Text className="text-5xl">🚕</Text>
+            </View>
+            <Text className="mb-2 text-3xl font-bold text-foreground">
+              Welcome back
             </Text>
-            <Text variant="muted">Sign in to your account</Text>
+            <Text className="text-center text-base text-muted-foreground">
+              Sign in to continue your journey
+            </Text>
           </View>
 
-          <View className="gap-4">
-            <Input
-              label="Email"
-              placeholder="you@example.com"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              error={error && !password ? error : undefined}
-            />
+          {/* Social Login */}
+          <SocialConnections />
 
-            <Input
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="password"
-            />
+          {/* Divider */}
+          <View className="my-8 flex-row items-center">
+            <Separator className="flex-1" />
+            <Text className="px-4 text-muted-foreground text-xs uppercase tracking-widest">
+              or
+            </Text>
+            <Separator className="flex-1" />
+          </View>
+
+          {/* Email Form */}
+          <View className="gap-5">
+            <View className="gap-2">
+              <Text className="font-semibold text-foreground">Email</Text>
+              <Input
+                placeholder="you@example.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoComplete="email"
+                autoCapitalize="none"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                returnKeyType="next"
+                inputAccessoryViewID={Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined}
+                className="h-12"
+              />
+            </View>
+
+            <View className="gap-2">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-semibold text-foreground">Password</Text>
+                <Pressable onPress={() => {}} hitSlop={8}>
+                  <Text className="text-primary text-sm font-medium">Forgot password?</Text>
+                </Pressable>
+              </View>
+              <Input
+                ref={passwordInputRef}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleEmailSignIn}
+                inputAccessoryViewID={Platform.OS === "ios" ? INPUT_ACCESSORY_ID : undefined}
+                className="h-12"
+              />
+            </View>
 
             {error && (
-              <Text variant="small" className="text-destructive">
-                {error}
-              </Text>
+              <View className="rounded-lg bg-destructive/10 px-4 py-3">
+                <Text className="text-center text-destructive text-sm font-medium">{error}</Text>
+              </View>
             )}
 
-            <Button
-              onPress={handleEmailSignIn}
-              disabled={isLoading || isGoogleLoading}
-              className="mt-2"
-            >
-              {isLoading ? <Spinner size="small" color="white" /> : <Text>Sign In</Text>}
-            </Button>
-
-            <View className="my-4 flex-row items-center gap-4">
-              <Separator className="flex-1" />
-              <Text variant="muted">or continue with</Text>
-              <Separator className="flex-1" />
-            </View>
-
-            <Button
-              variant="outline"
-              onPress={handleGoogleSignIn}
-              disabled={isLoading || isGoogleLoading}
-            >
-              {isGoogleLoading ? (
-                <Spinner size="small" />
+            <Button onPress={handleEmailSignIn} disabled={isLoading} className="h-12 mt-2">
+              {isLoading ? (
+                <Spinner size="small" color="white" />
               ) : (
-                <Text>Sign in with Google</Text>
+                <Text className="text-base font-semibold">Sign In</Text>
               )}
             </Button>
-
-            <View className="mt-6 flex-row justify-center gap-1">
-              <Text variant="muted">Don't have an account?</Text>
-              <Link href="/(auth)/signup" asChild>
-                <Pressable>
-                  <Text className="text-primary">Sign up</Text>
-                </Pressable>
-              </Link>
-            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+
+          {/* Footer */}
+          <View className="mt-10 flex-row items-center justify-center">
+            <Text className="text-muted-foreground">
+              Don't have an account?{" "}
+            </Text>
+            <Link href="/(auth)/signup" asChild>
+              <Pressable hitSlop={8}>
+                <Text className="font-bold text-primary">Sign up</Text>
+              </Pressable>
+            </Link>
+          </View>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
+
+      {Platform.OS === "ios" && (
+        <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+          <InputAccessory />
+        </InputAccessoryView>
+      )}
     </SafeAreaView>
   );
 }

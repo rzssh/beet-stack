@@ -4,6 +4,7 @@ export * from "./badge";
 export * from "./button";
 export * from "./card";
 export * from "./input";
+export * from "./input-accessory";
 export * from "./progress";
 export * from "./separator";
 export * from "./skeleton";
