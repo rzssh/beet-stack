@@ -9,7 +9,7 @@ function Input({
   return (
     <TextInput
       className={cn(
-        "flex h-16 w-full min-w-0 flex-row items-center rounded-2xl border-2 border-border bg-background px-5 text-lg text-foreground dark:bg-input/30",
+        "flex h-16 w-full min-w-0 flex-row items-center rounded-2xl border-2 border-border bg-background px-5 text-foreground text-lg dark:bg-input/30",
         props.editable === false &&
           cn(
             "opacity-50",

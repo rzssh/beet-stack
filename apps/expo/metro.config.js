@@ -26,7 +26,4 @@ config.cacheStores = [
 
 
 /** @type {import('expo/metro-config').MetroConfig} */
-module.exports = withNativewind(config, {
-  input: "./src/styles.css",
-  inlineRem: 16,
-});
+module.exports = withNativewind(config);

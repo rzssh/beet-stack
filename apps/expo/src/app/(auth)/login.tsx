@@ -1,8 +1,4 @@
-import {
-  FontAwesome6,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import * as React from "react";
 import {
@@ -100,6 +96,7 @@ export default function LoginScreen() {
 
             <View className="mt-12 gap-6">
               <Input
+                className="border-red-500"
                 placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
@@ -137,7 +134,7 @@ export default function LoginScreen() {
                 size="lg"
                 onPress={handleEmailSignIn}
                 disabled={isLoading}
-                className="mt-2"
+                className="mt-2 rounded-xl"
               >
                 {isLoading ? (
                   <Spinner size="small" color="white" />
