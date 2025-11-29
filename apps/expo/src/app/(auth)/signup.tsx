@@ -9,7 +9,7 @@ import { useSignupForm } from "~/lib/hooks";
 import { authClient } from "~/utils/auth";
 
 export default function SignupScreen() {
-  const { form, error } = useSignupForm();
+  const form = useSignupForm();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [socialError, setSocialError] = useState<string | null>(null);
 
@@ -90,27 +90,32 @@ export default function SignupScreen() {
               )}
             </form.Field>
 
-            {error && (
-              <Text variant="small" className="text-destructive">
-                {error}
-              </Text>
-            )}
-
             <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              selector={(state) => [
+                state.canSubmit,
+                state.isSubmitting,
+                state.errorMap.onSubmit,
+              ]}
             >
-              {([canSubmit, isSubmitting]) => (
-                <Button
-                  onPress={form.handleSubmit}
-                  disabled={!canSubmit || isSubmitting || isGoogleLoading}
-                  className="mt-2"
-                >
-                  {isSubmitting ? (
-                    <Spinner size="small" color="white" />
-                  ) : (
-                    <Text>Create Account</Text>
+              {([canSubmit, isSubmitting, submitError]) => (
+                <>
+                  {submitError && (
+                    <Text variant="small" className="text-destructive">
+                      {submitError}
+                    </Text>
                   )}
-                </Button>
+                  <Button
+                    onPress={form.handleSubmit}
+                    disabled={!canSubmit || isSubmitting || isGoogleLoading}
+                    className="mt-2"
+                  >
+                    {isSubmitting ? (
+                      <Spinner size="small" color="white" />
+                    ) : (
+                      <Text>Create Account</Text>
+                    )}
+                  </Button>
+                </>
               )}
             </form.Subscribe>
 

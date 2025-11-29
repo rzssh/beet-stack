@@ -25,13 +25,19 @@ export function FormField<
   TData,
 >({ field, label, children }: FormFieldProps<TParentData, TName, TFieldValidator, TFormValidator, TData>) {
   const errors = field.state.meta.errors;
+  const errorMessage =
+    errors.length > 0
+      ? typeof errors[0] === "string"
+        ? errors[0]
+        : (errors[0] as { message?: string })?.message ?? "Validation error"
+      : null;
 
   return (
     <View className="gap-2">
       {label && <Label nativeID={`label-${field.name}`}>{label}</Label>}
       {children(field)}
-      {errors.length > 0 && (
-        <Text className="text-destructive text-sm">{errors[0]}</Text>
+      {errorMessage && (
+        <Text className="text-destructive text-sm">{errorMessage}</Text>
       )}
     </View>
   );

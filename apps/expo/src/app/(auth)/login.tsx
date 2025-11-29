@@ -22,7 +22,7 @@ import { authClient } from "~/utils/auth";
 const INPUT_ACCESSORY_ID = "login-input-accessory";
 
 export default function LoginScreen() {
-  const { form, error } = useLoginForm();
+  const form = useLoginForm();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const passwordInputRef = useRef<TextInput>(null);
@@ -114,26 +114,33 @@ export default function LoginScreen() {
                 <Text className="text-muted-foreground">Forgot password?</Text>
               </Pressable>
 
-              {error && <Text className="text-destructive">{error}</Text>}
-
               <form.Subscribe
-                selector={(state) => [state.canSubmit, state.isSubmitting]}
+                selector={(state) => [
+                  state.canSubmit,
+                  state.isSubmitting,
+                  state.errorMap.onSubmit,
+                ]}
               >
-                {([canSubmit, isSubmitting]) => (
-                  <Button
-                    size="lg"
-                    onPress={form.handleSubmit}
-                    disabled={
-                      !canSubmit || isSubmitting || socialLoading !== null
-                    }
-                    className="mt-2 rounded-xl"
-                  >
-                    {isSubmitting ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      <Text className="font-semibold text-lg">Sign In</Text>
+                {([canSubmit, isSubmitting, submitError]) => (
+                  <>
+                    {submitError && (
+                      <Text className="text-destructive">{submitError}</Text>
                     )}
-                  </Button>
+                    <Button
+                      size="lg"
+                      onPress={form.handleSubmit}
+                      disabled={
+                        !canSubmit || isSubmitting || socialLoading !== null
+                      }
+                      className="mt-2 rounded-xl"
+                    >
+                      {isSubmitting ? (
+                        <Spinner size="small" color="white" />
+                      ) : (
+                        <Text className="font-semibold text-lg">Sign In</Text>
+                      )}
+                    </Button>
+                  </>
                 )}
               </form.Subscribe>
             </View>

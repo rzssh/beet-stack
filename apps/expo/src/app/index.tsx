@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card, CardContent, Spinner, Text } from "~/components/ui";
 import { darkMapStyle } from "~/constants/map-style";
 import { useTaxiSocket } from "~/hooks/useTaxiSocket";
+import { useAuth, useTaxiMode } from "~/lib/hooks";
 import { useLocationContext } from "~/providers/LocationProvider";
 import {
   driverMutations,
@@ -20,9 +21,6 @@ import {
   rideMutations,
   rideQueries,
 } from "~/utils/api";
-import { authClient } from "~/utils/auth";
-
-type UserMode = "rider" | "driver";
 
 interface DriverMarker {
   driverId: string;
@@ -33,10 +31,8 @@ interface DriverMarker {
 
 export default function Index() {
   const queryClient = useQueryClient();
-  const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const isAuthenticated = !!session?.user;
-
-  const [mode, setMode] = React.useState<UserMode>("rider");
+  const { session, isLoading: sessionLoading, isAuthenticated } = useAuth();
+  const { mode, toggleMode: toggleTaxiMode } = useTaxiMode();
   const [driverMarkers, setDriverMarkers] = React.useState<DriverMarker[]>([]);
   const [pickupAddress, setPickupAddress] = React.useState("");
   const [dropoffAddress, setDropoffAddress] = React.useState("");
@@ -194,12 +190,13 @@ export default function Index() {
     if (mode === "driver" && driverProfileQuery.data?.isOnline) {
       goOfflineMutation.mutate();
     }
-    setMode((prev) => (prev === "rider" ? "driver" : "rider"));
+    toggleTaxiMode();
   }, [
     isAuthenticated,
     mode,
     driverProfileQuery.data?.isOnline,
     goOfflineMutation,
+    toggleTaxiMode,
   ]);
 
   const handleBottomSheetInteraction = React.useCallback(() => {

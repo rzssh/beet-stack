@@ -1,14 +1,16 @@
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useState } from "react";
-import * as v from "valibot";
+import { useRef } from "react";
 
+import { authQueries } from "~/lib/api/auth";
 import type { SignupInput } from "~/lib/schema";
 import { signupSchema } from "~/lib/schema";
 import { authClient } from "~/utils/auth";
 
 export function useSignupForm() {
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const errorRef = useRef<string | null>(null);
 
   const form = useForm<SignupInput>({
     defaultValues: {
@@ -16,26 +18,37 @@ export function useSignupForm() {
       email: "",
       password: "",
     },
-    onSubmit: async ({ value }) => {
-      setError(null);
+    onSubmit: async ({ value, formApi }) => {
+      errorRef.current = null;
 
       try {
         const result = await authClient.signUp.email(value);
 
         if (result.error) {
-          setError(result.error.message ?? "Sign up failed");
+          errorRef.current = result.error.message ?? "Sign up failed";
+          formApi.setErrorMap({
+            onSubmit: result.error.message ?? "Sign up failed",
+          });
           return;
         }
 
+        await queryClient.invalidateQueries({
+          queryKey: authQueries.session().queryKey,
+        });
+
         router.replace("/");
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Sign up failed");
+        const errorMsg = e instanceof Error ? e.message : "Sign up failed";
+        errorRef.current = errorMsg;
+        formApi.setErrorMap({
+          onSubmit: errorMsg,
+        });
       }
     },
     validators: {
-      onChange: signupSchema,
+      onBlur: signupSchema,
     },
   });
 
-  return { form, error };
+  return form;
 }

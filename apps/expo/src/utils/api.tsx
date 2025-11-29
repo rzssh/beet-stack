@@ -43,6 +43,8 @@ export const api = treaty<App>(getBaseUrl(), {
       return { Cookie: cookies };
     }
   },
+  onRequest: (path, opts) => console.log(`[API] ${opts.method} ${path}`),
+  onResponse: (res) => console.log(`[API] ${res.status} ${res.url}`),
 }).api;
 
 // Helper functions for React Query integration
