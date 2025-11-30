@@ -197,6 +197,10 @@ export const rideQueries = {
     queryFn: async () => {
       const response = await api.rides.active.get();
       if (response.error) {
+        // Return null instead of throwing on 400 (no active ride)
+        if (response.status === 400) {
+          return null;
+        }
         throw new Error(
           extractErrorMessage(response.error, "Failed to fetch active ride"),
         );
@@ -377,6 +381,37 @@ export const flagMutations = {
       if (response.error) {
         throw new Error(
           extractErrorMessage(response.error, "Failed to set flag"),
+        );
+      }
+      return response.data;
+    },
+  }),
+};
+
+export const placesQueries = {
+  autocomplete: (input: string, sessionToken: string, locationBias?: any) => ({
+    queryKey: ["places", "autocomplete", input, locationBias] as const,
+    queryFn: async () => {
+      const response = await api.places.autocomplete.post({
+        input,
+        sessionToken,
+        locationBias,
+      });
+      if (response.error) {
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch autocomplete"),
+        );
+      }
+      return response.data ?? [];
+    },
+  }),
+  details: (placeId: string) => ({
+    queryKey: ["places", "details", placeId] as const,
+    queryFn: async () => {
+      const response = await api.places[{ id: placeId }].details.get();
+      if (response.error) {
+        throw new Error(
+          extractErrorMessage(response.error, "Failed to fetch place details"),
         );
       }
       return response.data;

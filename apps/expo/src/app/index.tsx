@@ -1,25 +1,29 @@
-import BottomSheet, {
-  BottomSheetScrollView,
-  BottomSheetTextInput,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { router, Stack } from "expo-router";
 import * as React from "react";
 import { Pressable, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+  RideMap,
+  RideRequestForm,
+  DriverDashboard,
+  DriverRideController,
+  RiderStatusDisplay,
+  RideRating,
+} from "~/components/ride";
 import { Button, Card, CardContent, Spinner, Text } from "~/components/ui";
-import { darkMapStyle } from "~/constants/map-style";
+import { useActiveRide } from "~/hooks/useActiveRide";
+import { useDirections } from "~/hooks/useDirections";
 import { useTaxiSocket } from "~/hooks/useTaxiSocket";
 import { useAuth, useTaxiMode } from "~/lib/hooks";
 import { useLocationContext } from "~/providers/LocationProvider";
 import {
   driverMutations,
   driverQueries,
-  rideMutations,
-  rideQueries,
 } from "~/utils/api";
 
 interface DriverMarker {
@@ -29,13 +33,19 @@ interface DriverMarker {
   heading?: number;
 }
 
+interface Location {
+  lat: number;
+  lng: number;
+  address: string;
+}
+
 export default function Index() {
   const queryClient = useQueryClient();
   const { session, isLoading: sessionLoading, isAuthenticated } = useAuth();
   const { mode, toggleMode: toggleTaxiMode } = useTaxiMode();
+  const [pickupLocation, setPickupLocation] = React.useState<Location | null>(null);
+  const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(null);
   const [driverMarkers, setDriverMarkers] = React.useState<DriverMarker[]>([]);
-  const [pickupAddress, setPickupAddress] = React.useState("");
-  const [dropoffAddress, setDropoffAddress] = React.useState("");
 
   const mapRef = React.useRef<MapView>(null);
   const bottomSheetRef = React.useRef<BottomSheet>(null);
@@ -78,16 +88,21 @@ export default function Index() {
     enabled: mode === "driver" && isReady,
   });
 
-  const activeRideQuery = useQuery({
-    ...rideQueries.active(),
-    enabled: isReady,
-    refetchInterval: isReady ? 5000 : false,
-  });
+  const activeRideQuery = useActiveRide();
 
   const nearbyDriversQuery = useQuery({
     ...driverQueries.nearby(location?.latitude ?? 0, location?.longitude ?? 0),
     enabled: mode === "rider" && isReady,
     refetchInterval: isReady ? 10000 : false,
+  });
+
+  const directionsQuery = useDirections({
+    origin: pickupLocation
+      ? { lat: pickupLocation.lat, lng: pickupLocation.lng }
+      : null,
+    destination: dropoffLocation
+      ? { lat: dropoffLocation.lat, lng: dropoffLocation.lng }
+      : null,
   });
 
   const goOnlineMutation = useMutation({
@@ -107,14 +122,6 @@ export default function Index() {
   });
 
   const updateLocationMutation = useMutation(driverMutations.updateLocation());
-
-  const requestRideMutation = useMutation({
-    ...rideMutations.request(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
-      bottomSheetRef.current?.snapToIndex(0);
-    },
-  });
 
   React.useEffect(() => {
     if (mode === "driver" && isTracking && location) {
@@ -147,40 +154,6 @@ export default function Index() {
       );
     }
   }, [nearbyDriversQuery.data]);
-
-  React.useEffect(() => {
-    if (location && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  }, [location?.latitude, location?.longitude]);
-
-  const handleRequestRide = React.useCallback(() => {
-    if (!isAuthenticated) {
-      router.push("/(auth)/login");
-      return;
-    }
-    if (!location || !pickupAddress || !dropoffAddress) return;
-
-    requestRideMutation.mutate({
-      pickupLat: location.latitude,
-      pickupLng: location.longitude,
-      pickupAddress,
-      dropoffLat: location.latitude + 0.01,
-      dropoffLng: location.longitude + 0.01,
-      dropoffAddress,
-    });
-  }, [
-    isAuthenticated,
-    location,
-    pickupAddress,
-    dropoffAddress,
-    requestRideMutation,
-  ]);
 
   const toggleMode = React.useCallback(() => {
     if (!isAuthenticated) {
@@ -314,40 +287,22 @@ export default function Index() {
         </View>
       </View>
 
-      <MapView
+      <RideMap
         ref={mapRef}
-        style={{ flex: 1 }}
-        provider={PROVIDER_GOOGLE}
-        customMapStyle={darkMapStyle}
-        showsUserLocation
-        showsMyLocationButton={false}
-        initialRegion={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        {mode === "rider" &&
-          driverMarkers.map((marker) => (
-            <Marker
-              key={marker.driverId}
-              identifier={`driver-${marker.driverId}`}
-              coordinate={{ latitude: marker.lat, longitude: marker.lng }}
-              title="Driver"
-            >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-yellow-500 shadow-lg">
-                <Text className="text-lg">🚗</Text>
-              </View>
-            </Marker>
-          ))}
-      </MapView>
+        location={location}
+        mode={mode}
+        driverMarkers={driverMarkers}
+        pickupLocation={pickupLocation}
+        dropoffLocation={dropoffLocation}
+        directionsQuery={directionsQuery}
+      />
 
       <BottomSheet
         ref={bottomSheetRef}
         index={1}
         snapPoints={snapPoints}
-        keyboardBehavior="interactive"
+        enablePanDownToClose={false}
+        keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustResize"
         backgroundStyle={{ backgroundColor: "#18181b" }}
@@ -359,133 +314,66 @@ export default function Index() {
         >
           {mode === "rider" ? (
             <View className="gap-4">
-              <Text variant="h3" className="text-white">
-                {activeRide ? "Active Ride" : "Request a Ride"}
-              </Text>
-
-              {!isAuthenticated ? (
-                <Card className="border-zinc-700 bg-zinc-800">
-                  <CardContent className="gap-3 pt-4">
-                    <Text className="text-center text-white">
-                      Sign in to request rides
-                    </Text>
-                    <Button onPress={() => router.push("/(auth)/login")}>
-                      <Text>Sign In</Text>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : activeRide ? (
-                <View className="gap-3">
-                  <Card className="border-zinc-700 bg-zinc-800">
-                    <CardContent className="pt-4">
-                      <Text variant="muted">Status</Text>
-                      <Text variant="large" className="text-white capitalize">
-                        {activeRide.status.replace("_", " ")}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-zinc-700 bg-zinc-800">
-                    <CardContent className="pt-4">
-                      <Text variant="muted">Pickup</Text>
-                      <Text className="text-white">
-                        {activeRide.pickupAddress}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-zinc-700 bg-zinc-800">
-                    <CardContent className="pt-4">
-                      <Text variant="muted">Dropoff</Text>
-                      <Text className="text-white">
-                        {activeRide.dropoffAddress}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                  {activeRide.estimatedPrice && (
-                    <Card className="border-zinc-700 bg-zinc-800">
-                      <CardContent className="pt-4">
-                        <Text variant="muted">Estimated Price</Text>
-                        <Text variant="h2" className="text-green-400">
-                          ${activeRide.estimatedPrice.toFixed(2)}
-                        </Text>
-                      </CardContent>
-                    </Card>
-                  )}
-                </View>
+              {activeRide ? (
+                activeRide.status === "completed" ? (
+                  <RideRating
+                    ride={activeRide}
+                    onComplete={() => {
+                      queryClient.invalidateQueries({ queryKey: ["rides"] });
+                    }}
+                  />
+                ) : (
+                  <RiderStatusDisplay
+                    ride={activeRide}
+                    onComplete={() => {
+                      queryClient.invalidateQueries({ queryKey: ["rides"] });
+                    }}
+                  />
+                )
               ) : (
-                <View className="gap-3">
-                  <BottomSheetTextInput
-                    style={{
-                      backgroundColor: "#27272a",
-                      borderRadius: 8,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      color: "#fff",
-                      fontSize: 16,
-                    }}
-                    placeholder="Pickup location"
-                    placeholderTextColor="#71717a"
-                    value={pickupAddress}
-                    onChangeText={setPickupAddress}
-                  />
-                  <BottomSheetTextInput
-                    style={{
-                      backgroundColor: "#27272a",
-                      borderRadius: 8,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      color: "#fff",
-                      fontSize: 16,
-                    }}
-                    placeholder="Where to?"
-                    placeholderTextColor="#71717a"
-                    value={dropoffAddress}
-                    onChangeText={setDropoffAddress}
-                  />
-                  <Button
-                    onPress={handleRequestRide}
-                    disabled={
-                      requestRideMutation.isPending ||
-                      !pickupAddress ||
-                      !dropoffAddress
-                    }
-                  >
-                    {requestRideMutation.isPending ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      <Text>Request Ride</Text>
-                    )}
-                  </Button>
-                </View>
+                <RideRequestForm
+                  activeRide={activeRide}
+                  onLocationsChange={(pickup, dropoff) => {
+                    setPickupLocation(pickup);
+                    setDropoffLocation(dropoff);
+                  }}
+                />
               )}
             </View>
           ) : (
             <View className="gap-4">
-              <Text variant="h3" className="text-white">
-                Driver Mode
-              </Text>
-
               {!isAuthenticated ? (
-                <Card className="border-zinc-700 bg-zinc-800">
-                  <CardContent className="gap-3 pt-4">
-                    <Text className="text-center text-white">
-                      Sign in to drive
-                    </Text>
-                    <Button onPress={() => router.push("/(auth)/login")}>
-                      <Text>Sign In</Text>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : !hasDriverProfile ? (
-                <View className="gap-3">
-                  <Text variant="muted">
-                    You need to register as a driver first
+                <>
+                  <Text variant="h3" className="text-white">
+                    Driver Mode
                   </Text>
-                  <Button onPress={() => router.push("/taxi/register-driver")}>
-                    <Text>Register as Driver</Text>
-                  </Button>
-                </View>
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardContent className="gap-3 pt-4">
+                      <Text className="text-center text-white">
+                        Sign in to drive
+                      </Text>
+                      <Button onPress={() => router.push("/(auth)/login")}>
+                        <Text>Sign In</Text>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : !hasDriverProfile ? (
+                <>
+                  <Text variant="h3" className="text-white">
+                    Driver Mode
+                  </Text>
+                  <View className="gap-3">
+                    <Text variant="muted">
+                      You need to register as a driver first
+                    </Text>
+                    <Button onPress={() => router.push("/taxi/register-driver")}>
+                      <Text>Register as Driver</Text>
+                    </Button>
+                  </View>
+                </>
               ) : (
-                <View className="gap-4">
+                <>
                   <Card className="border-zinc-700 bg-zinc-800">
                     <CardContent className="flex-row items-center justify-between pt-4">
                       <View>
@@ -507,43 +395,37 @@ export default function Index() {
                     </CardContent>
                   </Card>
 
-                  <Button
-                    variant={isDriverOnline ? "destructive" : "default"}
-                    onPress={() =>
-                      isDriverOnline
-                        ? goOfflineMutation.mutate()
-                        : goOnlineMutation.mutate()
-                    }
-                    disabled={
-                      goOnlineMutation.isPending || goOfflineMutation.isPending
-                    }
-                    className={!isDriverOnline ? "bg-green-500" : undefined}
-                  >
-                    {goOnlineMutation.isPending ||
-                    goOfflineMutation.isPending ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      <Text>{isDriverOnline ? "Go Offline" : "Go Online"}</Text>
-                    )}
-                  </Button>
-
-                  {isDriverOnline && (
-                    <Card className="border-zinc-700 bg-zinc-800">
-                      <CardContent className="pt-4">
-                        <Text variant="muted">Your Location</Text>
-                        <Text className="text-white">
-                          {location.latitude.toFixed(5)},{" "}
-                          {location.longitude.toFixed(5)}
-                        </Text>
-                        {isTracking && (
-                          <Text variant="small" className="mt-1 text-green-400">
-                            Location tracking active
-                          </Text>
+                  {!isDriverOnline ? (
+                    <Button
+                      onPress={() => goOnlineMutation.mutate()}
+                      disabled={goOnlineMutation.isPending}
+                      className="bg-green-500"
+                    >
+                      {goOnlineMutation.isPending ? (
+                        <Spinner size="small" color="white" />
+                      ) : (
+                        <Text className="font-semibold">Go Online</Text>
+                      )}
+                    </Button>
+                  ) : activeRide ? (
+                    <DriverRideController ride={activeRide} />
+                  ) : (
+                    <>
+                      <DriverDashboard />
+                      <Button
+                        variant="destructive"
+                        onPress={() => goOfflineMutation.mutate()}
+                        disabled={goOfflineMutation.isPending}
+                      >
+                        {goOfflineMutation.isPending ? (
+                          <Spinner size="small" color="white" />
+                        ) : (
+                          <Text>Go Offline</Text>
                         )}
-                      </CardContent>
-                    </Card>
+                      </Button>
+                    </>
                   )}
-                </View>
+                </>
               )}
             </View>
           )}

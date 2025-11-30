@@ -4,6 +4,7 @@ import {
   driversRoutes,
   featureFlagsRoutes,
   messagesRoutes,
+  placesRoutes,
   ridesRoutes,
 } from "@acme/core/server";
 import { createFileRoute } from "@tanstack/react-router";
@@ -16,6 +17,7 @@ export const app = new Elysia({ prefix: "/api" })
   .use(messagesRoutes)
   .use(driversRoutes)
   .use(ridesRoutes)
+  .use(placesRoutes)
   .use(featureFlagsRoutes);
 
 const handle = ({ request }: { request: Request }) => app.fetch(request);

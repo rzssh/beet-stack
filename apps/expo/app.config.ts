@@ -15,6 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "42f03b18-b022-49e3-8285-41b4eb1ff4c2",
     },
+    googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
   },
   owner: "r4zen2k",
 
@@ -30,6 +31,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       light: "./assets/icon-light.png",
       dark: "./assets/icon-dark.png",
     },
+    config: {
+      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+    },
   },
   android: {
     package: "your.bundle.identifier",
@@ -38,6 +42,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#1F104A",
     },
     edgeToEdgeEnabled: true,
+    config: {
+      googleMaps: {
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+      },
+    },
   },
   experiments: {
     tsconfigPaths: true,

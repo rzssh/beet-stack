@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import Toast from "react-native-toast-message";
 
 import { useAuth } from "~/lib/hooks";
 import { LocationProvider } from "~/providers/LocationProvider";
@@ -54,6 +55,7 @@ function RootLayoutNav() {
       </Stack>
       <StatusBar />
       <PortalHost />
+      <Toast />
     </>
   );
 }

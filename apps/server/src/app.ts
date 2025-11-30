@@ -3,6 +3,7 @@ import {
   createServerConfiguration,
   driversRoutes,
   featureFlagsRoutes,
+  placesRoutes,
   ridesRoutes,
 } from "@acme/core/server";
 import { Elysia } from "elysia";
@@ -217,6 +218,7 @@ export const app = new Elysia()
   })
   .use(countRoutes)
   .use(driversRoutes)
+  .use(placesRoutes)
   .use(ridesRoutes)
   .use(featureFlagsRoutes);
 
