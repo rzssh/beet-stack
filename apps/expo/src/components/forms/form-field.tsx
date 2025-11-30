@@ -1,44 +1,41 @@
-import type { FieldApi } from "@tanstack/react-form";
+import type { AnyFieldApi } from "@tanstack/react-form";
 import { View } from "react-native";
 
 import { Label, Text } from "~/components/ui";
 
-interface FormFieldProps<
-  TParentData,
-  TName extends string,
-  TFieldValidator,
-  TFormValidator,
-  TData,
-> {
-  field: FieldApi<TParentData, TName, TFieldValidator, TFormValidator, TData>;
+interface FormFieldProps {
+  field: AnyFieldApi;
   label?: string;
-  children: (
-    field: FieldApi<TParentData, TName, TFieldValidator, TFormValidator, TData>,
-  ) => React.ReactNode;
+  children: React.ReactNode;
 }
 
-export function FormField<
-  TParentData,
-  TName extends string,
-  TFieldValidator,
-  TFormValidator,
-  TData,
->({ field, label, children }: FormFieldProps<TParentData, TName, TFieldValidator, TFormValidator, TData>) {
+export function FormField({ field, label, children }: FormFieldProps) {
   const errors = field.state.meta.errors;
-  const errorMessage =
-    errors.length > 0
-      ? typeof errors[0] === "string"
-        ? errors[0]
-        : (errors[0] as { message?: string })?.message ?? "Validation error"
-      : null;
+  const hasError = errors.length > 0;
+  const shouldDisplayError = hasError && field.state.meta.isTouched;
 
   return (
-    <View className="gap-2">
+    <View className="w-full gap-2">
       {label && <Label nativeID={`label-${field.name}`}>{label}</Label>}
-      {children(field)}
-      {errorMessage && (
-        <Text className="text-destructive text-sm">{errorMessage}</Text>
-      )}
+      {children}
+      {shouldDisplayError
+        ? errors.map((err) => {
+            const message =
+              typeof err === "string"
+                ? err
+                : ((err as { message?: string })?.message ??
+                  "Validation error");
+            return (
+              <Text
+                key={message}
+                className="text-destructive text-sm"
+                role="alert"
+              >
+                {message}
+              </Text>
+            );
+          })
+        : null}
     </View>
   );
 }

@@ -1,13 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { authQueries } from "~/lib/api/auth";
+import { authClient } from "~/utils/auth";
 
 export function useAuth() {
-  const { data: session, isLoading } = useQuery(authQueries.session());
+  const { data: session, isPending } = authClient.useSession();
 
   return {
     session,
-    isLoading,
+    isLoading: isPending,
     isAuthenticated: !!session?.user,
     user: session?.user ?? null,
   };

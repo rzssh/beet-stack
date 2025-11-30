@@ -1,1 +1,0 @@
-export { authQueries } from "./queries";

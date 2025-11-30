@@ -4,7 +4,7 @@ export * from "./badge";
 export * from "./button";
 export * from "./card";
 export * from "./input";
-export * from "./input-accessory";
+export * from "./keyboard-toolbar";
 export * from "./label";
 export * from "./progress";
 export * from "./separator";
@@ -14,3 +14,4 @@ export * from "./switch";
 export * from "./text";
 
 export { cn } from "~/lib/utils";
+
