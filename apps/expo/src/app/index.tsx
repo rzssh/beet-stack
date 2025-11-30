@@ -47,6 +47,14 @@ export default function Index() {
   const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(null);
   const [driverMarkers, setDriverMarkers] = React.useState<DriverMarker[]>([]);
 
+  // Debug location updates
+  React.useEffect(() => {
+    console.log("📍 Locations updated:", {
+      pickup: pickupLocation ? `${pickupLocation.lat}, ${pickupLocation.lng}` : "null",
+      dropoff: dropoffLocation ? `${dropoffLocation.lat}, ${dropoffLocation.lng}` : "null",
+    });
+  }, [pickupLocation, dropoffLocation]);
+
   const mapRef = React.useRef<MapView>(null);
   const bottomSheetRef = React.useRef<BottomSheet>(null);
   const snapPoints = React.useMemo(() => ["25%", "50%", "90%"], []);
@@ -63,24 +71,28 @@ export default function Index() {
   const userId = session?.user?.id ?? "";
   const isReady = !!userId && !!location && hasPermission === true;
 
+  const handleDriverLocation = React.useCallback((loc: DriverMarker) => {
+    setDriverMarkers((prev) => {
+      const existing = prev.findIndex((m) => m.driverId === loc.driverId);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = loc;
+        return updated;
+      }
+      return [...prev, loc];
+    });
+  }, []);
+
+  const handleRideStatus = React.useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
+  }, [queryClient]);
+
   const { isConnected, sendLocation } = useTaxiSocket({
     userId,
     role: mode,
     autoConnect: isReady,
-    onDriverLocation: (loc) => {
-      setDriverMarkers((prev) => {
-        const existing = prev.findIndex((m) => m.driverId === loc.driverId);
-        if (existing >= 0) {
-          const updated = [...prev];
-          updated[existing] = loc;
-          return updated;
-        }
-        return [...prev, loc];
-      });
-    },
-    onRideStatus: () => {
-      queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
-    },
+    onDriverLocation: handleDriverLocation,
+    onRideStatus: handleRideStatus,
   });
 
   const driverProfileQuery = useQuery({
@@ -96,14 +108,45 @@ export default function Index() {
     refetchInterval: isReady ? 10000 : false,
   });
 
+  // Use activeRide coordinates if available, otherwise use form state
+  const effectivePickup = activeRide
+    ? {
+        lat: activeRide.pickupLat,
+        lng: activeRide.pickupLng,
+        address: activeRide.pickupAddress,
+      }
+    : pickupLocation;
+
+  const effectiveDropoff = activeRide
+    ? {
+        lat: activeRide.dropoffLat,
+        lng: activeRide.dropoffLng,
+        address: activeRide.dropoffAddress,
+      }
+    : dropoffLocation;
+
   const directionsQuery = useDirections({
-    origin: pickupLocation
-      ? { lat: pickupLocation.lat, lng: pickupLocation.lng }
+    origin: effectivePickup
+      ? { lat: effectivePickup.lat, lng: effectivePickup.lng }
       : null,
-    destination: dropoffLocation
-      ? { lat: dropoffLocation.lat, lng: dropoffLocation.lng }
+    destination: effectiveDropoff
+      ? { lat: effectiveDropoff.lat, lng: effectiveDropoff.lng }
       : null,
   });
+
+  // Debug directions
+  React.useEffect(() => {
+    if (directionsQuery.data) {
+      console.log("✅ Directions loaded:", {
+        hasPolyline: !!directionsQuery.data.polyline,
+        distance: directionsQuery.data.distance,
+        duration: directionsQuery.data.duration,
+      });
+    }
+    if (directionsQuery.error) {
+      console.log("❌ Directions error:", directionsQuery.error.message);
+    }
+  }, [directionsQuery.data, directionsQuery.error]);
 
   const goOnlineMutation = useMutation({
     ...driverMutations.goOnline(),
@@ -292,8 +335,8 @@ export default function Index() {
         location={location}
         mode={mode}
         driverMarkers={driverMarkers}
-        pickupLocation={pickupLocation}
-        dropoffLocation={dropoffLocation}
+        pickupLocation={effectivePickup}
+        dropoffLocation={effectiveDropoff}
         directionsQuery={directionsQuery}
       />
 
@@ -311,6 +354,7 @@ export default function Index() {
       >
         <BottomSheetScrollView
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled"
         >
           {mode === "rider" ? (
             <View className="gap-4">
@@ -336,6 +380,11 @@ export default function Index() {
                   onLocationsChange={(pickup, dropoff) => {
                     setPickupLocation(pickup);
                     setDropoffLocation(dropoff);
+                  }}
+                  onSuggestionsChange={(hasSuggestions) => {
+                    if (hasSuggestions) {
+                      bottomSheetRef.current?.snapToIndex(2); // Expand to max
+                    }
                   }}
                 />
               )}

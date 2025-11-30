@@ -1,6 +1,6 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import type { FieldApi } from "@tanstack/react-form";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, useColorScheme, View } from "react-native";
 
 import { Spinner, Text } from "~/components/ui";
@@ -8,27 +8,26 @@ import {
   usePlaceDetails,
   usePlacesAutocomplete,
 } from "~/hooks/usePlacesAutocomplete";
+import { logger } from "~/utils/logger";
 
 interface LocationAutocompleteProps {
   field: FieldApi<any, any, any, any, string>;
+  form: any;
   placeholder: string;
-  onLocationSelected: (location: {
-    placeId: string;
-    lat: number;
-    lng: number;
-    address: string;
-  }) => void;
   userLocation?: { lat: number; lng: number };
+  onSuggestionsChange?: (hasSuggestions: boolean) => void;
 }
 
 export function LocationAutocomplete({
   field,
+  form,
   placeholder,
-  onLocationSelected,
   userLocation,
+  onSuggestionsChange,
 }: LocationAutocompleteProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const blurTimeoutRef = useRef<NodeJS.Timeout>();
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -41,26 +40,44 @@ export function LocationAutocomplete({
   };
 
   const handleBlur = () => {
-    setIsFocused(false);
     field.handleBlur();
   };
 
   const handleSelectSuggestion = (placeId: string, description: string) => {
-    field.handleChange(description);
     setSelectedPlaceId(placeId);
     setIsFocused(false);
   };
 
   useEffect(() => {
     if (placeDetailsQuery.data && selectedPlaceId) {
-      field.handleChange(placeDetailsQuery.data.address);
-      onLocationSelected(placeDetailsQuery.data);
+      const address = placeDetailsQuery.data.address;
+      const lat = placeDetailsQuery.data.lat;
+      const lng = placeDetailsQuery.data.lng;
+      const placeId = placeDetailsQuery.data.placeId;
+
+      console.log("✅ Setting form values:", { address, lat, lng, placeId });
+
+      form.setFieldValue("dropoffAddress", address);
+      form.setFieldValue("dropoffLat", lat);
+      form.setFieldValue("dropoffLng", lng);
+      form.setFieldValue("dropoffPlaceId", placeId);
+
+      console.log("✅ Form values after set:", {
+        dropoffAddress: form.state.values.dropoffAddress,
+        dropoffLat: form.state.values.dropoffLat,
+        dropoffLng: form.state.values.dropoffLng,
+      });
+
       setSelectedPlaceId(null);
     }
   }, [placeDetailsQuery.data, selectedPlaceId]);
 
   const showSuggestions =
     isFocused && field.state.value.length >= 2 && suggestionsQuery.data;
+
+  useEffect(() => {
+    onSuggestionsChange?.(!!showSuggestions && (suggestionsQuery.data?.length ?? 0) > 0);
+  }, [showSuggestions, suggestionsQuery.data?.length, onSuggestionsChange]);
 
   return (
     <View className="w-full">
@@ -95,18 +112,11 @@ export function LocationAutocomplete({
       )}
 
       {showSuggestions && suggestionsQuery.data.length > 0 && (
-        <ScrollView
-          className="mt-2"
-          style={{ maxHeight: 300 }}
-          keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled
-        >
-          {suggestionsQuery.data.map((item) => (
+        <View className="mt-2">
+          {suggestionsQuery.data.slice(0, 5).map((item) => (
             <Pressable
               key={item.placeId}
-              onPress={() =>
-                handleSelectSuggestion(item.placeId, item.description)
-              }
+              onPress={() => handleSelectSuggestion(item.placeId, item.description)}
               className="border-zinc-800 border-b px-4 py-3 active:bg-zinc-800"
             >
               <Text className="font-semibold text-white">{item.mainText}</Text>
@@ -117,7 +127,7 @@ export function LocationAutocomplete({
               )}
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       )}
 
       {showSuggestions && suggestionsQuery.data.length === 0 && (

@@ -44,8 +44,13 @@ export const RideMap = React.forwardRef<MapView, RideMapProps>(
       }
     }, [location?.latitude, location?.longitude, ref]);
 
+    // Auto-fit map to show route
     React.useEffect(() => {
-      if (directionsQuery.data?.bounds && ref && "current" in ref && ref.current) {
+      if (!ref || !("current" in ref) || !ref.current) return;
+
+      // Use directions bounds if available
+      if (directionsQuery.data?.bounds) {
+        console.log("🗺️ Fitting map to directions bounds");
         ref.current.fitToCoordinates(
           [
             {
@@ -63,15 +68,64 @@ export const RideMap = React.forwardRef<MapView, RideMapProps>(
           }
         );
       }
-    }, [directionsQuery.data?.bounds, ref]);
+      // Fallback: fit to markers
+      else if (pickupLocation && dropoffLocation) {
+        console.log("🗺️ Fitting map to markers (fallback)", {
+          pickup: `${pickupLocation.lat},${pickupLocation.lng}`,
+          dropoff: `${dropoffLocation.lat},${dropoffLocation.lng}`,
+        });
+        ref.current.fitToCoordinates(
+          [
+            { latitude: pickupLocation.lat, longitude: pickupLocation.lng },
+            { latitude: dropoffLocation.lat, longitude: dropoffLocation.lng },
+          ],
+          {
+            edgePadding: { top: 100, right: 50, bottom: 300, left: 50 },
+            animated: true,
+          }
+        );
+      }
+    }, [directionsQuery.data?.bounds, pickupLocation, dropoffLocation]);
 
     if (!location) {
       return null;
     }
 
-    const routeCoordinates = directionsQuery.data?.polyline
-      ? decodePolyline(directionsQuery.data.polyline)
-      : [];
+    // Get route coordinates from directions API or fallback to straight line
+    const routeCoordinates = React.useMemo(() => {
+      if (directionsQuery.data?.polyline) {
+        return decodePolyline(directionsQuery.data.polyline);
+      }
+
+      // Fallback: straight line between pickup and dropoff
+      if (pickupLocation && dropoffLocation) {
+        return [
+          { latitude: pickupLocation.lat, longitude: pickupLocation.lng },
+          { latitude: dropoffLocation.lat, longitude: dropoffLocation.lng },
+        ];
+      }
+
+      return [];
+    }, [directionsQuery.data?.polyline, pickupLocation, dropoffLocation]);
+
+    React.useEffect(() => {
+      console.log("🗺️ RideMap state:", {
+        hasPickup: !!pickupLocation,
+        hasDropoff: !!dropoffLocation,
+        hasDirections: !!directionsQuery.data,
+        routePoints: routeCoordinates.length,
+        isLoading: directionsQuery.isLoading,
+        hasError: !!directionsQuery.error,
+        usingFallback: !directionsQuery.data && routeCoordinates.length > 0,
+      });
+    }, [
+      pickupLocation,
+      dropoffLocation,
+      directionsQuery.data,
+      routeCoordinates.length,
+      directionsQuery.isLoading,
+      directionsQuery.error,
+    ]);
 
     return (
       <MapView
@@ -130,7 +184,10 @@ export const RideMap = React.forwardRef<MapView, RideMapProps>(
           <Polyline
             coordinates={routeCoordinates}
             strokeColor="#3b82f6"
-            strokeWidth={4}
+            strokeWidth={6}
+            lineCap="round"
+            lineJoin="round"
+            lineDashPattern={directionsQuery.data ? undefined : [10, 10]}
           />
         )}
       </MapView>

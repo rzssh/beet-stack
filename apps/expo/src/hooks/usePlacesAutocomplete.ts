@@ -83,7 +83,7 @@ export function usePlaceDetails(placeId: string | null) {
 
       logger.places("Place details request", { placeId });
 
-      const response = await api.places[{ id: placeId }].details.get();
+      const response = await api.places({ id: placeId }).details.get();
 
       if (response.error) {
         logger.error("Place details failed", { error: response.error });

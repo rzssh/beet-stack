@@ -1,18 +1,16 @@
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { View } from "react-native";
 
 import { DirectionsPreview } from "./directions-preview";
 import { LocationAutocomplete } from "./location-autocomplete";
-import { RideSearchingState } from "./ride-searching-state";
 import { Button, ErrorCard, Spinner, Text } from "~/components/ui";
 import { useDirections } from "~/hooks/useDirections";
 import { useAuth } from "~/lib/hooks";
 import { useLocationContext } from "~/providers/LocationProvider";
 import { rideMutations } from "~/utils/api";
-import { logger } from "~/utils/logger";
 import { toast } from "~/utils/toast";
 
 interface Location {
@@ -24,13 +22,13 @@ interface Location {
 interface RideRequestFormProps {
   onLocationsChange?: (pickup: Location | null, dropoff: Location | null) => void;
   activeRide?: any;
+  onSuggestionsChange?: (hasSuggestions: boolean) => void;
 }
 
-export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFormProps) {
+export function RideRequestForm({ onLocationsChange, activeRide, onSuggestionsChange }: RideRequestFormProps) {
   const { isAuthenticated } = useAuth();
   const { location } = useLocationContext();
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const form = useForm({
     defaultValues: {
@@ -49,10 +47,10 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
       }
 
       if (
-        !value.pickupLat ||
-        !value.pickupLng ||
-        !value.dropoffLat ||
-        !value.dropoffLng
+        value.pickupLat == null ||
+        value.pickupLng == null ||
+        value.dropoffLat == null ||
+        value.dropoffLng == null
       ) {
         return;
       }
@@ -69,65 +67,19 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
   });
 
   useEffect(() => {
-    if (location) {
-      form.setFieldValue("pickupLat", location.latitude);
-      form.setFieldValue("pickupLng", location.longitude);
-
-      const pickup: Location = {
-        lat: location.latitude,
-        lng: location.longitude,
-        address: "My current location",
-      };
-      const dropoff =
-        form.state.values.dropoffLat && form.state.values.dropoffLng
-          ? {
-              lat: form.state.values.dropoffLat,
-              lng: form.state.values.dropoffLng,
-              address: form.state.values.dropoffAddress,
-            }
-          : null;
-
-      onLocationsChange?.(pickup, dropoff);
-    }
-  }, [location, form.state.values.dropoffLat, form.state.values.dropoffLng]);
-
-  useEffect(() => {
-    if (isSearching && activeRide) {
-      const status = activeRide.status;
-      if (status === "accepted" || status === "driver_arrived") {
-        setIsSearching(false);
-        setSearchStartTime(null);
-      }
-    }
-  }, [activeRide?.status, isSearching]);
+    if (!location) return;
+    form.setFieldValue("pickupLat", location.latitude);
+    form.setFieldValue("pickupLng", location.longitude);
+  }, [location, form]);
 
   const requestRideMutation = useMutation({
     ...rideMutations.request(),
     onSuccess: () => {
-      logger.ride("Ride requested successfully");
       toast.success("Ride requested", "Finding a driver...");
-      setIsSearching(true);
-      setSearchStartTime(Date.now());
+      queryClient.invalidateQueries({ queryKey: ["rides", "active"] });
     },
     onError: (error) => {
-      logger.error("Failed to request ride", { error: error.message });
       toast.error("Request failed", error.message);
-    },
-  });
-
-  const cancelRideMutation = useMutation({
-    ...rideMutations.cancel(),
-    onSuccess: () => {
-      logger.ride("Ride cancelled");
-      toast.info("Ride cancelled");
-      setIsSearching(false);
-      setSearchStartTime(null);
-      form.reset();
-      onLocationsChange?.(null, null);
-    },
-    onError: (error) => {
-      logger.error("Failed to cancel ride", { error: error.message });
-      toast.error("Cancel failed", error.message);
     },
   });
 
@@ -166,23 +118,6 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
     );
   }
 
-  if (isSearching && searchStartTime) {
-    return (
-      <RideSearchingState
-        searchStartTime={searchStartTime}
-        onCancel={() => {
-          if (activeRide?.id) {
-            cancelRideMutation.mutate({
-              rideId: activeRide.id,
-              reason: "User canceled",
-            });
-          }
-        }}
-        isCanceling={cancelRideMutation.isPending}
-      />
-    );
-  }
-
   return (
     <View className="gap-4">
       <Text variant="h3" className="text-white">
@@ -213,18 +148,14 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
             </Text>
             <LocationAutocomplete
               field={field}
+              form={form}
               placeholder="Where to?"
-              onLocationSelected={(loc) => {
-                form.setFieldValue("dropoffLat", loc.lat);
-                form.setFieldValue("dropoffLng", loc.lng);
-                form.setFieldValue("dropoffAddress", loc.address);
-                form.setFieldValue("dropoffPlaceId", loc.placeId);
-              }}
               userLocation={
                 location
                   ? { lat: location.latitude, lng: location.longitude }
                   : undefined
               }
+              onSuggestionsChange={onSuggestionsChange}
             />
           </View>
         )}
@@ -243,7 +174,7 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
 
       <form.Subscribe
         selector={(state) => ({
-          hasDropoff: !!state.values.dropoffLat && !!state.values.dropoffLng,
+          hasDropoff: state.values.dropoffLat != null && state.values.dropoffLng != null,
         })}
       >
         {({ hasDropoff }) =>
@@ -260,9 +191,49 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
 
       <form.Subscribe
         selector={(state) => ({
+          pickupLat: state.values.pickupLat,
+          pickupLng: state.values.pickupLng,
+          dropoffLat: state.values.dropoffLat,
+          dropoffLng: state.values.dropoffLng,
+          dropoffAddress: state.values.dropoffAddress,
+        })}
+      >
+        {({ pickupLat, pickupLng, dropoffLat, dropoffLng, dropoffAddress }) => {
+          useEffect(() => {
+            if (pickupLat == null || pickupLng == null) return;
+
+            const pickup: Location = {
+              lat: pickupLat,
+              lng: pickupLng,
+              address: "My current location",
+            };
+
+            const dropoff =
+              dropoffLat != null && dropoffLng != null
+                ? {
+                    lat: dropoffLat,
+                    lng: dropoffLng,
+                    address: dropoffAddress,
+                  }
+                : null;
+
+            console.log("🔄 Form values changed, updating parent:", {
+              pickup: `${pickup.lat}, ${pickup.lng}`,
+              dropoff: dropoff ? `${dropoff.lat}, ${dropoff.lng}` : "null",
+            });
+
+            onLocationsChange?.(pickup, dropoff);
+          }, [pickupLat, pickupLng, dropoffLat, dropoffLng, dropoffAddress]);
+
+          return null;
+        }}
+      </form.Subscribe>
+
+      <form.Subscribe
+        selector={(state) => ({
           canSubmit: state.canSubmit,
           isSubmitting: state.isSubmitting,
-          hasDropoff: !!state.values.dropoffLat && !!state.values.dropoffLng,
+          hasDropoff: state.values.dropoffLat != null && state.values.dropoffLng != null,
         })}
       >
         {({ canSubmit, isSubmitting, hasDropoff }) => (
