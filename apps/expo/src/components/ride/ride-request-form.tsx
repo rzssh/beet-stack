@@ -22,10 +22,9 @@ interface Location {
 interface RideRequestFormProps {
   onLocationsChange?: (pickup: Location | null, dropoff: Location | null) => void;
   activeRide?: any;
-  onSuggestionsChange?: (hasSuggestions: boolean) => void;
 }
 
-export function RideRequestForm({ onLocationsChange, activeRide, onSuggestionsChange }: RideRequestFormProps) {
+export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFormProps) {
   const { isAuthenticated } = useAuth();
   const { location } = useLocationContext();
   const queryClient = useQueryClient();
@@ -155,7 +154,6 @@ export function RideRequestForm({ onLocationsChange, activeRide, onSuggestionsCh
                   ? { lat: location.latitude, lng: location.longitude }
                   : undefined
               }
-              onSuggestionsChange={onSuggestionsChange}
             />
           </View>
         )}

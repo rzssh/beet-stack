@@ -1,7 +1,7 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import type { FieldApi } from "@tanstack/react-form";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, useColorScheme, View } from "react-native";
+import { Pressable, useColorScheme, View } from "react-native";
 
 import { Spinner, Text } from "~/components/ui";
 import {
@@ -15,7 +15,6 @@ interface LocationAutocompleteProps {
   form: any;
   placeholder: string;
   userLocation?: { lat: number; lng: number };
-  onSuggestionsChange?: (hasSuggestions: boolean) => void;
 }
 
 export function LocationAutocomplete({
@@ -23,7 +22,6 @@ export function LocationAutocomplete({
   form,
   placeholder,
   userLocation,
-  onSuggestionsChange,
 }: LocationAutocompleteProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
@@ -74,10 +72,6 @@ export function LocationAutocomplete({
 
   const showSuggestions =
     isFocused && field.state.value.length >= 2 && suggestionsQuery.data;
-
-  useEffect(() => {
-    onSuggestionsChange?.(!!showSuggestions && (suggestionsQuery.data?.length ?? 0) > 0);
-  }, [showSuggestions, suggestionsQuery.data?.length, onSuggestionsChange]);
 
   return (
     <View className="w-full">

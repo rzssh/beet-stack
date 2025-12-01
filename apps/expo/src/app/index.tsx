@@ -381,11 +381,6 @@ export default function Index() {
                     setPickupLocation(pickup);
                     setDropoffLocation(dropoff);
                   }}
-                  onSuggestionsChange={(hasSuggestions) => {
-                    if (hasSuggestions) {
-                      bottomSheetRef.current?.snapToIndex(2); // Expand to max
-                    }
-                  }}
                 />
               )}
             </View>

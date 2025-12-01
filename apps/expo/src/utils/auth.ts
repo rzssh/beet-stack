@@ -14,4 +14,10 @@ export const authClient = createAuthClient({
       storage: SecureStore,
     }),
   ],
+  fetchOptions: {
+    onSuccess: () => {},
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  },
 });
