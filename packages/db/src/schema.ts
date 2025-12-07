@@ -192,6 +192,8 @@ export const userRelations = relations(user, ({ one, many }) => ({
   ridesAsRider: many(ride, { relationName: "rider" }),
   ridesAsDriver: many(ride, { relationName: "driver" }),
   featureFlags: many(userFeatureFlag),
+  savedAddresses: many(savedAddress),
+  recentDestinations: many(recentDestination),
 }));
 
 export const userProfileRelations = relations(userProfile, ({ one }) => ({
@@ -217,6 +219,50 @@ export const rideRelations = relations(ride, ({ one }) => ({
 
 export const driverLocationRelations = relations(driverLocation, ({ one }) => ({
   driver: one(user, { fields: [driverLocation.driverId], references: [user.id] }),
+}));
+
+export const savedAddress = pgTable("saved_address", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => Bun.randomUUIDv7()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  address: text("address").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  lng: doublePrecision("lng").notNull(),
+  placeId: text("place_id"),
+  icon: text("icon").default("location"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const recentDestination = pgTable("recent_destination", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => Bun.randomUUIDv7()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  address: text("address").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  lng: doublePrecision("lng").notNull(),
+  placeId: text("place_id"),
+  name: text("name"),
+  usedAt: timestamp("used_at").notNull().defaultNow(),
+  useCount: integer("use_count").default(1),
+});
+
+export const savedAddressRelations = relations(savedAddress, ({ one }) => ({
+  user: one(user, { fields: [savedAddress.userId], references: [user.id] }),
+}));
+
+export const recentDestinationRelations = relations(recentDestination, ({ one }) => ({
+  user: one(user, { fields: [recentDestination.userId], references: [user.id] }),
 }));
 
 export const featureFlagRelations = relations(featureFlag, ({ many }) => ({
@@ -245,6 +291,10 @@ export type FeatureFlag = typeof featureFlag.$inferSelect;
 export type NewFeatureFlag = typeof featureFlag.$inferInsert;
 export type UserFeatureFlag = typeof userFeatureFlag.$inferSelect;
 export type NewUserFeatureFlag = typeof userFeatureFlag.$inferInsert;
+export type SavedAddress = typeof savedAddress.$inferSelect;
+export type NewSavedAddress = typeof savedAddress.$inferInsert;
+export type RecentDestination = typeof recentDestination.$inferSelect;
+export type NewRecentDestination = typeof recentDestination.$inferInsert;
 
 export type RideStatus =
   | "requested"

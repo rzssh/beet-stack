@@ -21,7 +21,7 @@ function RootLayoutNav() {
   const inAuthGroup = segments[0] === "(auth)";
 
   if (!isLoading && isAuthenticated && inAuthGroup) {
-    return <Redirect href="/" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   return (
@@ -35,20 +35,13 @@ function RootLayoutNav() {
           },
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="(auth)"
           options={{
             headerShown: false,
             gestureEnabled: false,
             animation: "fade",
-          }}
-        />
-        <Stack.Screen
-          name="profile"
-          options={{
-            title: "Profile",
-            presentation: "modal",
           }}
         />
         <Stack.Screen name="taxi" options={{ headerShown: false }} />

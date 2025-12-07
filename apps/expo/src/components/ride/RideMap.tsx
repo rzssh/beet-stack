@@ -28,10 +28,24 @@ interface RideMapProps {
   directionsQuery: UseQueryResult<DirectionsResponse, Error>;
   pickupLocation?: Location | null;
   dropoffLocation?: Location | null;
+  onRegionChangeComplete?: (region: { latitude: number; longitude: number }) => void;
+  onMapPress?: (coordinate: { latitude: number; longitude: number }) => void;
 }
 
 export const RideMap = React.forwardRef<MapView, RideMapProps>(
-  ({ location, mode, driverMarkers, directionsQuery, pickupLocation, dropoffLocation }, ref) => {
+  (
+    {
+      location,
+      mode,
+      driverMarkers,
+      directionsQuery,
+      pickupLocation,
+      dropoffLocation,
+      onRegionChangeComplete,
+      onMapPress,
+    },
+    ref
+  ) => {
 
     React.useEffect(() => {
       if (location && ref && "current" in ref && ref.current) {
@@ -140,6 +154,15 @@ export const RideMap = React.forwardRef<MapView, RideMapProps>(
           longitude: location.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
+        }}
+        onRegionChangeComplete={(region) => {
+          onRegionChangeComplete?.({
+            latitude: region.latitude,
+            longitude: region.longitude,
+          });
+        }}
+        onPress={(e) => {
+          onMapPress?.(e.nativeEvent.coordinate);
         }}
       >
         {mode === "rider" &&

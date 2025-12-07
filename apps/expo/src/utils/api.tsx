@@ -408,7 +408,7 @@ export const placesQueries = {
   details: (placeId: string) => ({
     queryKey: ["places", "details", placeId] as const,
     queryFn: async () => {
-      const response = await api.places[{ id: placeId }].details.get();
+      const response = await api.places({ id: placeId }).details.get();
       if (response.error) {
         throw new Error(
           extractErrorMessage(response.error, "Failed to fetch place details"),
