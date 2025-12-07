@@ -1,9 +1,11 @@
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import * as React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, {
+  Extrapolation,
   interpolate,
   SharedValue,
   useAnimatedStyle,
@@ -14,9 +16,9 @@ import { RiderStatusDisplay, RideRating } from "~/components/ride";
 import { Text } from "~/components/ui";
 import { useBottomSheetState } from "~/hooks/useBottomSheetState";
 import { useAuth } from "~/lib/hooks";
+import { useDrawerStore } from "~/stores/drawer-store";
 import { RecentDestination } from "~/stores/recent-destinations-store";
 
-import { CollapsedContent } from "./CollapsedContent";
 import { RecentDestinations } from "./RecentDestinations";
 import { ServiceSelector } from "./ServiceSelector";
 
@@ -65,6 +67,7 @@ export function MainBottomSheet({
 }: MainBottomSheetProps) {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
+  const openDrawer = useDrawerStore((s) => s.open);
   const internalAnimatedIndex = useSharedValue(0);
   const animatedIndex = sheetAnimatedIndex ?? internalAnimatedIndex;
 
@@ -111,8 +114,27 @@ export function MainBottomSheet({
     [isAuthenticated]
   );
 
+  const handleCollapseSheet = React.useCallback(() => {
+    bottomSheetRef.current?.snapToIndex(0);
+  }, [bottomSheetRef]);
+
+  const fullHeaderStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      animatedIndex.value,
+      [0.85, 1],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity };
+  });
+
   const expandedContentStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(animatedIndex.value, [0, 0.3, 1], [0, 0, 1]);
+    const opacity = interpolate(
+      animatedIndex.value,
+      [0.15, 0.4],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
     return { opacity };
   });
 
@@ -141,7 +163,20 @@ export function MainBottomSheet({
 
     return (
       <View className="gap-4">
-        <CollapsedContent onInputPress={handleInputPress} />
+        <Animated.View style={fullHeaderStyle} className="flex-row items-center justify-between">
+          <Pressable
+            onPress={openDrawer}
+            className="h-11 w-11 items-center justify-center rounded-full bg-zinc-800 active:bg-zinc-700"
+          >
+            <Ionicons name="menu" size={22} color="#fff" />
+          </Pressable>
+          <Pressable
+            onPress={handleCollapseSheet}
+            className="h-11 w-11 items-center justify-center rounded-full bg-zinc-800 active:bg-zinc-700"
+          >
+            <Ionicons name="map-outline" size={22} color="#fff" />
+          </Pressable>
+        </Animated.View>
 
         <Animated.View style={expandedContentStyle} className="gap-4">
           <Text className="font-semibold text-white text-lg">
@@ -153,7 +188,20 @@ export function MainBottomSheet({
             onServiceSelect={handleServiceSelect}
             animatedIndex={animatedIndex}
           />
+        </Animated.View>
 
+        <Pressable
+          onPress={handleInputPress}
+          className="flex-row items-center gap-3 rounded-xl bg-zinc-800 px-4 py-4 active:bg-zinc-700"
+        >
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/20">
+            <Ionicons name="search" size={20} color="#c03484" />
+          </View>
+          <Text className="flex-1 text-zinc-400 text-lg">Where to?</Text>
+          <Ionicons name="chevron-forward" size={20} color="#71717a" />
+        </Pressable>
+
+        <Animated.View style={expandedContentStyle}>
           <RecentDestinations
             onSelect={handleDestinationSelect}
             animatedIndex={animatedIndex}

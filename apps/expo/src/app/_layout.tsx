@@ -45,6 +45,15 @@ function RootLayoutNav() {
           }}
         />
         <Stack.Screen name="taxi" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="order"
+          options={{
+            headerShown: false,
+            presentation: "containedTransparentModal",
+            animation: "fade",
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
       </Stack>
       <StatusBar />
       <PortalHost />

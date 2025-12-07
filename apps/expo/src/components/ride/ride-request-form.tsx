@@ -21,10 +21,9 @@ interface Location {
 
 interface RideRequestFormProps {
   onLocationsChange?: (pickup: Location | null, dropoff: Location | null) => void;
-  activeRide?: any;
 }
 
-export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFormProps) {
+export function RideRequestForm({ onLocationsChange }: RideRequestFormProps) {
   const { isAuthenticated } = useAuth();
   const { location } = useLocationContext();
   const queryClient = useQueryClient();
@@ -133,13 +132,7 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
         </View>
       </View>
 
-      <form.Field
-        name="dropoffAddress"
-        listeners={{
-          onChangeListenTo: "change",
-          onChangeDebounceMs: 300,
-        }}
-      >
+      <form.Field name="dropoffAddress">
         {(field) => (
           <View>
             <Text className="mb-2 text-sm text-zinc-400">
@@ -181,7 +174,6 @@ export function RideRequestForm({ onLocationsChange, activeRide }: RideRequestFo
               distance={directionsQuery.data?.distance ?? 0}
               duration={directionsQuery.data?.duration ?? 0}
               isLoading={directionsQuery.isLoading}
-              error={directionsQuery.error?.message}
             />
           ) : null
         }

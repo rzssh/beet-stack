@@ -52,6 +52,13 @@ export default function ProfileLayout() {
           headerBackTitle: "Back",
         }}
       />
+      <Stack.Screen
+        name="security"
+        options={{
+          title: "Security",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack>
   );
 }

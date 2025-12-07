@@ -1,6 +1,5 @@
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import type { FieldApi } from "@tanstack/react-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, useColorScheme, View } from "react-native";
 
 import { Spinner, Text } from "~/components/ui";
@@ -8,11 +7,37 @@ import {
   usePlaceDetails,
   usePlacesAutocomplete,
 } from "~/hooks/usePlacesAutocomplete";
-import { logger } from "~/utils/logger";
+
+interface StringFieldApi {
+  state: {
+    value: string;
+  };
+  handleChange: (value: string) => void;
+  handleBlur: () => void;
+}
+
+interface RideFormValues {
+  dropoffAddress: string;
+  dropoffLat: number | null;
+  dropoffLng: number | null;
+  dropoffPlaceId: string | null;
+}
+
+interface RideFormApi {
+  setFieldValue: {
+    (name: "dropoffAddress", value: string): void;
+    (name: "dropoffLat", value: number): void;
+    (name: "dropoffLng", value: number): void;
+    (name: "dropoffPlaceId", value: string): void;
+  };
+  state: {
+    values: RideFormValues;
+  };
+}
 
 interface LocationAutocompleteProps {
-  field: FieldApi<any, any, any, any, string>;
-  form: any;
+  field: StringFieldApi;
+  form: RideFormApi;
   placeholder: string;
   userLocation?: { lat: number; lng: number };
 }
@@ -25,7 +50,6 @@ export function LocationAutocomplete({
 }: LocationAutocompleteProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  const blurTimeoutRef = useRef<NodeJS.Timeout>();
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";

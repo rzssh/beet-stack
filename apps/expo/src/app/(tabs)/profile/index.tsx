@@ -17,6 +17,19 @@ import { useAuth } from "~/lib/hooks";
 import { driverQueries } from "~/utils/api";
 import { authClient } from "~/utils/auth";
 
+interface MenuItem {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  route: string;
+}
+
+const accountMenuItems: MenuItem[] = [
+  { icon: "person-outline", label: "Personal Data", route: "/(tabs)/profile/personal-data" },
+  { icon: "location-outline", label: "Saved Addresses", route: "/(tabs)/profile/saved-addresses" },
+  { icon: "card-outline", label: "Payment Methods", route: "/(tabs)/profile/billing" },
+  { icon: "shield-outline", label: "Security", route: "/(tabs)/profile/security" },
+];
+
 export default function ProfileScreen() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const { isAuthenticated } = useAuth();
@@ -114,9 +127,38 @@ export default function ProfileScreen() {
 
         <View className="gap-3">
           <Text className="px-1 text-zinc-500 text-xs font-medium uppercase">
+            Account
+          </Text>
+          <View className="overflow-hidden rounded-2xl bg-zinc-800">
+            {accountMenuItems.map((item, index) => (
+              <Pressable
+                key={item.route}
+                onPress={() => router.push(item.route as never)}
+                className={`flex-row items-center gap-4 px-4 py-4 active:bg-zinc-700 ${
+                  index < accountMenuItems.length - 1 ? "border-b border-zinc-700" : ""
+                }`}
+              >
+                <Ionicons name={item.icon} size={22} color="#a1a1aa" />
+                <Text className="flex-1 text-white">{item.label}</Text>
+                <Ionicons name="chevron-forward" size={18} color="#71717a" />
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View className="gap-3">
+          <Text className="px-1 text-zinc-500 text-xs font-medium uppercase">
             Driver
           </Text>
-          {hasDriverProfile ? (
+          {driverProfileQuery.isLoading ? (
+            <View className="items-center rounded-2xl bg-zinc-800 p-5">
+              <Spinner size="small" />
+            </View>
+          ) : driverProfileQuery.error ? (
+            <View className="rounded-2xl bg-red-900/20 border border-red-700 p-4">
+              <Text className="text-red-400 text-center">Failed to load driver status</Text>
+            </View>
+          ) : hasDriverProfile ? (
             <View className="rounded-2xl bg-zinc-800 p-5">
               <View className="flex-row items-center gap-4">
                 <View className="h-14 w-14 items-center justify-center rounded-full bg-green-500/20">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type SheetState = "collapsed" | "expanded" | "active-ride";
+type SheetState = "collapsed" | "expanded" | "full" | "active-ride";
 
 interface UseBottomSheetStateOptions {
   hasActiveRide: boolean;
@@ -21,7 +21,7 @@ export function useBottomSheetState({ hasActiveRide }: UseBottomSheetStateOption
     if (hasActiveRide) {
       return ["25%", "60%"];
     }
-    return ["15%", "85%"];
+    return ["15%", "80%", "100%"];
   }, [hasActiveRide]);
 
   const snapIndex = useMemo(() => {
@@ -30,6 +30,8 @@ export function useBottomSheetState({ hasActiveRide }: UseBottomSheetStateOption
         return 0;
       case "expanded":
         return 1;
+      case "full":
+        return 2;
       case "active-ride":
         return 1;
       default:
@@ -49,6 +51,12 @@ export function useBottomSheetState({ hasActiveRide }: UseBottomSheetStateOption
     }
   }, [hasActiveRide]);
 
+  const goToFull = useCallback(() => {
+    if (!hasActiveRide) {
+      setState("full");
+    }
+  }, [hasActiveRide]);
+
   const goToActiveRide = useCallback(() => {
     setState("active-ride");
   }, []);
@@ -61,6 +69,8 @@ export function useBottomSheetState({ hasActiveRide }: UseBottomSheetStateOption
         setState("collapsed");
       } else if (index === 1) {
         setState("expanded");
+      } else if (index === 2) {
+        setState("full");
       }
     },
     [hasActiveRide]
@@ -72,6 +82,7 @@ export function useBottomSheetState({ hasActiveRide }: UseBottomSheetStateOption
     snapPoints,
     goToCollapsed,
     goToExpanded,
+    goToFull,
     goToActiveRide,
     handleSheetChange,
   };

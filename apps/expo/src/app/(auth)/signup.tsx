@@ -47,14 +47,12 @@ export default function SignupScreen() {
             <form.Field name="name">
               {(field) => (
                 <FormField field={field} label="Name">
-                  {(field) => (
-                    <FormInput
-                      field={field}
-                      placeholder="Your name"
-                      autoCapitalize="words"
-                      autoComplete="name"
-                    />
-                  )}
+                  <FormInput
+                    field={field}
+                    placeholder="Your name"
+                    autoCapitalize="words"
+                    autoComplete="name"
+                  />
                 </FormField>
               )}
             </form.Field>
@@ -62,15 +60,13 @@ export default function SignupScreen() {
             <form.Field name="email">
               {(field) => (
                 <FormField field={field} label="Email">
-                  {(field) => (
-                    <FormInput
-                      field={field}
-                      placeholder="you@example.com"
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      autoComplete="email"
-                    />
-                  )}
+                  <FormInput
+                    field={field}
+                    placeholder="you@example.com"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                  />
                 </FormField>
               )}
             </form.Field>
@@ -78,14 +74,12 @@ export default function SignupScreen() {
             <form.Field name="password">
               {(field) => (
                 <FormField field={field} label="Password">
-                  {(field) => (
-                    <FormInput
-                      field={field}
-                      placeholder="At least 8 characters"
-                      secureTextEntry
-                      autoComplete="new-password"
-                    />
-                  )}
+                  <FormInput
+                    field={field}
+                    placeholder="At least 8 characters"
+                    secureTextEntry
+                    autoComplete="new-password"
+                  />
                 </FormField>
               )}
             </form.Field>

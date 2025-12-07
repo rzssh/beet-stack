@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import * as React from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RecentDestinations } from "~/components/main/RecentDestinations";
 import { Button, Spinner, Text } from "~/components/ui";
-import { usePlacesAutocomplete } from "~/hooks/usePlacesAutocomplete";
+import { usePlacesAutocomplete, usePlaceDetails } from "~/hooks/usePlacesAutocomplete";
 import { useLocationContext } from "~/providers/LocationProvider";
-import { useMapStateStore } from "~/stores/map-state-store";
 import { useRecentDestinationsStore } from "~/stores/recent-destinations-store";
-import { placesQueries, rideMutations } from "~/utils/api";
+import { rideMutations } from "~/utils/api";
 
 interface Location {
   lat: number;
@@ -33,7 +33,6 @@ export default function OrderScreen() {
   const params = useLocalSearchParams<{ dropoff?: string }>();
   const { location } = useLocationContext();
   const queryClient = useQueryClient();
-  const setMapMode = useMapStateStore((s) => s.setMode);
 
   const [activeInput, setActiveInput] = React.useState<"pickup" | "dropoff">("dropoff");
   const [pickupLocation, setPickupLocation] = React.useState<Location | null>(null);
@@ -48,10 +47,7 @@ export default function OrderScreen() {
 
   const addDestination = useRecentDestinationsStore((s) => s.addDestination);
 
-  const placeDetailsQuery = useQuery({
-    ...placesQueries.details(selectedPlaceId ?? ""),
-    enabled: !!selectedPlaceId,
-  });
+  const placeDetailsQuery = usePlaceDetails(selectedPlaceId);
 
   const rideMutation = useMutation({
     ...rideMutations.request(),
@@ -76,10 +72,11 @@ export default function OrderScreen() {
         setPickupLocation(newLocation);
         setPickupQuery(details.address);
         setActiveInput("dropoff");
-        dropoffInputRef.current?.focus();
+        setTimeout(() => dropoffInputRef.current?.focus(), 100);
       } else {
         setDropoffLocation(newLocation);
         setDropoffQuery(details.address);
+        Keyboard.dismiss();
       }
 
       setSelectedPlaceId(null);
@@ -102,14 +99,14 @@ export default function OrderScreen() {
         const dest = JSON.parse(params.dropoff as string);
         setDropoffLocation(dest);
         setDropoffQuery(dest.address);
-      } catch (e) {
-        // ignore parse errors
+      } catch {
+        // ignore
       }
     }
   }, [params.dropoff]);
 
   const pickupAutocomplete = usePlacesAutocomplete(
-    activeInput === "pickup" ? pickupQuery : "",
+    activeInput === "pickup" && pickupQuery !== "Current location" ? pickupQuery : "",
     location ? { lat: location.latitude, lng: location.longitude } : undefined
   );
 
@@ -123,12 +120,16 @@ export default function OrderScreen() {
       ? (pickupAutocomplete.data ?? [])
       : (dropoffAutocomplete.data ?? []);
 
+  const isLoadingSuggestions =
+    (activeInput === "pickup" && pickupAutocomplete.isLoading) ||
+    (activeInput === "dropoff" && dropoffAutocomplete.isLoading);
+
   const handleSwapLocations = () => {
     const tempPickup = pickupLocation;
     const tempPickupQuery = pickupQuery;
 
     setPickupLocation(dropoffLocation);
-    setPickupQuery(dropoffQuery);
+    setPickupQuery(dropoffQuery || "");
 
     setDropoffLocation(tempPickup);
     setDropoffQuery(tempPickupQuery);
@@ -139,13 +140,19 @@ export default function OrderScreen() {
     setSelectedPlaceId(suggestion.placeId);
 
     if (activeInput === "pickup") {
-      setPickupQuery(suggestion.description);
+      setPickupQuery(suggestion.mainText);
     } else {
-      setDropoffQuery(suggestion.description);
+      setDropoffQuery(suggestion.mainText);
     }
   };
 
-  const handleRecentSelect = (dest: { lat: number; lng: number; address: string; placeId?: string; name?: string }) => {
+  const handleRecentSelect = (dest: {
+    lat: number;
+    lng: number;
+    address: string;
+    placeId?: string;
+    name?: string;
+  }) => {
     const newLocation: Location = {
       lat: dest.lat,
       lng: dest.lng,
@@ -155,46 +162,34 @@ export default function OrderScreen() {
     };
 
     if (activeInput === "pickup") {
-      setPickupQuery(dest.address);
+      setPickupQuery(dest.name || dest.address);
       setPickupLocation(newLocation);
       setActiveInput("dropoff");
-      dropoffInputRef.current?.focus();
+      setTimeout(() => dropoffInputRef.current?.focus(), 100);
     } else {
-      setDropoffQuery(dest.address);
+      setDropoffQuery(dest.name || dest.address);
       setDropoffLocation(newLocation);
+      Keyboard.dismiss();
     }
   };
 
   const handleUseCurrentLocation = () => {
     if (!location) return;
 
-    const currentLocation: Location = {
+    setPickupQuery("Current location");
+    setPickupLocation({
       lat: location.latitude,
       lng: location.longitude,
       address: "Current location",
-    };
-
-    setPickupQuery("Current location");
-    setPickupLocation(currentLocation);
+    });
     setActiveInput("dropoff");
-    dropoffInputRef.current?.focus();
-  };
-
-  const handlePickupMapPin = () => {
-    setMapMode("pin-pickup");
-    router.back();
-  };
-
-  const handleDropoffMapPin = () => {
-    setMapMode("pin-dropoff");
-    router.back();
+    setTimeout(() => dropoffInputRef.current?.focus(), 100);
   };
 
   const handleConfirm = async () => {
     if (!pickupLocation || !dropoffLocation) return;
-    if (pickupLocation.lat === 0 || dropoffLocation.lat === 0) return;
 
-    if (dropoffLocation.placeId) {
+    if (dropoffLocation.placeId && dropoffLocation.lat !== 0) {
       addDestination({
         address: dropoffLocation.address,
         lat: dropoffLocation.lat,
@@ -218,109 +213,148 @@ export default function OrderScreen() {
     pickupLocation &&
     dropoffLocation &&
     pickupLocation.lat !== 0 &&
-    dropoffLocation.lat !== 0;
+    dropoffLocation.lat !== 0 &&
+    !placeDetailsQuery.isPending;
+
+  const isProcessing = rideMutation.isPending || placeDetailsQuery.isPending;
 
   return (
-    <View className="flex-1 bg-zinc-900" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center gap-3 px-4 py-3">
-        <Pressable
-          onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
-        >
-          <Ionicons name="arrow-back" size={20} color="#fff" />
-        </Pressable>
-        <Text className="font-semibold text-white text-lg">Plan your ride</Text>
-      </View>
-
-      <View className="flex-row gap-3 px-4">
-        <View className="items-center justify-center py-3">
-          <View className="h-3 w-3 rounded-full bg-green-500" />
-          <View className="my-1 h-10 w-0.5 bg-zinc-700" />
-          <View className="h-3 w-3 rounded-full bg-red-500" />
+    <View style={{ flex: 1, backgroundColor: "#18181b" }}>
+      <View
+        style={{
+          paddingTop: insets.top,
+          backgroundColor: "#18181b",
+          borderBottomWidth: 1,
+          borderBottomColor: "#27272a",
+        }}
+      >
+        <View className="flex-row items-center gap-3 px-4 py-3">
+          <Pressable
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-full bg-zinc-800 active:bg-zinc-700"
+          >
+            <Ionicons name="close" size={22} color="#fff" />
+          </Pressable>
+          <Text className="font-semibold text-white text-lg">Plan your ride</Text>
         </View>
 
-        <View className="flex-1 gap-2">
-          <View className="flex-row items-center gap-2">
+        <View className="flex-row px-4 pb-4">
+          <View className="items-center justify-center mr-3">
+            <View className="h-3 w-3 rounded-full bg-green-500" />
+            <View className="my-1.5 h-8 w-0.5 bg-zinc-600" />
+            <View className="h-3 w-3 rounded-full bg-primary" />
+          </View>
+
+          <View className="flex-1 gap-2">
             <Pressable
               onPress={() => {
                 setActiveInput("pickup");
+                if (pickupQuery === "Current location") {
+                  setPickupQuery("");
+                }
                 pickupInputRef.current?.focus();
               }}
-              className={`flex-1 flex-row items-center rounded-xl border-2 bg-zinc-800 px-4 py-3 ${
-                activeInput === "pickup" ? "border-primary" : "border-zinc-700"
+              className={`flex-row items-center rounded-xl bg-zinc-800 px-4 py-3 ${
+                activeInput === "pickup" ? "border-2 border-green-500" : ""
               }`}
             >
               <TextInput
                 ref={pickupInputRef}
                 value={pickupQuery}
-                onChangeText={setPickupQuery}
-                onFocus={() => setActiveInput("pickup")}
+                onChangeText={(text) => {
+                  setPickupQuery(text);
+                  if (text !== pickupLocation?.address) {
+                    setPickupLocation(null);
+                  }
+                }}
+                onFocus={() => {
+                  setActiveInput("pickup");
+                  if (pickupQuery === "Current location") {
+                    setPickupQuery("");
+                  }
+                }}
                 placeholder="Pickup location"
                 placeholderTextColor="#71717a"
-                className="flex-1 text-white text-base"
+                className="flex-1 text-white"
+                style={{ fontSize: 16 }}
               />
+              {activeInput === "pickup" && pickupQuery.length > 0 && (
+                <Pressable onPress={() => setPickupQuery("")}>
+                  <Ionicons name="close-circle" size={20} color="#71717a" />
+                </Pressable>
+              )}
             </Pressable>
-            <Pressable
-              onPress={handlePickupMapPin}
-              className="h-12 w-12 items-center justify-center rounded-xl bg-zinc-800 active:bg-zinc-700"
-            >
-              <Ionicons name="locate" size={20} color="#a1a1aa" />
-            </Pressable>
-          </View>
 
-          <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => {
                 setActiveInput("dropoff");
                 dropoffInputRef.current?.focus();
               }}
-              className={`flex-1 flex-row items-center rounded-xl border-2 bg-zinc-800 px-4 py-3 ${
-                activeInput === "dropoff" ? "border-primary" : "border-zinc-700"
+              className={`flex-row items-center rounded-xl bg-zinc-800 px-4 py-3 ${
+                activeInput === "dropoff" ? "border-2 border-primary" : ""
               }`}
             >
               <TextInput
                 ref={dropoffInputRef}
                 value={dropoffQuery}
-                onChangeText={setDropoffQuery}
+                onChangeText={(text) => {
+                  setDropoffQuery(text);
+                  if (text !== dropoffLocation?.address) {
+                    setDropoffLocation(null);
+                  }
+                }}
                 onFocus={() => setActiveInput("dropoff")}
                 placeholder="Where to?"
                 placeholderTextColor="#71717a"
-                className="flex-1 text-white text-base"
+                className="flex-1 text-white"
+                style={{ fontSize: 16 }}
                 autoFocus
               />
-            </Pressable>
-            <Pressable
-              onPress={handleDropoffMapPin}
-              className="h-12 w-12 items-center justify-center rounded-xl bg-zinc-800 active:bg-zinc-700"
-            >
-              <Ionicons name="locate" size={20} color="#a1a1aa" />
+              {activeInput === "dropoff" && dropoffQuery.length > 0 && (
+                <Pressable onPress={() => setDropoffQuery("")}>
+                  <Ionicons name="close-circle" size={20} color="#71717a" />
+                </Pressable>
+              )}
             </Pressable>
           </View>
-        </View>
 
-        <Pressable
-          onPress={handleSwapLocations}
-          className="h-12 w-12 items-center justify-center self-center rounded-xl bg-zinc-800"
-        >
-          <Ionicons name="swap-vertical" size={20} color="#a1a1aa" />
-        </Pressable>
+          <Pressable
+            onPress={handleSwapLocations}
+            className="ml-3 h-10 w-10 items-center justify-center self-center rounded-full bg-zinc-800 active:bg-zinc-700"
+          >
+            <Ionicons name="swap-vertical" size={20} color="#a1a1aa" />
+          </Pressable>
+        </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled">
-        {activeInput === "pickup" && !pickupQuery && (
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {activeInput === "pickup" && pickupQuery.length === 0 && (
           <Pressable
             onPress={handleUseCurrentLocation}
-            className="mb-2 flex-row items-center gap-3 rounded-xl bg-zinc-800 px-4 py-3 active:bg-zinc-700"
+            className="mb-3 flex-row items-center gap-3 rounded-xl bg-zinc-800 px-4 py-3 active:bg-zinc-700"
           >
             <View className="h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
               <Ionicons name="navigate" size={20} color="#3b82f6" />
             </View>
-            <Text className="text-white">Use current location</Text>
+            <View className="flex-1">
+              <Text className="font-medium text-white">Current location</Text>
+              <Text className="text-zinc-400 text-sm">Use GPS location</Text>
+            </View>
           </Pressable>
         )}
 
-        {activeSuggestions.length > 0 ? (
-          <View className="gap-1">
+        {isLoadingSuggestions && (
+          <View className="items-center py-8">
+            <Spinner size="small" />
+          </View>
+        )}
+
+        {!isLoadingSuggestions && activeSuggestions.length > 0 && (
+          <Animated.View entering={FadeIn.duration(200)} className="gap-1">
             {activeSuggestions.map((suggestion) => (
               <Pressable
                 key={suggestion.placeId}
@@ -331,9 +365,7 @@ export default function OrderScreen() {
                   <Ionicons name="location-outline" size={20} color="#a1a1aa" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-medium text-white">
-                    {suggestion.mainText}
-                  </Text>
+                  <Text className="font-medium text-white">{suggestion.mainText}</Text>
                   {suggestion.secondaryText && (
                     <Text className="text-zinc-400 text-sm" numberOfLines={1}>
                       {suggestion.secondaryText}
@@ -342,25 +374,34 @@ export default function OrderScreen() {
                 </View>
               </Pressable>
             ))}
-          </View>
-        ) : activeInput === "dropoff" && !dropoffQuery ? (
-          <RecentDestinations onSelect={handleRecentSelect} />
-        ) : null}
+          </Animated.View>
+        )}
+
+        {!isLoadingSuggestions &&
+          activeSuggestions.length === 0 &&
+          activeInput === "dropoff" &&
+          dropoffQuery.length < 2 && <RecentDestinations onSelect={handleRecentSelect} />}
       </ScrollView>
 
       <View
-        className="border-t border-zinc-800 px-4 pt-4"
-        style={{ paddingBottom: insets.bottom + 16 }}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: insets.bottom + 16,
+          paddingTop: 16,
+          paddingHorizontal: 16,
+          backgroundColor: "#18181b",
+          borderTopWidth: 1,
+          borderTopColor: "#27272a",
+        }}
       >
-        <Button
-          onPress={handleConfirm}
-          disabled={!canConfirm || rideMutation.isPending || placeDetailsQuery.isPending}
-          className="w-full"
-        >
-          {rideMutation.isPending || placeDetailsQuery.isPending ? (
+        <Button onPress={handleConfirm} disabled={!canConfirm || isProcessing} className="w-full">
+          {isProcessing ? (
             <Spinner size="small" color="#fff" />
           ) : (
-            <Text className="font-semibold">
+            <Text className="font-semibold text-white">
               {canConfirm ? "Request Ride" : "Select locations"}
             </Text>
           )}

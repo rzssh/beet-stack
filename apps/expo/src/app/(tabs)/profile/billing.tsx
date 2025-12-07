@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, Text } from "~/components/ui";
 import { useAuth } from "~/lib/hooks";
+import { toast } from "~/utils/toast";
 
 export default function BillingScreen() {
   const { isAuthenticated } = useAuth();
@@ -37,7 +38,7 @@ export default function BillingScreen() {
         <Button
           variant="outline"
           className="border-dashed border-zinc-600"
-          onPress={() => {}}
+          onPress={() => toast.info("Feature coming soon!")}
         >
           <View className="flex-row items-center gap-2">
             <Ionicons name="add" size={20} color="#a1a1aa" />

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, Text } from "~/components/ui";
 import { useAuth } from "~/lib/hooks";
+import { toast } from "~/utils/toast";
 
 interface SavedAddress {
   id: string;
@@ -71,7 +72,7 @@ export default function SavedAddressesScreen() {
         <Button
           variant="outline"
           className="mt-4 border-dashed border-zinc-600"
-          onPress={() => {}}
+          onPress={() => toast.info("Feature coming soon!")}
         >
           <View className="flex-row items-center gap-2">
             <Ionicons name="add" size={20} color="#a1a1aa" />

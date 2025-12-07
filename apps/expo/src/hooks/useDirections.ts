@@ -18,6 +18,33 @@ export interface DirectionsResponse {
   };
 }
 
+interface GoogleDirectionsApiResponse {
+  status: string;
+  routes: Array<{
+    legs: Array<{
+      distance: { value: number };
+      duration: { value: number };
+    }>;
+    bounds: {
+      northeast: { lat: number; lng: number };
+      southwest: { lat: number; lng: number };
+    };
+    overview_polyline: { points: string };
+  }>;
+}
+
+function isValidDirectionsResponse(
+  data: unknown
+): data is GoogleDirectionsApiResponse {
+  if (typeof data !== "object" || data === null) return false;
+
+  const obj = data as Record<string, unknown>;
+  if (typeof obj.status !== "string") return false;
+  if (!Array.isArray(obj.routes)) return false;
+
+  return true;
+}
+
 export function useDirections({ origin, destination }: DirectionsParams) {
   const apiKey = Constants.expoConfig?.extra?.googleMapsApiKey;
 
@@ -48,15 +75,29 @@ export function useDirections({ origin, destination }: DirectionsParams) {
         throw new Error("Failed to fetch directions");
       }
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
-      if (data.status !== "OK" || !data.routes?.[0]) {
+      if (!isValidDirectionsResponse(data)) {
+        logger.error("Directions API invalid response", { data });
+        throw new Error("Invalid directions API response");
+      }
+
+      if (data.status !== "OK") {
         logger.error("Directions API error", { status: data.status });
         throw new Error(`Directions API error: ${data.status}`);
       }
 
       const route = data.routes[0];
+      if (!route) {
+        logger.error("Directions API no routes");
+        throw new Error("No routes found");
+      }
+
       const leg = route.legs[0];
+      if (!leg) {
+        logger.error("Directions API no legs");
+        throw new Error("No route legs found");
+      }
 
       logger.ride("Directions fetched successfully", {
         distance: leg.distance.value,

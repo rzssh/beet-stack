@@ -1,39 +1,49 @@
 import * as React from "react";
 import { useColorScheme, View } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { Spinner } from "~/components/ui/spinner";
 import { authClient } from "~/utils/auth";
 
-const SOCIAL_PROVIDERS = [
+type SocialProvider = "google" | "discord";
+
+interface SocialProviderConfig {
+  provider: SocialProvider;
+  label: string;
+  renderIcon: (color: string, size: number) => React.ReactNode;
+}
+
+const SOCIAL_PROVIDERS: SocialProviderConfig[] = [
   {
     provider: "google",
     label: "Google",
-    Icon: Ionicons,
-    iconName: "logo-google" as const,
+    renderIcon: (color, size) => (
+      <Ionicons name="logo-google" size={size} color={color} />
+    ),
   },
   {
     provider: "discord",
     label: "Discord",
-    Icon: MaterialCommunityIcons,
-    iconName: "discord" as const,
+    renderIcon: (color, size) => (
+      <FontAwesome6 name="discord" size={size} color={color} />
+    ),
   },
-] as const;
+];
 
 export function SocialConnections() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [loadingProvider, setLoadingProvider] = React.useState<string | null>(null);
+  const [loadingProvider, setLoadingProvider] = React.useState<SocialProvider | null>(null);
 
   const iconColor = isDark ? "#a1a1aa" : "#52525b";
 
-  const handleSocialSignIn = async (provider: string) => {
+  const handleSocialSignIn = async (provider: SocialProvider) => {
     setLoadingProvider(provider);
     try {
       await authClient.signIn.social({
-        provider: provider as "discord" | "google",
+        provider,
         callbackURL: "/",
       });
     } catch (e) {
@@ -60,7 +70,7 @@ export function SocialConnections() {
               <Spinner size="small" />
             ) : (
               <>
-                <item.Icon name={item.iconName} size={22} color={iconColor} />
+                {item.renderIcon(iconColor, 22)}
                 <Text className="text-base font-medium">{item.label}</Text>
               </>
             )}

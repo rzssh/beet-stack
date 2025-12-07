@@ -60,7 +60,7 @@ export default function MainScreen() {
   const [isSheetExpanded, setIsSheetExpanded] = React.useState(false);
 
   useAnimatedReaction(
-    () => sheetAnimatedIndex.value > 0.5,
+    () => sheetAnimatedIndex.value > 0.3,
     (expanded) => {
       runOnJS(setIsSheetExpanded)(expanded);
     },
@@ -68,7 +68,7 @@ export default function MainScreen() {
   );
 
   const overlayAnimatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(sheetAnimatedIndex.value, [0, 0.5, 1], [1, 0.5, 0]);
+    const opacity = interpolate(sheetAnimatedIndex.value, [0, 0.3], [1, 0]);
     return { opacity };
   });
 
