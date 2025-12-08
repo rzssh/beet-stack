@@ -1,18 +1,11 @@
 // biome-ignore assist/source/organizeImports: ok to keep unorganized
 export * from "./avatar";
-export * from "./badge";
 export * from "./button";
-export * from "./card";
-export * from "./error-card";
 export * from "./input";
-export * from "./keyboard-toolbar";
+export * from "../keyboard-toolbar";
 export * from "./label";
-export * from "./progress";
 export * from "./separator";
 export * from "./skeleton";
-export * from "./spinner";
-export * from "./switch";
 export * from "./text";
 
 export { cn } from "~/lib/utils";
-

@@ -54,12 +54,19 @@ interface UseTaxiSocketResult {
   isConnected: boolean;
   connect: () => void;
   disconnect: () => void;
-  sendLocation: (lat: number, lng: number, heading?: number, speed?: number) => void;
+  sendLocation: (
+    lat: number,
+    lng: number,
+    heading?: number,
+    speed?: number,
+  ) => void;
   subscribeToRide: (rideId: string) => void;
   unsubscribeFromRide: (rideId: string) => void;
 }
 
-export function useTaxiSocket(options: UseTaxiSocketOptions): UseTaxiSocketResult {
+export function useTaxiSocket(
+  options: UseTaxiSocketOptions,
+): UseTaxiSocketResult {
   const {
     userId,
     role,
@@ -71,11 +78,16 @@ export function useTaxiSocket(options: UseTaxiSocketOptions): UseTaxiSocketResul
 
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const getWebSocketUrl = useCallback(() => {
-    const baseUrl = getMicroserviceUrl();
-    return baseUrl.replace("http://", "ws://").replace("https://", "wss://") + "/taxi";
+    return (
+      getMicroserviceUrl()
+        .replace("http://", "ws://")
+        .replace("https://", "wss://") + "/taxi"
+    );
   }, []);
 
   const send = useCallback((message: { type: string; payload?: unknown }) => {

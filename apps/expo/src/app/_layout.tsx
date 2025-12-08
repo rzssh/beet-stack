@@ -1,77 +1,66 @@
 import "../styles.css";
 
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Redirect, Stack, useSegments } from "expo-router";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
+import { StyleSheet, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
+import { queryClient } from "~/lib/api";
 
-import { useAuth } from "~/lib/hooks";
-import { LocationProvider } from "~/providers/LocationProvider";
-import { queryClient } from "~/utils/api";
+export const unstable_settings = {
+  initialRouteName: "(app)",
+};
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  const { isAuthenticated, isLoading } = useAuth();
-  const segments = useSegments();
-
-  const inAuthGroup = segments[0] === "(auth)";
-
-  if (!isLoading && isAuthenticated && inAuthGroup) {
-    return <Redirect href="/(tabs)" />;
-  }
-
-  return (
-    <>
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: "#c03484" },
-          headerTintColor: "#FFFFFF",
-          contentStyle: {
-            backgroundColor: colorScheme === "dark" ? "#09090B" : "#FFFFFF",
-          },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(auth)"
-          options={{
-            headerShown: false,
-            gestureEnabled: false,
-            animation: "fade",
-          }}
-        />
-        <Stack.Screen name="taxi" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="order"
-          options={{
-            headerShown: false,
-            presentation: "containedTransparentModal",
-            animation: "fade",
-            contentStyle: { backgroundColor: "transparent" },
-          }}
-        />
-      </Stack>
-      <StatusBar />
-      <PortalHost />
-      <Toast />
-    </>
-  );
-}
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+// Set the animation options. This is optional.
+SplashScreen.setOptions({
+  duration: 500,
+  fade: true,
+});
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <Providers>
+      <Stack>
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+      </Stack>
+    </Providers>
+  );
+}
+
+function Providers({ children }: { children: React.ReactNode }) {
+  const isDark = useColorScheme() === "dark";
+  return (
+    <GestureHandlerRootView
+      style={styles.container}
+      className={isDark ? "dark" : undefined}
+    >
       <KeyboardProvider>
         <QueryClientProvider client={queryClient}>
-          <LocationProvider>
-            <RootLayoutNav />
-          </LocationProvider>
+          {/* <LocationProvider> */}
+          <BottomSheetModalProvider>
+            {children}
+            <StatusBar />
+            <PortalHost />
+            <Toast />
+          </BottomSheetModalProvider>
+          {/* </LocationProvider> */}
         </QueryClientProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

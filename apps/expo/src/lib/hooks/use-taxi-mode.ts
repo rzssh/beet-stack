@@ -1,4 +1,4 @@
-import { useTaxiModeStore } from "~/lib/stores/taxi-mode-store";
+import { useTaxiModeStore } from "~/lib/stores/taxi-mode";
 
 export function useTaxiMode() {
   const { mode, setMode, toggleMode } = useTaxiModeStore();

@@ -1,57 +1,45 @@
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet from "@gorhom/bottom-sheet";
+import type BottomSheet from "@gorhom/bottom-sheet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
-import * as React from "react";
 import { Pressable, View } from "react-native";
-import MapView from "react-native-maps";
-import Animated, {
-  interpolate,
-  runOnJS,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import type MapView from "react-native-maps";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppDrawer } from "~/components/drawer";
-import { CenterButton, MainBottomSheet, MapPinOverlay } from "~/components/main";
+import {
+  CenterButton,
+  MainBottomSheet,
+  MapPinOverlay,
+} from "~/components/main";
 import { RideMap } from "~/components/ride";
 import { Button, Spinner, Text } from "~/components/ui";
-import { useActiveRide } from "~/hooks/useActiveRide";
-import { useDirections } from "~/hooks/useDirections";
-import { useTaxiSocket } from "~/hooks/useTaxiSocket";
-import { useAuth } from "~/lib/hooks";
-import { useLocationContext } from "~/providers/LocationProvider";
-import { useDrawerStore } from "~/stores/drawer-store";
-import { useMapStateStore } from "~/stores/map-state-store";
-import { driverQueries } from "~/utils/api";
 
-interface DriverMarker {
-  driverId: string;
-  lat: number;
-  lng: number;
-  heading?: number;
-}
-
-interface Location {
-  lat: number;
-  lng: number;
-  address: string;
-  placeId?: string;
-  name?: string;
-}
+// const ActionButton = () => {
+//   return (
+//     <Link href="/feed/add-post" asChild>
+//       <Pressable>
+//         <Text className="px-3 text-primary-300">Create</Text>
+//       </Pressable>
+//     </Link>
+//   );
+// };
 
 export default function MainScreen() {
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const { session, isLoading: sessionLoading, isAuthenticated } = useAuth();
   const openDrawer = useDrawerStore((s) => s.open);
-  const [pickupLocation, setPickupLocation] = React.useState<Location | null>(null);
-  const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(null);
+  const [pickupLocation, setPickupLocation] = React.useState<Location | null>(
+    null,
+  );
+  const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(
+    null,
+  );
   const [driverMarkers, setDriverMarkers] = React.useState<DriverMarker[]>([]);
-  const [reverseGeocodeAddress, setReverseGeocodeAddress] = React.useState<string | null>(null);
+  const [reverseGeocodeAddress, setReverseGeocodeAddress] = React.useState<
+    string | null
+  >(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = React.useState(false);
 
   const mapRef = React.useRef<MapView>(null);
@@ -64,7 +52,7 @@ export default function MainScreen() {
     (expanded) => {
       runOnJS(setIsSheetExpanded)(expanded);
     },
-    [sheetAnimatedIndex]
+    [sheetAnimatedIndex],
   );
 
   const overlayAnimatedStyle = useAnimatedStyle(() => {
@@ -179,8 +167,8 @@ export default function MainScreen() {
       if (!location) return;
 
       const distance = Math.sqrt(
-        Math.pow(region.latitude - location.latitude, 2) +
-          Math.pow(region.longitude - location.longitude, 2)
+        (region.latitude - location.latitude) ** 2 +
+          (region.longitude - location.longitude) ** 2,
       );
 
       setPannedAway(distance > 0.001);
@@ -188,11 +176,13 @@ export default function MainScreen() {
       if (mapMode !== "default") {
         setPendingCoordinate({ lat: region.latitude, lng: region.longitude });
         setIsReverseGeocoding(true);
-        setReverseGeocodeAddress(`${region.latitude.toFixed(6)}, ${region.longitude.toFixed(6)}`);
+        setReverseGeocodeAddress(
+          `${region.latitude.toFixed(6)}, ${region.longitude.toFixed(6)}`,
+        );
         setIsReverseGeocoding(false);
       }
     },
-    [location, mapMode, setPannedAway, setPendingCoordinate]
+    [location, mapMode, setPannedAway, setPendingCoordinate],
   );
 
   const handleConfirmMapPin = React.useCallback(() => {
