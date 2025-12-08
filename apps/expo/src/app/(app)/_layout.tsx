@@ -13,9 +13,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (!isPending) {
-      setTimeout(() => {
-        hideSplash();
-      }, 1000);
+      setTimeout(hideSplash, 1000);
     }
   }, [hideSplash, isPending]);
 

@@ -2,11 +2,12 @@ import { AntDesign } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, type TextInputProps, useColorScheme, View } from "react-native";
 
+import { FieldError, FieldWrapper } from "~/components/ui/forms";
 import { Input } from "~/components/ui/input";
-import { Text } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
 
 import { useFieldContext } from "../context";
+import { useFieldState } from "../hooks";
 
 interface PasswordFieldProps extends Omit<TextInputProps, "value" | "onChangeText" | "secureTextEntry"> {
   label: string;
@@ -18,14 +19,14 @@ export function PasswordField({ label, className, ...props }: PasswordFieldProps
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "#a1a1aa" : "#52525b";
-
-  const errors = field.state.meta.errors;
-  const hasError = errors.length > 0;
-  const shouldShowError = hasError && field.state.meta.isTouched;
+  const { showError, errorMessages } = useFieldState(field);
 
   return (
-    <View className="w-full gap-2">
-      <Text className="text-foreground text-sm font-medium">{label}</Text>
+    <FieldWrapper
+      label={label}
+      fieldId={field.name}
+      error={<FieldError errors={errorMessages} show={showError} />}
+    >
       <View className="relative w-full flex-row items-center">
         <Input
           nativeID={field.name}
@@ -33,9 +34,9 @@ export function PasswordField({ label, className, ...props }: PasswordFieldProps
           value={field.state.value ?? ""}
           onChangeText={field.handleChange}
           onBlur={field.handleBlur}
-          aria-invalid={shouldShowError}
+          aria-invalid={showError}
           secureTextEntry={!showPassword}
-          className={cn(shouldShowError && "border-destructive", "flex-1 pr-14", className)}
+          className={cn(showError && "border-destructive", "flex-1 pr-14", className)}
           {...props}
         />
         <Pressable
@@ -46,19 +47,6 @@ export function PasswordField({ label, className, ...props }: PasswordFieldProps
           <AntDesign name={showPassword ? "eye" : "eye-invisible"} size={20} color={iconColor} />
         </Pressable>
       </View>
-      {shouldShowError
-        ? errors.map((err) => {
-            const message =
-              typeof err === "string"
-                ? err
-                : ((err as { message?: string })?.message ?? "Validation error");
-            return (
-              <Text key={message} className="text-destructive text-sm" role="alert">
-                {message}
-              </Text>
-            );
-          })
-        : null}
-    </View>
+    </FieldWrapper>
   );
 }

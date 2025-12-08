@@ -7,9 +7,9 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { Button, KeyboardToolbar, Text } from "~/components/ui";
 import { Spinner } from "~/components/ui/spinner";
+import { authClient } from "~/lib/auth";
 import { useAppForm } from "~/lib/form";
 import { loginSchema } from "~/lib/schema";
-import { authClient } from "~/lib/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -107,7 +107,11 @@ export default function LoginScreen() {
 
             <form.AppForm>
               <form.FormError />
-              <form.SubmitButton label="Sign In" disabled={socialLoading !== null} className="mt-2" />
+              <form.SubmitButton
+                label="Sign In"
+                disabled={socialLoading !== null}
+                className="mt-2"
+              />
             </form.AppForm>
           </View>
 
@@ -159,7 +163,7 @@ export default function LoginScreen() {
             <Text className="text-muted-foreground">
               Don't have an account?
             </Text>
-            <Link href="/(auth)/signup" asChild>
+            <Link href="/onboarding" asChild>
               <Pressable hitSlop={12}>
                 <Text className="font-semibold text-primary">Sign up</Text>
               </Pressable>

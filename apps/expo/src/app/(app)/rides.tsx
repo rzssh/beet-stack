@@ -5,8 +5,6 @@ import { FlatList, Pressable, RefreshControl, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, Spinner, Text } from "~/components/ui";
-import { useAuth } from "~/lib/hooks";
-import { rideQueries } from "~/utils/api";
 
 interface Ride {
   id: string;
@@ -36,7 +34,7 @@ function RideHistoryCard({ ride }: { ride: Ride }) {
   return (
     <View className="rounded-xl border border-zinc-700 bg-zinc-800 p-4">
       <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-zinc-400 text-sm">{formatDate(date)}</Text>
+        <Text className="text-sm text-zinc-400">{formatDate(date)}</Text>
         <View
           className={`rounded-full px-2 py-1 ${
             ride.status === "completed"
@@ -67,7 +65,7 @@ function RideHistoryCard({ ride }: { ride: Ride }) {
             {ride.pickupAddress}
           </Text>
         </View>
-        <View className="ml-1 h-4 border-l border-dashed border-zinc-600" />
+        <View className="ml-1 h-4 border-zinc-600 border-l border-dashed" />
         <View className="flex-row items-start gap-3">
           <View className="mt-1.5 h-2 w-2 rounded-full bg-red-500" />
           <Text className="flex-1 text-white" numberOfLines={1}>
@@ -77,7 +75,7 @@ function RideHistoryCard({ ride }: { ride: Ride }) {
       </View>
 
       {price && (
-        <View className="flex-row items-center justify-between border-t border-zinc-700 pt-3">
+        <View className="flex-row items-center justify-between border-zinc-700 border-t pt-3">
           <Text className="text-zinc-400">Total</Text>
           <Text className="font-semibold text-white">${price.toFixed(2)}</Text>
         </View>
@@ -119,7 +117,10 @@ export default function RidesScreen() {
               Sign in to view your ride history
             </Text>
           </View>
-          <Button onPress={() => router.push("/(auth)/login")} className="w-full">
+          <Button
+            onPress={() => router.push("/(auth)/login")}
+            className="w-full"
+          >
             <Text>Sign In</Text>
           </Button>
         </View>
@@ -129,7 +130,7 @@ export default function RidesScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
-      <View className="border-b border-zinc-800 px-4 py-4">
+      <View className="border-zinc-800 border-b px-4 py-4">
         <Text className="font-semibold text-2xl text-white">Your Rides</Text>
       </View>
 

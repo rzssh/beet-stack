@@ -8,7 +8,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RecentDestinations } from "~/components/main/RecentDestinations";
 import { Button, Spinner, Text } from "~/components/ui";
-import { usePlacesAutocomplete, usePlaceDetails } from "~/hooks/usePlacesAutocomplete";
+import {
+  usePlaceDetails,
+  usePlacesAutocomplete,
+} from "~/hooks/usePlacesAutocomplete";
 import { useLocationContext } from "~/providers/LocationProvider";
 import { useRecentDestinationsStore } from "~/stores/recent-destinations-store";
 import { rideMutations } from "~/utils/api";
@@ -34,13 +37,23 @@ export default function OrderScreen() {
   const { location } = useLocationContext();
   const queryClient = useQueryClient();
 
-  const [activeInput, setActiveInput] = React.useState<"pickup" | "dropoff">("dropoff");
-  const [pickupLocation, setPickupLocation] = React.useState<Location | null>(null);
-  const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(null);
+  const [activeInput, setActiveInput] = React.useState<"pickup" | "dropoff">(
+    "dropoff",
+  );
+  const [pickupLocation, setPickupLocation] = React.useState<Location | null>(
+    null,
+  );
+  const [dropoffLocation, setDropoffLocation] = React.useState<Location | null>(
+    null,
+  );
   const [pickupQuery, setPickupQuery] = React.useState("Current location");
   const [dropoffQuery, setDropoffQuery] = React.useState("");
-  const [selectedPlaceId, setSelectedPlaceId] = React.useState<string | null>(null);
-  const [placeTarget, setPlaceTarget] = React.useState<"pickup" | "dropoff">("dropoff");
+  const [selectedPlaceId, setSelectedPlaceId] = React.useState<string | null>(
+    null,
+  );
+  const [placeTarget, setPlaceTarget] = React.useState<"pickup" | "dropoff">(
+    "dropoff",
+  );
 
   const pickupInputRef = React.useRef<TextInput>(null);
   const dropoffInputRef = React.useRef<TextInput>(null);
@@ -106,13 +119,15 @@ export default function OrderScreen() {
   }, [params.dropoff]);
 
   const pickupAutocomplete = usePlacesAutocomplete(
-    activeInput === "pickup" && pickupQuery !== "Current location" ? pickupQuery : "",
-    location ? { lat: location.latitude, lng: location.longitude } : undefined
+    activeInput === "pickup" && pickupQuery !== "Current location"
+      ? pickupQuery
+      : "",
+    location ? { lat: location.latitude, lng: location.longitude } : undefined,
   );
 
   const dropoffAutocomplete = usePlacesAutocomplete(
     activeInput === "dropoff" ? dropoffQuery : "",
-    location ? { lat: location.latitude, lng: location.longitude } : undefined
+    location ? { lat: location.latitude, lng: location.longitude } : undefined,
   );
 
   const activeSuggestions: PlaceSuggestion[] =
@@ -235,11 +250,13 @@ export default function OrderScreen() {
           >
             <Ionicons name="close" size={22} color="#fff" />
           </Pressable>
-          <Text className="font-semibold text-white text-lg">Plan your ride</Text>
+          <Text className="font-semibold text-lg text-white">
+            Plan your ride
+          </Text>
         </View>
 
         <View className="flex-row px-4 pb-4">
-          <View className="items-center justify-center mr-3">
+          <View className="mr-3 items-center justify-center">
             <View className="h-3 w-3 rounded-full bg-green-500" />
             <View className="my-1.5 h-8 w-0.5 bg-zinc-600" />
             <View className="h-3 w-3 rounded-full bg-primary" />
@@ -342,7 +359,7 @@ export default function OrderScreen() {
             </View>
             <View className="flex-1">
               <Text className="font-medium text-white">Current location</Text>
-              <Text className="text-zinc-400 text-sm">Use GPS location</Text>
+              <Text className="text-sm text-zinc-400">Use GPS location</Text>
             </View>
           </Pressable>
         )}
@@ -365,9 +382,11 @@ export default function OrderScreen() {
                   <Ionicons name="location-outline" size={20} color="#a1a1aa" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-medium text-white">{suggestion.mainText}</Text>
+                  <Text className="font-medium text-white">
+                    {suggestion.mainText}
+                  </Text>
                   {suggestion.secondaryText && (
-                    <Text className="text-zinc-400 text-sm" numberOfLines={1}>
+                    <Text className="text-sm text-zinc-400" numberOfLines={1}>
                       {suggestion.secondaryText}
                     </Text>
                   )}
@@ -380,7 +399,9 @@ export default function OrderScreen() {
         {!isLoadingSuggestions &&
           activeSuggestions.length === 0 &&
           activeInput === "dropoff" &&
-          dropoffQuery.length < 2 && <RecentDestinations onSelect={handleRecentSelect} />}
+          dropoffQuery.length < 2 && (
+            <RecentDestinations onSelect={handleRecentSelect} />
+          )}
       </ScrollView>
 
       <View
@@ -397,7 +418,11 @@ export default function OrderScreen() {
           borderTopColor: "#27272a",
         }}
       >
-        <Button onPress={handleConfirm} disabled={!canConfirm || isProcessing} className="w-full">
+        <Button
+          onPress={handleConfirm}
+          disabled={!canConfirm || isProcessing}
+          className="w-full"
+        >
           {isProcessing ? (
             <Spinner size="small" color="#fff" />
           ) : (
@@ -407,7 +432,7 @@ export default function OrderScreen() {
           )}
         </Button>
         {rideMutation.isError && (
-          <Text className="text-red-400 text-center text-sm mt-2">
+          <Text className="mt-2 text-center text-red-400 text-sm">
             {rideMutation.error.message}
           </Text>
         )}
