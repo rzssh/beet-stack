@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import * as React from "react";
@@ -6,8 +5,8 @@ import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button, ErrorCard, Spinner, Text } from "~/components/ui";
-import { FormField, FormInput } from "~/components/forms";
+import { ErrorCard, Text } from "~/components/ui";
+import { useAppForm } from "~/lib/form";
 import { useAuth } from "~/lib/hooks";
 import { driverMutations } from "~/utils/api";
 import { toast } from "~/utils/toast";
@@ -29,7 +28,7 @@ export default function DriverRegistrationScreen() {
     },
   });
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       vehicleMake: "",
       vehicleModel: "",
@@ -69,88 +68,70 @@ export default function DriverRegistrationScreen() {
         {error && <ErrorCard message={error} />}
 
         <View className="gap-4">
-          <form.Field name="vehicleMake">
-            {(field) => (
-              <FormField field={field} label="Vehicle Make">
-                <FormInput
-                  field={field}
-                  placeholder="e.g., Toyota"
-                  autoCapitalize="words"
-                />
-              </FormField>
+          <form.AppField
+            name="vehicleMake"
+            children={(field) => (
+              <field.TextField
+                label="Vehicle Make"
+                placeholder="e.g., Toyota"
+                autoCapitalize="words"
+              />
             )}
-          </form.Field>
+          />
 
-          <form.Field name="vehicleModel">
-            {(field) => (
-              <FormField field={field} label="Vehicle Model">
-                <FormInput
-                  field={field}
-                  placeholder="e.g., Camry"
-                  autoCapitalize="words"
-                />
-              </FormField>
+          <form.AppField
+            name="vehicleModel"
+            children={(field) => (
+              <field.TextField
+                label="Vehicle Model"
+                placeholder="e.g., Camry"
+                autoCapitalize="words"
+              />
             )}
-          </form.Field>
+          />
 
-          <form.Field name="vehicleYear">
-            {(field) => (
-              <FormField field={field} label="Vehicle Year">
-                <FormInput
-                  field={field}
-                  placeholder="e.g., 2022"
-                  keyboardType="number-pad"
-                  maxLength={4}
-                />
-              </FormField>
+          <form.AppField
+            name="vehicleYear"
+            children={(field) => (
+              <field.TextField
+                label="Vehicle Year"
+                placeholder="e.g., 2022"
+                keyboardType="number-pad"
+                maxLength={4}
+              />
             )}
-          </form.Field>
+          />
 
-          <form.Field name="vehicleColor">
-            {(field) => (
-              <FormField field={field} label="Vehicle Color">
-                <FormInput
-                  field={field}
-                  placeholder="e.g., Black"
-                  autoCapitalize="words"
-                />
-              </FormField>
+          <form.AppField
+            name="vehicleColor"
+            children={(field) => (
+              <field.TextField
+                label="Vehicle Color"
+                placeholder="e.g., Black"
+                autoCapitalize="words"
+              />
             )}
-          </form.Field>
+          />
 
-          <form.Field name="licensePlate">
-            {(field) => (
-              <FormField field={field} label="License Plate">
-                <FormInput
-                  field={field}
-                  placeholder="e.g., ABC 1234"
-                  autoCapitalize="characters"
-                />
-              </FormField>
+          <form.AppField
+            name="licensePlate"
+            children={(field) => (
+              <field.TextField
+                label="License Plate"
+                placeholder="e.g., ABC 1234"
+                autoCapitalize="characters"
+              />
             )}
-          </form.Field>
+          />
         </View>
 
-        <form.Subscribe
-          selector={(state) => ({
-            canSubmit: state.canSubmit,
-            isSubmitting: state.isSubmitting,
-          })}
-        >
-          {({ canSubmit, isSubmitting }) => (
-            <Button
-              onPress={() => form.handleSubmit()}
-              disabled={!canSubmit || isSubmitting || createProfileMutation.isPending}
-              className="mt-4"
-            >
-              {isSubmitting || createProfileMutation.isPending ? (
-                <Spinner size="small" color="white" />
-              ) : (
-                <Text>Register as Driver</Text>
-              )}
-            </Button>
-          )}
-        </form.Subscribe>
+        <form.AppForm>
+          <form.SubmitButton
+            label="Register as Driver"
+            disabled={createProfileMutation.isPending}
+            className="mt-4"
+          />
+        </form.AppForm>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

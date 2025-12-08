@@ -15,7 +15,7 @@ import {
 } from "~/components/ui";
 import { useAuth } from "~/lib/hooks";
 import { driverQueries } from "~/utils/api";
-import { authClient } from "~/utils/auth";
+import { authClient } from "~/lib/auth";
 
 interface MenuItem {
   icon: keyof typeof Ionicons.glyphMap;

@@ -1,15 +1,20 @@
-import { useForm } from "@tanstack/react-form";
+import { revalidateLogic } from "@tanstack/react-form";
 import { router } from "expo-router";
 
+import { authClient } from "~/lib/auth";
+import { useAppForm } from "~/lib/form";
 import { signupSchema } from "~/lib/schema";
-import { authClient } from "~/utils/auth";
 
 export function useSignupForm() {
-  const form = useForm({
+  return useAppForm({
     defaultValues: {
       name: "",
       email: "",
       password: "",
+    },
+    validationLogic: revalidateLogic(),
+    validators: {
+      onChange: signupSchema,
     },
     onSubmit: async ({ value }) => {
       const result = await authClient.signUp.email(value);
@@ -20,10 +25,5 @@ export function useSignupForm() {
 
       router.replace("/");
     },
-    validators: {
-      onBlur: signupSchema,
-    },
   });
-
-  return form;
 }

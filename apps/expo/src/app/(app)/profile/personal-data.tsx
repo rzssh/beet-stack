@@ -1,14 +1,12 @@
-import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
 import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button, Spinner, Text } from "~/components/ui";
-import { FormField, FormInput } from "~/components/forms";
+import { Text } from "~/components/ui";
+import { authClient } from "~/lib/auth";
+import { useAppForm } from "~/lib/form";
 import { useAuth } from "~/lib/hooks";
-import { authClient } from "~/utils/auth";
 import { toast } from "~/utils/toast";
 
 export default function PersonalDataScreen() {
@@ -16,7 +14,7 @@ export default function PersonalDataScreen() {
   const { data: session } = authClient.useSession();
   const { isAuthenticated } = useAuth();
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       name: session?.user?.name ?? "",
     },
@@ -48,17 +46,16 @@ export default function PersonalDataScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-4">
-          <form.Field name="name">
-            {(field) => (
-              <FormField field={field} label="Name">
-                <FormInput
-                  field={field}
-                  placeholder="Your name"
-                  autoCapitalize="words"
-                />
-              </FormField>
+          <form.AppField
+            name="name"
+            children={(field) => (
+              <field.TextField
+                label="Name"
+                placeholder="Your name"
+                autoCapitalize="words"
+              />
             )}
-          </form.Field>
+          />
 
           <View className="rounded-xl border border-zinc-700 bg-zinc-800 p-4">
             <Text className="mb-1 text-zinc-400 text-sm">Email</Text>
@@ -68,26 +65,9 @@ export default function PersonalDataScreen() {
             </Text>
           </View>
 
-          <form.Subscribe
-            selector={(state) => ({
-              canSubmit: state.canSubmit,
-              isSubmitting: state.isSubmitting,
-            })}
-          >
-            {({ canSubmit, isSubmitting }) => (
-              <Button
-                onPress={() => form.handleSubmit()}
-                disabled={!canSubmit || isSubmitting}
-                className="mt-4"
-              >
-                {isSubmitting ? (
-                  <Spinner size="small" color="white" />
-                ) : (
-                  <Text>Save Changes</Text>
-                )}
-              </Button>
-            )}
-          </form.Subscribe>
+          <form.AppForm>
+            <form.SubmitButton label="Save Changes" className="mt-4" />
+          </form.AppForm>
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>

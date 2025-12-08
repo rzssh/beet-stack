@@ -3,10 +3,9 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { FormField, FormInput } from "~/components/forms";
-import { Button, Separator, Spinner, Text } from "~/components/ui";
+import { Button, Spinner, Text } from "~/components/ui";
+import { authClient } from "~/lib/auth";
 import { useSignupForm } from "~/lib/hooks";
-import { authClient } from "~/utils/auth";
 
 export default function SignupScreen() {
   const form = useSignupForm();
@@ -44,79 +43,52 @@ export default function SignupScreen() {
           </View>
 
           <View className="gap-4">
-            <form.Field name="name">
-              {(field) => (
-                <FormField field={field} label="Name">
-                  <FormInput
-                    field={field}
-                    placeholder="Your name"
-                    autoCapitalize="words"
-                    autoComplete="name"
-                  />
-                </FormField>
+            <form.AppField
+              name="name"
+              children={(field) => (
+                <field.TextField
+                  label="Name"
+                  placeholder="Your name"
+                  autoCapitalize="words"
+                  autoComplete="name"
+                />
               )}
-            </form.Field>
+            />
 
-            <form.Field name="email">
-              {(field) => (
-                <FormField field={field} label="Email">
-                  <FormInput
-                    field={field}
-                    placeholder="you@example.com"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    autoComplete="email"
-                  />
-                </FormField>
+            <form.AppField
+              name="email"
+              children={(field) => (
+                <field.EmailField
+                  label="Email"
+                  placeholder="you@example.com"
+                />
               )}
-            </form.Field>
+            />
 
-            <form.Field name="password">
-              {(field) => (
-                <FormField field={field} label="Password">
-                  <FormInput
-                    field={field}
-                    placeholder="At least 8 characters"
-                    secureTextEntry
-                    autoComplete="new-password"
-                  />
-                </FormField>
+            <form.AppField
+              name="password"
+              children={(field) => (
+                <field.PasswordField
+                  label="Password"
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                />
               )}
-            </form.Field>
+            />
 
-            <form.Subscribe
-              selector={(state) => [
-                state.canSubmit,
-                state.isSubmitting,
-                state.errorMap.onSubmit,
-              ]}
-            >
-              {([canSubmit, isSubmitting, submitError]) => (
-                <>
-                  {submitError && (
-                    <Text variant="small" className="text-destructive">
-                      {submitError}
-                    </Text>
-                  )}
-                  <Button
-                    onPress={form.handleSubmit}
-                    disabled={!canSubmit || isSubmitting || isGoogleLoading}
-                    className="mt-2"
-                  >
-                    {isSubmitting ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      <Text>Create Account</Text>
-                    )}
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
+            <form.AppForm>
+              <form.FormError />
+              <form.SubmitButton
+                label="Create Account"
+                disabled={isGoogleLoading}
+                className="mt-2"
+              />
+            </form.AppForm>
 
             <View className="my-4 flex-row items-center gap-4">
-              <Separator className="flex-1" />
+              <View className="h-px flex-1 bg-border" />
               <Text variant="muted">or continue with</Text>
-              <Separator className="flex-1" />
+              <View className="h-px flex-1 bg-border" />
             </View>
 
             <Button
@@ -139,7 +111,7 @@ export default function SignupScreen() {
 
             <View className="mt-6 flex-row justify-center gap-1">
               <Text variant="muted">Already have an account?</Text>
-              <Link href="/(auth)/login" asChild>
+              <Link href="/login" asChild>
                 <Pressable>
                   <Text className="text-primary">Sign in</Text>
                 </Pressable>

@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Text } from "~/components/ui";
 import { useAuth } from "~/lib/hooks";
-import { authClient } from "~/utils/auth";
+import { authClient } from "~/lib/auth";
 
 interface SocialAccount {
   provider: string;

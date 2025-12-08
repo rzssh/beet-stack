@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, SplashScreen, Tabs } from "expo-router";
 import { useCallback, useEffect } from "react";
-import { authClient } from "~/utils/auth";
+import { authClient } from "~/lib/auth";
 
 export default function TabLayout() {
   const { data: authData, isPending } = authClient.useSession();
