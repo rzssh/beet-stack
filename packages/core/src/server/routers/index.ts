@@ -1,2 +1,1 @@
-export { countRoutes } from "./count";
-export { messagesRoutes } from "./messages";
+export { createMessagesRoutes, messagesRoutes } from "./messages";

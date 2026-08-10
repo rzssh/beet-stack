@@ -3,15 +3,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./src/index.ts" },
-    "./env": { "types": "./dist/env.d.ts", "default": "./src/env.ts" },
-    "./auth": { "types": "./dist/auth.d.ts", "default": "./src/auth.ts" },
-    "./integrations": {
-      "types": "./dist/integrations/index.d.ts",
-      "default": "./src/integrations/index.ts"
-    },
+    ".": { "types": "./src/index.ts", "default": "./src/index.ts" },
+    "./env": { "types": "./src/env.ts", "default": "./src/env.ts" },
+    "./auth": { "types": "./src/auth.ts", "default": "./src/auth.ts" },
     "./server": {
-      "types": "./dist/server/index.d.ts",
+      "types": "./src/server/index.ts",
       "default": "./src/server/index.ts"
     }
   },
@@ -28,15 +24,10 @@
     "@acme/db": "workspace:*",
     "@better-auth/expo": "catalog:",
     "@elysiajs/cors": "catalog:",
-    "@elysiajs/opentelemetry": "catalog:",
-    "@elysiajs/swagger": "catalog:",
-    "@sentry/bun": "catalog:",
     "@t3-oss/env-core": "catalog:",
     "better-auth": "catalog:",
     "elysia": "catalog:",
     "pino": "catalog:",
-    "resend": "catalog:",
-    "stripe": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

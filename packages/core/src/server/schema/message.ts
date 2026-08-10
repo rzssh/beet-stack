@@ -10,10 +10,10 @@ export const messageModel = t.Object({
 });
 
 export const messageInputModel = t.Object({
-  title: t.String(),
-  content: t.String(),
+  title: t.String({ minLength: 1, maxLength: 100 }),
+  content: t.String({ minLength: 1, maxLength: 1000 }),
 });
 
 export const messageIdParams = t.Object({
-  id: t.String(),
+  id: t.String({ minLength: 1 }),
 });
