@@ -8,7 +8,8 @@
   "packageManager": "bun@1.3.13",
   "scripts": {
     "build": "bun run --filter=* build",
-    "check": "bun run typecheck && biome check . --diagnostic-level=error",
+    "check": "bun run check:vite && bun run typecheck && biome check . --diagnostic-level=error",
+    "check:vite": "bun scripts/check-vite-instance.mjs",
     "test": "DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/messages AUTH_SECRET=local-test-secret-with-at-least-32-characters bun test packages/core/src/server/routers/messages/messages.test.ts",
     "test:integration": "bun test apps/server/src/app.integration.test.ts",
     "dev": "bun run --filter=* dev",
@@ -40,6 +41,9 @@
     "protobufjs",
     "sharp"
   ],
+  "overrides": {
+    "lightningcss": "1.32.0"
+  },
   "workspaces": ["apps/*", "packages/*", "tooling/*"],
   "catalogs": {
     "react": {
