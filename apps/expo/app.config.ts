@@ -2,15 +2,15 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Authenticated Messages",
-  slug: "authenticated-messages",
-  scheme: "acme-messages",
+  name: "BEET Stack",
+  slug: "beet-stack",
+  scheme: "beet-stack",
   version: "0.1.0",
   orientation: "portrait",
   icon: "./assets/icon-light.png",
   userInterfaceStyle: "automatic",
   ios: {
-    bundleIdentifier: "com.example.authenticatedmessages",
+    bundleIdentifier: "com.acme.beetstack",
     supportsTablet: true,
     icon: {
       light: "./assets/icon-light.png",
@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: "com.example.authenticatedmessages",
+    package: "com.acme.beetstack",
     adaptiveIcon: {
       foregroundImage: "./assets/icon-light.png",
       backgroundColor: "#1F104A",

@@ -15,7 +15,7 @@ export const env = createEnv({
     SERVICE_PORT: z.coerce.number().default(3001),
     TRUSTED_ORIGINS: z
       .string()
-      .default("http://localhost:3000,http://localhost:3001,acme-messages://")
+      .default("http://localhost:3000,http://localhost:3001,beet-stack://")
       .transform((value) => value.split(",").map((origin) => origin.trim())),
     AUTH_SECRET: z.string().min(32),
   },

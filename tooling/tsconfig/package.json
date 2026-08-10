@@ -1,6 +1,7 @@
 {
   "name": "@acme/tsconfig",
   "private": true,
+  "license": "MIT",
   "files": [
     "*.json"
   ]

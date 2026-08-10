@@ -1,6 +1,7 @@
 {
   "name": "@acme/expo",
   "private": true,
+  "license": "MIT",
   "main": "index.ts",
   "scripts": {
     "clean": "rm -rf .cache .expo android ios node_modules",

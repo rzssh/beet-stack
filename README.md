@@ -1,8 +1,10 @@
-# Authenticated messages vertical slice
+# BEET Stack
 
-Runnable portfolio slice across TanStack Start, Elysia, Expo, Better Auth, Drizzle, and PostgreSQL. It does one thing: users create an email/password account, keep a session, and create, read, update, and delete only their own messages.
+BEET stands for Bun, Elysia, Expo, and TanStack Start. Better Auth, Drizzle, and PostgreSQL are the explicitly named supporting layers for auth, schema, and storage. The repository does one thing: users create an email/password account, keep a session, and create, read, update, and delete only their own messages.
 
 ## Architecture
+
+One Elysia app defines the full API contract in `packages/core/src/server/routers/`, exposed through Eden so clients get the routes, validation, and response types for free. TanStack Start web mounts that contract under `/api`; a standalone Elysia server mounts the same app on port 3001 for Expo. Web and native therefore consume the exact same API surface.
 
 ```text
 TanStack Start web ── /api ─┐
@@ -19,7 +21,20 @@ Expo native ── port 3001 ───┘
 - `apps/server/src/app.ts` mounts the same API for Expo.
 - `apps/expo/src/utils/api.tsx` derives the mobile client from the standalone Elysia app type.
 
-Every message route requires a Better Auth session. List and detail reads, updates, and deletes include the authenticated user ID in the database predicate. A cross-user lookup returns `404` so message existence is not disclosed.
+### Web and native boundaries
+
+Web sessions are Better Auth HTTP cookies, issued and checked inside the `/api` mount. Native Expo does not inherit a browser cookie jar, so `@better-auth/expo` plus `expo-secure-store` bridge the session: the native client keeps the session token in SecureStore and sends it with every request to the standalone API. Both mounts share the same Elysia routes and the same Better Auth session check, which keeps route behavior aligned across clients.
+
+### Security decisions
+
+- Every message route requires a Better Auth session; a missing or expired session returns `401`.
+- List, detail, update, and delete include the authenticated user ID in the PostgreSQL predicate, so queries can only touch rows the user owns.
+- Cross-user lookups return `404` rather than `403`, so message existence is never disclosed to another account.
+- Request payloads are validated at the trust boundary: route schemas reject blank and malformed input before the service layer runs.
+- Environment variables are parsed with `@t3-oss/env-core`; missing or invalid values fail at startup instead of silently degrading.
+- The PostgreSQL integration guard refuses any database host other than loopback before importing the database client.
+- CORS trusts only the exact origins in `TRUSTED_ORIGINS` — localhost web and API, plus the `beet-stack://` app scheme — and never a production wildcard.
+- `AUTH_SECRET` must be at least 32 characters. Example values in this repository are local-only and contain no usable secret.
 
 ## Prerequisites
 
@@ -79,7 +94,7 @@ bun run test:integration
 A disposable local PostgreSQL option:
 
 ```sh
-docker run --rm --name bun-messages-postgres \
+docker run --rm --name beet-messages-postgres \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=messages \
   -p 127.0.0.1:5432:5432 postgres:17

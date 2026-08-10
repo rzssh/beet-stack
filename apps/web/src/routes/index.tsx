@@ -14,7 +14,9 @@ function Home() {
   return (
     <main className="container mx-auto flex min-h-screen max-w-5xl flex-col justify-center gap-10 px-6 py-16">
       <section className="space-y-5">
-        <p className="font-medium text-primary">Portfolio vertical slice</p>
+        <p className="font-medium text-primary">
+          Bun · Elysia · Expo · TanStack
+        </p>
         <h1 className="max-w-3xl font-bold text-5xl tracking-tight">
           Authenticated messages, end to end
         </h1>

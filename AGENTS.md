@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-Repository is one portfolio vertical slice: Better Auth email/password sessions and user-owned message CRUD through TanStack Start, Elysia, Expo, Drizzle, and PostgreSQL. Do not reintroduce mock integrations, cloud deployment claims, or speculative features.
+Repository is the BEET Stack monorepo (Bun, Elysia, Expo, TanStack Start): Better Auth email/password sessions and user-owned message CRUD through TanStack Start, Elysia, Expo, Drizzle, and PostgreSQL. Do not reintroduce mock integrations, cloud deployment claims, or speculative features.
 
 ## Authoritative paths
 

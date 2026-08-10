@@ -8,6 +8,7 @@
       "default": "./src/routes/api/$.ts"
     }
   },
+  "license": "MIT",
   "scripts": {
     "dev": "bun with-env vite dev",
     "build": "bun with-env vite build",

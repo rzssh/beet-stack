@@ -1,7 +1,9 @@
 {
-  "name": "bun-stack",
+  "name": "beet-stack",
   "version": "0.0.1",
-  "description": "Elysia Backend + React Native + TanStack Start + Bun Monorepo",
+  "description": "BEET Stack: Bun, Elysia, Expo, and TanStack Start with Better Auth, Drizzle, and PostgreSQL",
+  "license": "MIT",
+  "author": "Sasha Mysak",
   "private": true,
   "packageManager": "bun@1.3.13",
   "scripts": {

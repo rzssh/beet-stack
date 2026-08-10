@@ -5,8 +5,8 @@ import * as SecureStore from "expo-secure-store";
 import { getApiUrl } from "./base-url";
 
 const plugin = expoClient({
-  scheme: "acme-messages",
-  storagePrefix: "acme-messages",
+  scheme: "beet-stack",
+  storagePrefix: "beet-stack",
   storage: SecureStore,
 });
 
