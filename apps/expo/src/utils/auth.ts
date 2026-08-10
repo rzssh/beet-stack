@@ -1,17 +1,18 @@
 import { expoClient } from "@better-auth/expo/client";
+import type { BetterAuthClientPlugin } from "better-auth";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
-import { getMicroserviceUrl } from "./base-url";
+import { getApiUrl } from "./base-url";
 
-const authBaseUrl = process.env.EXPO_PUBLIC_APP_URL ?? getMicroserviceUrl();
+const plugin = expoClient({
+  scheme: "acme-messages",
+  storagePrefix: "acme-messages",
+  storage: SecureStore,
+});
 
 export const authClient = createAuthClient({
-  baseURL: authBaseUrl,
-  plugins: [
-    expoClient({
-      scheme: "expo",
-      storagePrefix: "expo",
-      storage: SecureStore,
-    }),
-  ],
-});
+  baseURL: getApiUrl(),
+  plugins: [plugin as unknown as BetterAuthClientPlugin],
+}) as unknown as ReturnType<typeof createAuthClient> & {
+  getCookie: () => string;
+};

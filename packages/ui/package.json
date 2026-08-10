@@ -32,14 +32,12 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@sinclair/typebox": "catalog:",
     "@types/react": "catalog:react",
     "react": "catalog:react",
     "typescript": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {
-    "@sinclair/typebox": "catalog:",
     "react": "catalog:react"
   }
 }

@@ -27,9 +27,7 @@ export function FormField({
           {label}
         </label>
         {description && (
-          <p className="text-muted-foreground text-sm">
-            {description}
-          </p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         )}
       </div>
 
@@ -39,7 +37,10 @@ export function FormField({
         <div className="space-y-1">
           {field.state.meta.errors.map((error: unknown, index: number) => (
             <p key={index} className="text-destructive text-sm">
-              {typeof error === "string" ? error : (error as { message?: string })?.message || "Validation error"}
+              {typeof error === "string"
+                ? error
+                : (error as { message?: string })?.message ||
+                  "Validation error"}
             </p>
           ))}
         </div>
@@ -81,12 +82,13 @@ export function FormInputField({
           disabled={disabled}
           className={cn(
             "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
-            "file:border-0 file:bg-transparent file:text-sm file:font-medium",
+            "file:border-0 file:bg-transparent file:font-medium file:text-sm",
             "placeholder:text-muted-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            field.state.meta.errors?.length && "border-destructive focus-visible:ring-destructive",
-            className
+            field.state.meta.errors?.length &&
+              "border-destructive focus-visible:ring-destructive",
+            className,
           )}
         />
       )}
@@ -135,13 +137,15 @@ export function FormTextareaField({
               "placeholder:text-muted-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               "disabled:cursor-not-allowed disabled:opacity-50",
-              field.state.meta.errors?.length && "border-destructive focus-visible:ring-destructive",
-              className
+              field.state.meta.errors?.length &&
+                "border-destructive focus-visible:ring-destructive",
+              className,
             )}
           />
           {showCharCount && (
             <p className="text-muted-foreground text-xs">
-              {(field.state.value || "").length}{maxLength ? `/${maxLength}` : ""} characters
+              {(field.state.value || "").length}
+              {maxLength ? `/${maxLength}` : ""} characters
             </p>
           )}
         </div>

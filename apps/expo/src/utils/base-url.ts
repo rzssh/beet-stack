@@ -1,12 +1,13 @@
 import Constants from "expo-constants";
 
-export const getLocalhost = () => {
-  const debuggerHost = Constants.expoConfig?.hostUri;
-  const localhost = debuggerHost?.split(":")[0];
-  if (!localhost) throw new Error("Failed to get localhost.");
-  return localhost;
+const developmentHost = () => {
+  const host = Constants.expoConfig?.hostUri?.split(":")[0];
+  if (!host)
+    throw new Error(
+      "Set EXPO_PUBLIC_API_URL when Expo cannot detect the development host",
+    );
+  return `http://${host}:3001`;
 };
 
-export const getBaseUrl = () => `http://${getLocalhost()}:3000`;
-
-export const getMicroserviceUrl = () => `http://${getLocalhost()}:3001`;
+export const getApiUrl = () =>
+  process.env.EXPO_PUBLIC_API_URL ?? developmentHost();

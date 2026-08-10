@@ -1,204 +1,237 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Constants from "expo-constants";
 import { Link, Stack } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
-  Keyboard,
+  ActivityIndicator,
   Pressable,
+  SafeAreaView,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
-  type TextInput as TextInputType,
   View,
 } from "react-native";
-import {
-  KeyboardAvoidingView,
-  KeyboardToolbar,
-} from "react-native-keyboard-controller";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { messageMutations, messageQueries } from "~/utils/api";
 import { authClient } from "~/utils/auth";
+import { ActionButton } from "~/utils/mobile-ui";
 
-type MessagesQuery = ReturnType<typeof messageQueries.all>;
-type Messages = Awaited<ReturnType<MessagesQuery["queryFn"]>>;
-type Message = Messages[number];
+export default function Index() {
+  const session = authClient.useSession();
 
-function MessageCard(props: { message: Message; onDelete: () => void }) {
-  return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
-      <View className="grow">
-        <Link
-          asChild
-          href={{ pathname: "/message/[id]", params: { id: props.message.id } }}
-        >
-          <Pressable className="">
-            <Text className="font-semibold text-primary text-xl">
-              {props.message.title}
-            </Text>
-            <Text className="mt-2 text-foreground">
-              {props.message.content}
-            </Text>
-          </Pressable>
-        </Link>
-      </View>
-      <Pressable onPress={props.onDelete}>
-        <Text className="font-bold text-primary uppercase">Delete</Text>
-      </Pressable>
-    </View>
-  );
+  if (session.isPending) {
+    return (
+      <Centered>
+        <ActivityIndicator />
+      </Centered>
+    );
+  }
+  if (!session.data) return <AuthForm />;
+  return <Messages email={session.data.user.email} />;
 }
 
-function CreateMessage() {
-  const queryClient = useQueryClient();
+function AuthForm() {
+  const [signup, setSignup] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string>();
+  const [pending, setPending] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  const contentRef = useRef<TextInputType>(null);
-
-  const { mutate, error, isPending } = useMutation({
-    ...messageMutations.create(),
-    async onSuccess() {
-      setTitle("");
-      setContent("");
-      await queryClient.invalidateQueries({ queryKey: ["messages", "all"] });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (title.trim() && content.trim()) {
-      mutate({ title, content });
-    }
+  const submit = async () => {
+    setPending(true);
+    setError(undefined);
+    const response = signup
+      ? await authClient.signUp.email({ name, email, password })
+      : await authClient.signIn.email({ email, password });
+    setPending(false);
+    if (response.error) setError(response.error.message);
   };
 
   return (
-    <View className="flex gap-2 border-input border-t bg-background p-4 pb-6">
-      <TextInput
-        className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Title"
-        returnKeyType="next"
-        onSubmitEditing={() => contentRef.current?.focus()}
-      />
-      <TextInput
-        ref={contentRef}
-        className="items-center rounded-md border border-input bg-background px-3 text-foreground text-lg leading-tight"
-        value={content}
-        onChangeText={setContent}
-        placeholder="Content"
-        returnKeyType="done"
-        onSubmitEditing={handleSubmit}
-      />
-      <Pressable
-        className="flex items-center rounded-sm bg-primary p-2"
-        onPress={handleSubmit}
-        disabled={isPending}
-      >
-        <Text className="text-foreground">
-          {isPending ? "Creating..." : "Create"}
-        </Text>
-      </Pressable>
-      {error && (
-        <Text className="mt-2 text-destructive">
-          {error instanceof Error ? error.message : "Failed to create message"}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-function MobileAuth() {
-  const { data: session } = authClient.useSession();
-
-  return (
-    <>
-      <Text className="pb-2 text-center font-semibold text-foreground text-xl">
-        {session?.user.name ? `Hello, ${session.user.name}` : "Not logged in"}
-      </Text>
-      <Pressable
-        onPress={() =>
-          session
-            ? authClient.signOut()
-            : authClient.signIn.social({
-                provider: "discord",
-                callbackURL: "/",
-              })
-        }
-        className="flex items-center rounded-sm bg-primary p-2"
-      >
-        <Text>{session ? "Sign Out" : "Sign In With Discord"}</Text>
-      </Pressable>
-    </>
-  );
-}
-
-export default function Index() {
-  const queryClient = useQueryClient();
-
-  const messagesQuery = useQuery(messageQueries.all());
-  const messages = messagesQuery.data ?? [];
-
-  const deleteMessageMutation = useMutation({
-    ...messageMutations.delete(),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: ["messages", "all"] }),
-  });
-
-  return (
-    <>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#09090B" }}>
-        <Stack.Screen options={{ title: "Home Page" }} />
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={140}
-          style={{ flex: 1 }}
-        >
-          {/* Header */}
-          <View className="p-4">
-            <Text className="pb-2 text-center font-bold text-5xl text-foreground">
-              Create <Text className="text-primary">T3</Text> Turbo
-            </Text>
-
-            <MobileAuth />
-
-            <View className="py-2">
-              <Text className="font-semibold text-primary italic">
-                Press on a message
-              </Text>
-            </View>
-          </View>
-
-          {/* Messages - scrollable, takes remaining space */}
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ gap: 8, padding: 16, paddingTop: 0 }}
-            keyboardShouldPersistTaps="handled"
-          >
-            {messages.map((message) => (
-              <MessageCard
-                key={message.id}
-                message={message}
-                onDelete={() => deleteMessageMutation.mutate(message.id)}
-              />
-            ))}
-          </ScrollView>
-
-          {/* Input at bottom */}
-          <CreateMessage />
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-      <KeyboardToolbar>
-        <KeyboardToolbar.Next />
-        <KeyboardToolbar.Prev />
-        <KeyboardToolbar.Done
-          onPress={(e) => {
-            e.preventDefault();
-            Keyboard.dismiss();
-          }}
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.authCard}>
+        <Stack.Screen
+          options={{ title: signup ? "Create account" : "Sign in" }}
         />
-      </KeyboardToolbar>
-    </>
+        <Text style={styles.heading}>
+          {signup ? "Create account" : "Sign in"}
+        </Text>
+        {signup && (
+          <TextInput
+            accessibilityLabel="Name"
+            autoComplete="name"
+            placeholder="Name"
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+          />
+        )}
+        <TextInput
+          accessibilityLabel="Email"
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          placeholder="Email"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          accessibilityLabel="Password"
+          autoComplete={signup ? "new-password" : "current-password"}
+          placeholder="Password"
+          secureTextEntry
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
+        {error && <Text style={styles.error}>{error}</Text>}
+        <ActionButton
+          disabled={pending}
+          label={pending ? "Working…" : signup ? "Create account" : "Sign in"}
+          onPress={submit}
+        />
+        <Pressable onPress={() => setSignup((value) => !value)}>
+          <Text style={styles.link}>
+            {signup
+              ? "Already registered? Sign in"
+              : "Need an account? Sign up"}
+          </Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
+
+function Messages({ email }: { email: string }) {
+  const queryClient = useQueryClient();
+  const messages = useQuery(messageQueries.all());
+  const create = useMutation({
+    mutationFn: messageMutations.create,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages"] }),
+  });
+  const remove = useMutation({
+    mutationFn: messageMutations.delete,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages"] }),
+  });
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  const submit = async () => {
+    await create.mutateAsync({ title, content });
+    setTitle("");
+    setContent("");
+  };
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <Stack.Screen options={{ title: "Your messages" }} />
+      <ScrollView
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.heading}>Messages</Text>
+            <Text>{email}</Text>
+          </View>
+          <ActionButton
+            label="Sign out"
+            onPress={async () => {
+              await authClient.signOut();
+              queryClient.clear();
+            }}
+          />
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.subheading}>Create message</Text>
+          <TextInput
+            accessibilityLabel="Title"
+            maxLength={100}
+            placeholder="Title"
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+          />
+          <TextInput
+            accessibilityLabel="Content"
+            maxLength={1000}
+            multiline
+            placeholder="Content"
+            style={[styles.input, styles.multiline]}
+            value={content}
+            onChangeText={setContent}
+          />
+          {create.error && (
+            <Text style={styles.error}>{create.error.message}</Text>
+          )}
+          <ActionButton
+            disabled={!title.trim() || !content.trim() || create.isPending}
+            label={create.isPending ? "Creating…" : "Create"}
+            onPress={submit}
+          />
+        </View>
+        {messages.isLoading && <ActivityIndicator />}
+        {messages.error && (
+          <Text style={styles.error}>{messages.error.message}</Text>
+        )}
+        {messages.data?.map((message) => (
+          <View key={message.id} style={styles.card}>
+            <Link
+              href={{ pathname: "/message/[id]", params: { id: message.id } }}
+              asChild
+            >
+              <Pressable>
+                <Text style={styles.subheading}>{message.title}</Text>
+                <Text>{message.content}</Text>
+                <Text style={styles.link}>Open and edit</Text>
+              </Pressable>
+            </Link>
+            <ActionButton
+              disabled={remove.isPending}
+              label="Delete"
+              onPress={() => remove.mutate(message.id)}
+            />
+          </View>
+        ))}
+        {messages.data?.length === 0 && <Text>No messages yet.</Text>}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return <View style={styles.centered}>{children}</View>;
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#f8fafc" },
+  page: { gap: 16, padding: 16 },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  authCard: {
+    gap: 14,
+    margin: 24,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: "white",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  card: { gap: 12, padding: 16, borderRadius: 12, backgroundColor: "white" },
+  heading: { fontSize: 28, fontWeight: "700" },
+  subheading: { fontSize: 20, fontWeight: "600" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "white",
+  },
+  multiline: { minHeight: 96, textAlignVertical: "top" },
+  error: { color: "#b91c1c" },
+  link: { color: "#1d4ed8", marginTop: 8 },
+});

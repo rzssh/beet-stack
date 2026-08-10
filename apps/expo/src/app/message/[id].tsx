@@ -1,24 +1,105 @@
-import { useQuery } from "@tanstack/react-query";
-import { Stack, useGlobalSearchParams } from "expo-router";
-import { SafeAreaView, Text, View } from "react-native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { messageMutations, messageQueries } from "~/utils/api";
+import { ActionButton } from "~/utils/mobile-ui";
 
-import { messageQueries } from "~/utils/api";
+export default function MessageScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const message = useQuery(messageQueries.byId(id));
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
 
-export default function Message() {
-  const { id } = useGlobalSearchParams<{ id: string }>();
-  const { data } = useQuery(messageQueries.byId(id!));
+  useEffect(() => {
+    if (message.data) {
+      setTitle(message.data.title);
+      setContent(message.data.content);
+    }
+  }, [message.data]);
 
-  if (!data) return null;
+  const update = useMutation({
+    mutationFn: messageMutations.update,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["messages"] });
+      router.back();
+    },
+  });
+  const remove = useMutation({
+    mutationFn: messageMutations.delete,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["messages"] });
+      router.back();
+    },
+  });
+
+  if (message.isLoading)
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
+  if (message.error)
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>{message.error.message}</Text>
+      </View>
+    );
 
   return (
-    <SafeAreaView>
-      <Stack.Screen options={{ title: data.title }} />
-      <View className="h-full w-full p-4">
-        <Text className="py-2 font-bold text-3xl text-primary">
-          {data.title}
-        </Text>
-        <Text className="py-4 text-foreground">{data.content}</Text>
-      </View>
+    <SafeAreaView style={styles.page}>
+      <Stack.Screen options={{ title: message.data?.title ?? "Message" }} />
+      <Text style={styles.label}>Title</Text>
+      <TextInput
+        maxLength={100}
+        style={styles.input}
+        value={title}
+        onChangeText={setTitle}
+      />
+      <Text style={styles.label}>Content</Text>
+      <TextInput
+        maxLength={1000}
+        multiline
+        style={[styles.input, styles.content]}
+        value={content}
+        onChangeText={setContent}
+      />
+      {update.error && <Text style={styles.error}>{update.error.message}</Text>}
+      {remove.error && <Text style={styles.error}>{remove.error.message}</Text>}
+      <ActionButton
+        disabled={!title.trim() || !content.trim() || update.isPending}
+        label={update.isPending ? "Saving…" : "Save"}
+        onPress={() => update.mutate({ id, title, content })}
+      />
+      <ActionButton
+        disabled={remove.isPending}
+        label={remove.isPending ? "Deleting…" : "Delete"}
+        onPress={() => remove.mutate(id)}
+      />
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  page: { flex: 1, gap: 12, padding: 16, backgroundColor: "#f8fafc" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  label: { fontWeight: "600" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "white",
+  },
+  content: { minHeight: 160, textAlignVertical: "top" },
+  error: { color: "#b91c1c" },
+});

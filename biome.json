@@ -1,5 +1,19 @@
 {
   "$schema": "node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "**/*.{ts,tsx,json,css}",
+      "!!**/.cache",
+      "!!**/.expo",
+      "!!**/.tanstack",
+      "!!**/dist",
+      "!!**/tsc-build",
+      "!!.claude",
+      "!!.mcp.json",
+      "!!tooling/tsconfig",
+      "!!apps/web/src/routeTree.gen.ts"
+    ]
+  },
   "css": { "parser": { "tailwindDirectives": true } },
   "assist": {
     "enabled": true,
@@ -91,7 +105,7 @@
       "**/*.{ts,tsx,json,css}",
       "!node_modules/**",
       "!bun.lock",
-      "!dist/**"
+      "!**/dist/**"
     ]
   },
   "formatter": {
@@ -103,17 +117,24 @@
       "**/*.{ts,tsx,json,css}",
       "!node_modules/**",
       "!bun.lock",
-      "!dist/**"
+      "!**/dist/**"
     ]
   },
   "overrides": [
     {
       "includes": [
-        "packages/tsconfig/**/*.{json}",
-        "apps/web/src/routeTree.gen.ts"
+        "apps/web/src/components/ui/carousel.tsx",
+        "packages/ui/src/field.tsx"
       ],
-      "linter": { "enabled": false },
-      "formatter": { "enabled": false }
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
+    },
+    {
+      "includes": ["tooling/tailwind-config/theme.css"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noDuplicateCustomProperties": "off" }
+        }
+      }
     }
   ]
 }

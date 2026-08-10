@@ -1,70 +1,66 @@
-import type { App } from "@acme/web/app";
+import type { App } from "@acme/server/app";
 import { treaty } from "@elysiajs/eden";
 import { QueryClient } from "@tanstack/react-query";
-
 import { authClient } from "./auth";
-import { getBaseUrl } from "./base-url";
+import { getApiUrl } from "./base-url";
 
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 3,
-    },
+  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+});
+
+export const api = treaty<App>(getApiUrl(), {
+  fetch: { credentials: "omit" },
+  headers: () => {
+    const cookies = authClient.getCookie();
+    return cookies ? { Cookie: cookies } : undefined;
   },
 });
 
-export const api = treaty<App>(getBaseUrl(), {
-  fetch: { credentials: "include" },
-  headers: () => {
-    const cookies = authClient.getCookie();
-    if (cookies) {
-      return { Cookie: cookies };
-    }
-  },
-}).api;
+const failed = (action: string, status: number) =>
+  new Error(`${action} failed with HTTP ${status}`);
 
-// Helper functions for React Query integration
 export const messageQueries = {
   all: () => ({
-    queryKey: ["messages", "all"] as const,
+    queryKey: ["messages"] as const,
     queryFn: async () => {
       const response = await api.messages.get();
-      if (response.error) {
-        throw new Error("Failed to fetch messages");
+      if (response.error || !response.data || !("messages" in response.data)) {
+        throw failed("Loading messages", response.status);
       }
-      return response.data?.messages ?? [];
+      return response.data.messages;
     },
   }),
   byId: (id: string) => ({
-    queryKey: ["messages", "byId", id] as const,
+    queryKey: ["messages", id] as const,
     queryFn: async () => {
       const response = await api.messages({ id }).get();
-      if (response.error) {
-        throw new Error("Failed to fetch message");
+      if (response.error || !response.data || !("message" in response.data)) {
+        throw failed("Loading message", response.status);
       }
-      return response.data?.message;
+      return response.data.message;
     },
   }),
 };
 
 export const messageMutations = {
-  create: () => ({
-    mutationFn: async (data: { title: string; content: string }) => {
-      const response = await api.messages.post(data);
-      if (response.error) {
-        throw new Error("Failed to create message");
-      }
-      return response.data?.message;
-    },
-  }),
-  delete: () => ({
-    mutationFn: async (id: string) => {
-      const response = await api.messages({ id }).delete();
-      if (response.error) {
-        throw new Error("Failed to delete message");
-      }
-      return response.data;
-    },
-  }),
+  create: async (input: { title: string; content: string }) => {
+    const response = await api.messages.post(input);
+    if (response.error || !response.data || !("message" in response.data)) {
+      throw failed("Creating message", response.status);
+    }
+    return response.data.message;
+  },
+  update: async (input: { id: string; title: string; content: string }) => {
+    const response = await api
+      .messages({ id: input.id })
+      .patch({ title: input.title, content: input.content });
+    if (response.error || !response.data || !("message" in response.data)) {
+      throw failed("Updating message", response.status);
+    }
+    return response.data.message;
+  },
+  delete: async (id: string) => {
+    const response = await api.messages({ id }).delete();
+    if (response.error) throw failed("Deleting message", response.status);
+  },
 };

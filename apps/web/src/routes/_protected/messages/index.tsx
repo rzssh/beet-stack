@@ -1,213 +1,219 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquare, Plus } from "lucide-react";
-import { Suspense } from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "~/components/ui/breadcrumb";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { LogOut, Pencil, Plus, Save, Trash2 } from "lucide-react";
+import { type FormEvent, useState } from "react";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { Separator } from "~/components/ui/separator";
-import { SidebarTrigger } from "~/components/ui/sidebar";
-import { Skeleton } from "~/components/ui/skeleton";
-import { MessageForm } from "~/features/message/components/message-form";
-import { MessageList } from "~/features/message/components/message-list";
-import { messageController } from "~/features/message/controllers/message-controller";
+  loadMessages,
+  messageController,
+} from "~/features/message/controllers/message-controller";
+import { authClient } from "~/lib/auth/client";
+
+type Message = Awaited<ReturnType<typeof loadMessages>>[number];
 
 export const Route = createFileRoute("/_protected/messages/")({
-  component: MessagesIndex,
-  loader: async ({ context }) => {
-    try {
-      const response = await context.api().messages.get();
-      return {
-        initialMessages: response.data?.messages ?? [],
-        user: context.user,
-      };
-    } catch {
-      return {
-        initialMessages: [],
-        user: context.user,
-      };
-    }
-  },
+  loader: async ({ context }) => ({
+    messages: await loadMessages(),
+    user: context.user,
+  }),
+  component: MessagesPage,
 });
 
-function MessagesIndex() {
-  const { initialMessages, user } = Route.useLoaderData();
+function MessagesPage() {
+  const initial = Route.useLoaderData();
+  const router = useRouter();
+  const { data: messages = initial.messages, error } =
+    messageController.useMessagesQuery(initial.messages);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <header className="flex h-16 shrink-0 items-center gap-2">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Messages</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+    <main className="container mx-auto min-h-screen max-w-4xl space-y-8 px-6 py-10">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <Link to="/" className="text-muted-foreground text-sm underline">
+            Home
+          </Link>
+          <h1 className="font-bold text-3xl">Your messages</h1>
+          <p className="text-muted-foreground">
+            Signed in as {initial.user?.email}
+          </p>
         </div>
-        <div className="ml-auto">
-          <Button asChild size="sm">
-            <Link to="/messages/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Message
-            </Link>
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            await authClient.signOut();
+            await router.invalidate();
+            await router.navigate({ to: "/" });
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </Button>
       </header>
 
-      <div className="space-y-6">
-        <section className="flex items-center justify-between">
-          <div>
-            <h1 className="font-semibold text-3xl tracking-tight">Messages</h1>
-            <p className="text-muted-foreground">
-              Manage team messages with full CRUD operations and real-time
-              updates.
-            </p>
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  All Messages
-                </CardTitle>
-                <CardDescription>
-                  Messages are scoped to your user and demonstrate server-side
-                  prefetching with client-side updates.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<MessageListSkeleton />}>
-                  <MessagesList initialData={initialMessages} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Create</CardTitle>
-                <CardDescription>
-                  Create a new message with optimistic updates.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<MessageFormSkeleton />}>
-                  <MessagesForm />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Fetching Patterns</CardTitle>
-              <CardDescription>
-                This page demonstrates various data fetching patterns in the
-                TanStack Start + Elysia stack.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <h4 className="font-medium">Server-side Prefetch</h4>
-                <p className="text-muted-foreground text-sm">
-                  Messages are prefetched in the route loader using the
-                  isomorphic API client.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">Client-side Queries</h4>
-                <p className="text-muted-foreground text-sm">
-                  React Query provides caching, background updates, and
-                  optimistic updates.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">Real-time Updates</h4>
-                <p className="text-muted-foreground text-sm">
-                  WebSocket integration provides real-time message updates
-                  across clients.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-    </div>
+      <CreateMessage />
+      {error && <ErrorText error={error} />}
+      <section className="space-y-4" aria-label="Saved messages">
+        {messages.map((message) => (
+          <MessageEditor key={message.id} message={message} />
+        ))}
+        {messages.length === 0 && (
+          <p className="rounded-lg border p-8 text-center text-muted-foreground">
+            No messages yet.
+          </p>
+        )}
+      </section>
+    </main>
   );
 }
 
-const MessagesList = ({ initialData }: { initialData: any[] }) => {
-  const { data = { messages: initialData } } =
-    messageController.useMessagesQuery();
-  const deleteMutation = messageController.useDeleteMessageMutation();
+function CreateMessage() {
+  const mutation = messageController.useCreateMessageMutation();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    await mutation.mutateAsync({ title, content });
+    setTitle("");
+    setContent("");
+  };
 
   return (
-    <MessageList
-      messages={data.messages || []}
-      emptyMessage="No messages yet. Create your first message to get started."
-      onDelete={({ id }) => deleteMutation.mutate({ id })}
-      isDeleting={deleteMutation.isPending}
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Plus className="h-5 w-5" /> Create message
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <label htmlFor="new-title" className="font-medium text-sm">
+            Title
+          </label>
+          <Input
+            id="new-title"
+            required
+            maxLength={100}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <label htmlFor="new-content" className="font-medium text-sm">
+            Content
+          </label>
+          <Textarea
+            id="new-content"
+            required
+            maxLength={1000}
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+          />
+          {mutation.error && <ErrorText error={mutation.error} />}
+          <Button disabled={mutation.isPending} type="submit">
+            <Save className="mr-2 h-4 w-4" />
+            {mutation.isPending ? "Creating…" : "Create"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
-};
+}
 
-const MessagesForm = () => {
-  const createMutation = messageController.useCreateMessageMutation();
+function MessageEditor({ message }: { message: Message }) {
+  const update = messageController.useUpdateMessageMutation();
+  const remove = messageController.useDeleteMessageMutation();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(message.title);
+  const [content, setContent] = useState(message.content);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    await update.mutateAsync({ id: message.id, title, content });
+    setEditing(false);
+  };
 
   return (
-    <MessageForm
-      formTitle="Quick Create"
-      submitLabel="Create Message"
-      onSubmit={async ({ title, content }) => {
-        await createMutation.mutateAsync({
-          params: { title, content },
-        });
-      }}
-      isSubmitting={createMutation.isPending}
-      showFormState={true}
-    />
+    <Card>
+      <CardContent className="pt-6">
+        {editing ? (
+          <form onSubmit={submit} className="space-y-3">
+            <label
+              htmlFor={`title-${message.id}`}
+              className="font-medium text-sm"
+            >
+              Title
+            </label>
+            <Input
+              id={`title-${message.id}`}
+              required
+              maxLength={100}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+            <label
+              htmlFor={`content-${message.id}`}
+              className="font-medium text-sm"
+            >
+              Content
+            </label>
+            <Textarea
+              id={`content-${message.id}`}
+              required
+              maxLength={1000}
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+            />
+            {update.error && <ErrorText error={update.error} />}
+            <div className="flex gap-2">
+              <Button disabled={update.isPending} type="submit">
+                <Save className="mr-2 h-4 w-4" /> Save
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <h2 className="font-semibold text-xl">{message.title}</h2>
+              <p className="whitespace-pre-wrap text-muted-foreground">
+                {message.content}
+              </p>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Updated {new Date(message.updatedAt).toLocaleString()}
+            </p>
+            {remove.error && <ErrorText error={remove.error} />}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={remove.isPending}
+                onClick={() => remove.mutate(message.id)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-};
+}
 
-const MessageListSkeleton = () => (
-  <div className="space-y-3">
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-20 w-full" />
-  </div>
-);
-
-const MessageFormSkeleton = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-10 w-full" />
-    <Skeleton className="h-24 w-full" />
-    <Skeleton className="h-10 w-full" />
-  </div>
-);
+function ErrorText({ error }: { error: Error }) {
+  return <p className="text-destructive text-sm">{error.message}</p>;
+}

@@ -21,6 +21,5 @@
     "node_modules",
     "**/*.flow.js",
     "**/node_modules/react-native/index.js"
-  ],
-  "references": [{ "path": "../../apps/server" }, { "path": "../../apps/web" }]
+  ]
 }

@@ -1,11 +1,5 @@
 import type { MutationOptions } from "@tanstack/react-query";
-import { queryOptions } from "@tanstack/react-query";
 import { authClient } from "~/lib/auth/client";
-
-export const authKeys = {
-  user: ["user"] as const,
-  session: ["session"] as const,
-};
 
 export type SignInCredentials = {
   email: string;
@@ -20,26 +14,16 @@ export type SignUpCredentials = {
   callbackURL?: string;
 };
 
-export type SocialSignInCredentials = {
-  provider: "discord" | "google" | "github";
-  callbackURL?: string;
-};
-
-export const userQueryOptions = queryOptions({
-  queryKey: authKeys.user,
-  queryFn: () => authClient.getSession(),
-});
-
 export const emailSignInMutationOptions: MutationOptions<
   unknown,
   Error,
   SignInCredentials
 > = {
-  mutationKey: [...authKeys.user, "signin"],
-  mutationFn: async (credentials: SignInCredentials) => {
-    const res = await authClient.signIn.email(credentials);
-    if (res.error) throw new Error(res.error.message);
-    return res;
+  mutationKey: ["auth", "signin"],
+  mutationFn: async (credentials) => {
+    const response = await authClient.signIn.email(credentials);
+    if (response.error) throw new Error(response.error.message);
+    return response.data;
   },
 };
 
@@ -48,30 +32,10 @@ export const emailSignUpMutationOptions: MutationOptions<
   Error,
   SignUpCredentials
 > = {
-  mutationKey: [...authKeys.user, "signup"],
-  mutationFn: async (credentials: SignUpCredentials) => {
-    return authClient.signUp.email(credentials);
-  },
-};
-
-export const socialSignInMutationOptions: MutationOptions<
-  string | null,
-  Error,
-  SocialSignInCredentials
-> = {
-  mutationKey: [...authKeys.user, "social-signin"],
-  mutationFn: async (credentials: SocialSignInCredentials) => {
-    const { data } = await authClient.signIn.social({
-      provider: credentials.provider,
-      callbackURL: credentials.callbackURL,
-    });
-    return data?.url ?? null;
-  },
-};
-
-export const signOutMutationOptions: MutationOptions<unknown, Error, void> = {
-  mutationKey: [...authKeys.user, "signout"],
-  mutationFn: async () => {
-    return authClient.signOut();
+  mutationKey: ["auth", "signup"],
+  mutationFn: async (credentials) => {
+    const response = await authClient.signUp.email(credentials);
+    if (response.error) throw new Error(response.error.message);
+    return response.data;
   },
 };
