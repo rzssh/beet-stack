@@ -1,159 +1,60 @@
 import { Elysia } from "elysia";
-import { createAttachMiddleware } from "~/server/middleware/attach";
+import { createAttachMiddleware } from "../../middleware/attach";
 import {
   messageIdParams,
   messageInputModel,
   messageModel,
-} from "~/server/schema/message";
-import { messagesService } from "./service";
+} from "../../schema/message";
+import { type MessagesService, messagesService } from "./service";
 
-export const messagesRoutes = new Elysia({ prefix: "/messages" })
-  .use(createAttachMiddleware())
-  .decorate("messagesService", messagesService)
-  .model({
-    message: messageModel,
-    messageInput: messageInputModel,
-    messageIdParams,
-  })
-  .get(
-    "/",
-    async ({ messagesService }) => {
-      const messages = await messagesService.getAll();
-      return { success: true, messages };
-    },
-    {
-      detail: {
-        summary: "Get all messages",
-        tags: ["Messages"],
-      },
-    },
-  )
-  .get(
-    "/index",
-    async ({ messagesService }) => {
-      const messages = await messagesService.getAll();
-      return { success: true, messages };
-    },
-    {
-      detail: {
-        summary: "Get all messages (index)",
-        tags: ["Messages"],
-      },
-    },
-  )
-  .guard({ auth: true }, (app) =>
-    app
-      .post(
-        "/",
-        async ({ body, messagesService, user }) => {
-          const message = await messagesService.create({
-            title: body.title,
-            content: body.content,
-            userId: user.id,
-          });
-
-          return {
-            success: true,
-            message,
-          };
-        },
-        {
-          body: "messageInput",
-          detail: {
-            summary: "Create a new message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
+export const createMessagesRoutes = (
+  service: MessagesService = messagesService,
+) =>
+  new Elysia({ prefix: "/messages" })
+    .use(createAttachMiddleware())
+    .decorate("messagesService", service)
+    .model({
+      message: messageModel,
+      messageInput: messageInputModel,
+      messageIdParams,
+    })
+    .guard({ auth: true }, (app) =>
+      app
+        .get("/", ({ messagesService, user }) =>
+          messagesService.list(user.id).then((messages) => ({ messages })),
+        )
+        .post(
+          "/",
+          ({ body, messagesService, user }) =>
+            messagesService
+              .create({ ...body, userId: user.id })
+              .then((message) => ({ message })),
+          { body: "messageInput" },
+        )
+        .get(
+          "/:id",
+          ({ params, messagesService, user }) =>
+            messagesService
+              .get(params.id, user.id)
+              .then((message) => ({ message })),
+          { params: "messageIdParams" },
+        )
+        .patch(
+          "/:id",
+          ({ params, body, messagesService, user }) =>
+            messagesService
+              .update(params.id, user.id, body)
+              .then((message) => ({ message })),
+          { params: "messageIdParams", body: "messageInput" },
+        )
+        .delete(
+          "/:id",
+          async ({ params, messagesService, user }) => {
+            await messagesService.delete(params.id, user.id);
+            return { deleted: true };
           },
-        },
-      )
-      .post(
-        "/index",
-        async ({ body, messagesService, user }) => {
-          const message = await messagesService.create({
-            title: body.title,
-            content: body.content,
-            userId: user.id,
-          });
+          { params: "messageIdParams" },
+        ),
+    );
 
-          return {
-            success: true,
-            message,
-          };
-        },
-        {
-          body: "messageInput",
-          detail: {
-            summary: "Create a new message (index)",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
-      .get(
-        "/:id",
-        async ({ params, messagesService }) => {
-          const message = await messagesService.getById({ id: params.id });
-          return { success: true, message };
-        },
-        {
-          params: messageIdParams,
-          detail: {
-            summary: "Get a message by ID",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
-      .patch(
-        "/:id",
-        async ({ params, body, messagesService, user }) => {
-          await messagesService.validateOwnership({
-            id: params.id,
-            userId: user.id,
-          });
-
-          const message = await messagesService.update({
-            id: params.id,
-            title: body.title,
-            content: body.content,
-          });
-
-          return {
-            success: true,
-            message,
-          };
-        },
-        {
-          params: messageIdParams,
-          body: "messageInput",
-          detail: {
-            summary: "Update a message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      )
-      .delete(
-        "/:id",
-        async ({ params, messagesService, user }) => {
-          await messagesService.validateOwnership({
-            id: params.id,
-            userId: user.id,
-          });
-
-          await messagesService.delete({ id: params.id });
-
-          return {
-            success: true,
-          };
-        },
-        {
-          params: messageIdParams,
-          detail: {
-            summary: "Delete a message",
-            tags: ["Messages"],
-            security: [{ BearerAuth: [] }],
-          },
-        },
-      ),
-  );
+export const messagesRoutes = createMessagesRoutes();

@@ -1,4 +1,5 @@
-import { AppError, AuthorizationError, NotFoundError } from "@acme/core/server";
+import type { Message } from "@acme/db";
+import { NotFoundError, ValidationError } from "../../errors";
 import { messageRepository } from "./repository";
 
 interface MessageInput {
@@ -6,71 +7,63 @@ interface MessageInput {
   content: string;
 }
 
-export class MessagesService {
-  getAll() {
-    return messageRepository.findMany();
-  }
+export interface MessageStore {
+  findManyByUser(userId: string): Promise<Message[]>;
+  findByIdForUser(id: string, userId: string): Promise<Message | undefined>;
+  create(
+    input: MessageInput & { userId: string },
+  ): Promise<Message | undefined>;
+  updateForUser(
+    id: string,
+    userId: string,
+    input: MessageInput,
+  ): Promise<Message | undefined>;
+  deleteForUser(id: string, userId: string): Promise<Message | undefined>;
+}
 
-  getForUser(userId: string) {
-    return messageRepository.findManyByUser(userId);
+const normalize = ({ title, content }: MessageInput) => {
+  const normalized = { title: title.trim(), content: content.trim() };
+  if (!normalized.title || !normalized.content) {
+    throw new ValidationError("Title and content are required");
+  }
+  return normalized;
+};
+
+export class MessagesService {
+  constructor(private readonly repository: MessageStore = messageRepository) {}
+
+  list(userId: string) {
+    return this.repository.findManyByUser(userId);
   }
 
   async create(input: MessageInput & { userId: string }) {
-    const message = await messageRepository.create(input);
-
-    if (!message) {
-      throw new AppError(
-        "Failed to create message",
-        500,
-        "MESSAGE_CREATE_FAILED",
-        { userId: input.userId, title: input.title },
-      );
-    }
-
-    return message;
-  }
-
-  async getById({ id }: { id: string }) {
-    const message = await messageRepository.findById(id);
-    if (!message) {
-      throw new NotFoundError("Message", { messageId: id });
-    }
-    return message;
-  }
-
-  async validateOwnership({ id, userId }: { id: string; userId: string }) {
-    const message = await this.getById({ id });
-    if (message.userId !== userId) {
-      throw new AuthorizationError(
-        "You don't have permission to access this message",
-        {
-          messageId: id,
-          userId,
-          messageOwnerId: message.userId,
-        },
-      );
-    }
-    return message;
-  }
-
-  async update(input: MessageInput & { id: string }) {
-    const message = await messageRepository.update(input.id, {
-      title: input.title,
-      content: input.content,
+    const message = await this.repository.create({
+      ...normalize(input),
+      userId: input.userId,
     });
-
-    if (!message) {
-      throw new NotFoundError("Message", { messageId: input.id });
-    }
-
+    if (!message) throw new Error("Message insert returned no row");
     return message;
   }
 
-  async delete({ id }: { id: string }) {
-    const message = await messageRepository.delete(id);
-    if (!message) {
-      throw new NotFoundError("Message", { messageId: id });
-    }
+  async get(id: string, userId: string) {
+    const message = await this.repository.findByIdForUser(id, userId);
+    if (!message) throw new NotFoundError("Message", { messageId: id });
+    return message;
+  }
+
+  async update(id: string, userId: string, input: MessageInput) {
+    const message = await this.repository.updateForUser(
+      id,
+      userId,
+      normalize(input),
+    );
+    if (!message) throw new NotFoundError("Message", { messageId: id });
+    return message;
+  }
+
+  async delete(id: string, userId: string) {
+    const message = await this.repository.deleteForUser(id, userId);
+    if (!message) throw new NotFoundError("Message", { messageId: id });
     return message;
   }
 }

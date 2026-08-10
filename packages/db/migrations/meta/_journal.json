@@ -8,6 +8,13 @@
       "when": 1763785312482,
       "tag": "0000_lethal_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786316621226,
+      "tag": "0001_fantastic_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

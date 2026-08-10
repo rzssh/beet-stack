@@ -1,55 +1,46 @@
-import { db, desc, eq } from "@acme/db";
-import * as schema from "@acme/db/schema";
-
-const DEFAULT_LIMIT = 100;
+import { and, db, desc, eq } from "@acme/db";
+import { message } from "@acme/db/schema";
 
 export const messageRepository = {
-  findMany: () => {
+  findManyByUser(userId: string) {
     return db.query.message.findMany({
-      orderBy: desc(schema.message.createdAt),
-      limit: DEFAULT_LIMIT,
+      where: eq(message.userId, userId),
+      orderBy: desc(message.createdAt),
+      limit: 100,
     });
   },
 
-  findManyByUser: (userId: string) => {
-    return db.query.message.findMany({
-      where: eq(schema.message.userId, userId),
-      orderBy: desc(schema.message.createdAt),
-    });
-  },
-
-  findById: (id: string) => {
+  findByIdForUser(id: string, userId: string) {
     return db.query.message.findFirst({
-      where: eq(schema.message.id, id),
+      where: and(eq(message.id, id), eq(message.userId, userId)),
     });
   },
 
-  create: async (input: { title: string; content: string; userId: string }) => {
-    const res = await db.insert(schema.message).values(input).returning();
-
-    return res[0];
+  async create(input: { title: string; content: string; userId: string }) {
+    const [created] = await db.insert(message).values(input).returning();
+    return created;
   },
 
-  update: async (id: string, data: { title: string; content: string }) => {
-    const res = await db
-      .update(schema.message)
-      .set({
-        title: data.title,
-        content: data.content,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.message.id, id))
+  async updateForUser(
+    id: string,
+    userId: string,
+    data: { title: string; content: string },
+  ) {
+    const [updated] = await db
+      .update(message)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(message.id, id), eq(message.userId, userId)))
       .returning();
-
-    return res[0];
+    return updated;
   },
 
-  delete: async (id: string) => {
-    const res = await db
-      .delete(schema.message)
-      .where(eq(schema.message.id, id))
+  async deleteForUser(id: string, userId: string) {
+    const [deleted] = await db
+      .delete(message)
+      .where(and(eq(message.id, id), eq(message.userId, userId)))
       .returning();
-
-    return res[0];
+    return deleted;
   },
 };
+
+export type MessageRepository = typeof messageRepository;

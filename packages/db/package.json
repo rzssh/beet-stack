@@ -5,19 +5,19 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
     "./client": {
-      "types": "./dist/client.d.ts",
+      "types": "./src/client.ts",
       "default": "./src/client.ts"
     },
     "./schema": {
-      "types": "./dist/schema.d.ts",
+      "types": "./src/schema.ts",
       "default": "./src/schema.ts"
     },
     "./auth-schema": {
-      "types": "./dist/auth-schema.d.ts",
+      "types": "./src/auth-schema.ts",
       "default": "./src/auth-schema.ts"
     }
   },
@@ -39,7 +39,6 @@
     "with-env": "bun --env-file=../../.env --"
   },
   "dependencies": {
-    "@sinclair/typebox": "catalog:",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "catalog:",
     "postgres": "catalog:"

@@ -1,4 +1,3 @@
-// Re-export Drizzle ORM operators for convenience
 export {
   and,
   asc,
@@ -14,12 +13,8 @@ export {
   or,
   sql,
 } from "drizzle-orm";
-// Re-export common types
 export type { User } from "./auth-schema";
-
-// Export auth schemas
 export * from "./auth-schema";
 export { db } from "./client";
-export type { Message, Note } from "./schema";
-// Export all business schemas
+export type { Message } from "./schema";
 export * from "./schema";
