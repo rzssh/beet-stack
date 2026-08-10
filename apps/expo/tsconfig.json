@@ -8,15 +8,7 @@
     "moduleSuffixes": [".ios", ".android", ".native", ""],
     "paths": { "~/*": ["./src/*"] }
   },
-  "include": [
-    "src",
-    "*.ts",
-    "*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts",
-    "react-native.d.ts"
-  ],
+  "include": ["src", "*.ts", "*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
   "exclude": [
     "node_modules",
     "**/*.flow.js",

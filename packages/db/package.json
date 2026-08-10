@@ -33,8 +33,6 @@
     "db:generate": "bun with-env drizzle-kit generate",
     "db:migrate": "bun with-env drizzle-kit migrate",
     "db:push": "bun with-env drizzle-kit push",
-    "db:reset": "bun with-env ./reset-db.ts",
-    "db:seed": "bun with-env ./src/seed.ts",
     "db:studio": "bun with-env drizzle-kit studio",
     "with-env": "bun --env-file=../../.env --"
   },
