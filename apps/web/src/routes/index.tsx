@@ -1,7 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, KeyRound, MessageSquare, Smartphone } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -12,81 +10,71 @@ function Home() {
   const { user } = Route.useLoaderData();
 
   return (
-    <main className="container mx-auto flex min-h-screen max-w-5xl flex-col justify-center gap-10 px-6 py-16">
-      <section className="space-y-5">
-        <p className="font-medium text-primary">
-          Bun · Elysia · Expo · TanStack
-        </p>
-        <h1 className="max-w-3xl font-bold text-5xl tracking-tight">
-          Authenticated messages, end to end
-        </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground">
-          Better Auth sessions protect user-owned message CRUD through one
-          Elysia contract backed by Drizzle and PostgreSQL. TanStack Start and
-          Expo consume that same contract.
-        </p>
-        <div className="flex gap-3">
-          {user ? (
-            <Button asChild size="lg">
-              <Link to="/messages">Open your messages</Link>
-            </Button>
-          ) : (
-            <>
-              <Button asChild size="lg">
-                <Link to="/signup">Create account</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/signin">Sign in</Link>
-              </Button>
-            </>
-          )}
-        </div>
-      </section>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 sm:px-10">
+        <header className="flex items-center justify-between border-b py-6">
+          <p className="font-semibold tracking-tight">BEET Stack</p>
+          <p className="text-muted-foreground text-sm">
+            Full-stack TypeScript starter
+          </p>
+        </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SliceCard
-          icon={KeyRound}
-          title="Session"
-          text="Email/password account and cookie session"
-        />
-        <SliceCard
-          icon={MessageSquare}
-          title="CRUD"
-          text="Create, read, update, and delete owned messages"
-        />
-        <SliceCard
-          icon={Database}
-          title="Database"
-          text="PostgreSQL schema and Drizzle migrations"
-        />
-        <SliceCard
-          icon={Smartphone}
-          title="Two clients"
-          text="Web and Expo use one typed API"
-        />
-      </section>
+        <div className="grid flex-1 items-center gap-16 py-16 lg:grid-cols-[1.15fr_0.85fr]">
+          <section>
+            <p className="mb-5 font-mono text-primary text-sm uppercase tracking-widest">
+              Bun · Elysia · Expo · TanStack
+            </p>
+            <h1 className="max-w-3xl font-semibold text-5xl tracking-tight sm:text-7xl">
+              One backend.
+              <br />
+              Two clients.
+            </h1>
+            <p className="mt-7 max-w-xl text-lg text-muted-foreground sm:text-xl">
+              A working message app for web and mobile, built around one typed
+              API. Authentication, data ownership, and PostgreSQL are already
+              wired in.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              {user ? (
+                <Button asChild size="lg">
+                  <Link to="/messages">Open your messages</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg">
+                    <Link to="/signup">Create account</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/signin">Sign in</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className="border-t lg:border-t-0 lg:border-l lg:pl-12">
+            <h2 className="py-5 font-medium text-sm uppercase tracking-widest">
+              Included
+            </h2>
+            <dl>
+              <StackRow label="Web" value="TanStack Start" />
+              <StackRow label="Mobile" value="Expo" />
+              <StackRow label="API" value="Elysia + Eden" />
+              <StackRow label="Auth" value="Better Auth" />
+              <StackRow label="Data" value="PostgreSQL + Drizzle" />
+            </dl>
+          </section>
+        </div>
+      </div>
     </main>
   );
 }
 
-function SliceCard({
-  icon: Icon,
-  title,
-  text,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  text: string;
-}) {
+function StackRow({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardHeader>
-        <Icon className="h-5 w-5 text-primary" />
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="text-muted-foreground text-sm">
-        {text}
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-[6rem_1fr] border-t py-5 last:border-b">
+      <dt className="text-muted-foreground text-sm">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
   );
 }
