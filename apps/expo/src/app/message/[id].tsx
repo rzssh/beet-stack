@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -10,13 +11,18 @@ import {
   View,
 } from "react-native";
 import { messageMutations, messageQueries } from "~/utils/api";
+import { authClient } from "~/utils/auth";
 import { ActionButton } from "~/utils/mobile-ui";
 
 export default function MessageScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const message = useQuery(messageQueries.byId(id));
+  const session = authClient.useSession();
+  const message = useQuery({
+    ...messageQueries.byId(id),
+    enabled: !!session.data,
+  });
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -41,6 +47,14 @@ export default function MessageScreen() {
       router.back();
     },
   });
+
+  if (session.isPending)
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
+  if (!session.data) return <Redirect href="/" />;
 
   if (message.isLoading)
     return (
@@ -83,7 +97,16 @@ export default function MessageScreen() {
       <ActionButton
         disabled={remove.isPending}
         label={remove.isPending ? "Deleting…" : "Delete"}
-        onPress={() => remove.mutate(id)}
+        onPress={() =>
+          Alert.alert("Delete message", "Delete this message?", [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => remove.mutate(id),
+            },
+          ])
+        }
       />
     </SafeAreaView>
   );

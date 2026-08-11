@@ -22,6 +22,12 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = "Unauthorized", context?: Record<string, unknown>) {
+    super(message, 401, "UNAUTHORIZED", context);
+  }
+}
+
 export interface ErrorResponse {
   error: {
     message: string;

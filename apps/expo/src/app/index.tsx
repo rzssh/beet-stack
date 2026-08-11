@@ -3,6 +3,7 @@ import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -190,7 +191,16 @@ function Messages({ email }: { email: string }) {
             <ActionButton
               disabled={remove.isPending}
               label="Delete"
-              onPress={() => remove.mutate(message.id)}
+              onPress={() =>
+                Alert.alert("Delete message", "Delete this message?", [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: () => remove.mutate(message.id),
+                  },
+                ])
+              }
             />
           </View>
         ))}

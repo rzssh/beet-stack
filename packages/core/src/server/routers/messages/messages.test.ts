@@ -122,7 +122,18 @@ describe("authenticated message contract", () => {
   });
 
   test("requires a session for message reads and writes", async () => {
-    expect((await request(app, "/messages")).status).toBe(401);
+    const unauthList = await request(app, "/messages");
+    expect(unauthList.status).toBe(401);
+    expect(await unauthList.json()).toEqual({
+      error: {
+        message: expect.any(String),
+        code: "UNAUTHORIZED",
+        statusCode: 401,
+        requestId: expect.any(String),
+        timestamp: expect.any(String),
+        path: "/messages",
+      },
+    });
     expect(
       (
         await request(app, "/messages", {

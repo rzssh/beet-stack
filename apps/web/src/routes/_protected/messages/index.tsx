@@ -202,7 +202,10 @@ function MessageEditor({ message }: { message: Message }) {
                 type="button"
                 variant="destructive"
                 disabled={remove.isPending}
-                onClick={() => remove.mutate(message.id)}
+                onClick={() => {
+                  if (window.confirm("Delete this message?"))
+                    remove.mutate(message.id);
+                }}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </Button>
