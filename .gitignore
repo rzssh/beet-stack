@@ -15,6 +15,7 @@ apps/server/server
 .env
 .env.production
 
+.direnv
 .expo
 .DS_Store
 .turbo

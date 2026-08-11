@@ -45,6 +45,8 @@ Web sessions are Better Auth HTTP cookies, issued and checked inside the `/api` 
 
 No cloud account is required. Example values are local-only and contain no usable secret.
 
+On NixOS, enable `nix-ld` and run `direnv allow` once. The optional flake pins the toolchain and keeps React Native DevTools libraries inside this project.
+
 ## Setup
 
 ```sh
