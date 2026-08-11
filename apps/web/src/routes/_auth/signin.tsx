@@ -59,7 +59,12 @@ function SignInPage() {
           <p className="text-muted-foreground">Use your local account.</p>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(submit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(submit)}
+            className="space-y-4"
+            autoComplete="on"
+            method="post"
+          >
             <FormField
               control={form.control}
               name="email"
@@ -67,7 +72,7 @@ function SignInPage() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" autoComplete="email" {...field} />
+                    <Input type="email" autoComplete="username" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

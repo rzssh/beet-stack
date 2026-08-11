@@ -63,12 +63,14 @@ function SignupPage() {
       <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8">
         <div>
           <h1 className="font-bold text-2xl">Create account</h1>
-          <p className="text-muted-foreground">
-            Account stays in your PostgreSQL database.
-          </p>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(submit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(submit)}
+            className="space-y-4"
+            autoComplete="on"
+            method="post"
+          >
             <AuthField
               form={form}
               name="name"
@@ -80,7 +82,7 @@ function SignupPage() {
               name="email"
               label="Email"
               type="email"
-              autoComplete="email"
+              autoComplete="username"
             />
             <AuthField
               form={form}

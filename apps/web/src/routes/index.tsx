@@ -25,14 +25,12 @@ function Home() {
               Bun · Elysia · Expo · TanStack
             </p>
             <h1 className="max-w-3xl font-semibold text-5xl tracking-tight sm:text-7xl">
-              One backend.
-              <br />
-              Two clients.
+              Build web and mobile together.
             </h1>
             <p className="mt-7 max-w-xl text-lg text-muted-foreground sm:text-xl">
-              A working message app for web and mobile, built around one typed
-              API. Authentication, data ownership, and PostgreSQL are already
-              wired in.
+              A fast TypeScript stack built with Bun and Elysia. TanStack Start
+              and Expo share one type-safe API, keeping routes, validation, and
+              response types in sync across both clients.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               {user ? (
