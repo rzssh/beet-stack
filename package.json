@@ -23,6 +23,7 @@
     "db:generate": "bun run --filter=@beet/db db:generate",
     "db:migrate": "bun run --filter=@beet/db db:migrate",
     "db:push": "bun run --filter=@beet/db db:push",
+    "db:seed": "bun run --filter=@beet/server db:seed",
     "db:studio": "bun run --filter=@beet/db db:studio",
     "clean": "bun run --filter=* clean && rm -rf node_modules"
   },

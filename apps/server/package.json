@@ -14,6 +14,7 @@
     "build:types": "tsc",
     "dev": "bun with-env --watch src/index.ts",
     "start": "bun run --filter=@beet/db db:migrate && bun with-env ./server",
+    "db:seed": "bun with-env src/seed.ts",
     "with-env": "bun --env-file=../../.env --bun",
     "fixall": "biome check --write --diagnostic-level=error .",
     "lint": "biome lint --write --diagnostic-level=error .",

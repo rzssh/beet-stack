@@ -59,6 +59,12 @@ cp .env.example .env
 bun run db:migrate
 ```
 
+Optional development seed (refuses production and non-loopback hosts, safe to repeat):
+
+```sh
+bun run db:seed   # creates demo@beet.local / demo-password and three sample messages
+```
+
 Web and standalone API:
 
 ```sh
@@ -108,6 +114,7 @@ docker run --rm --name beet-messages-postgres \
 ## Limitations
 
 - No TLS, password reset, email verification, social login, rate limiting, payments, analytics, or cloud integrations. Better Auth email/password uses an email-shaped identifier; no outbound email is sent.
+- No OpenAPI/Swagger docs: the official Elysia plugin exposes the shared Zod request schemas, but cannot represent the Better Auth cookie-session security model (protected routes would appear open) or response shapes without duplicating schemas, so generated docs would mislead; omitted rather than shipped incomplete.
 - Expo device/simulator behavior cannot be proven by TypeScript or Metro. Run the mobile checklist on each target platform.
 - `401` means the session cookie is absent or expired; sign in again and confirm `AUTH_SECRET` did not change.
 - Expo network errors usually mean the device cannot reach port 3001; check LAN/firewall and `EXPO_PUBLIC_API_URL`.
