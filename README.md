@@ -103,7 +103,7 @@ docker run --rm --name beet-messages-postgres \
 
 ## Deployment
 
-`apps/server` compiles to a single Bun binary (`bun run --filter=@beet/server build`) that runs migrations on start (`start` script) and serves the API and `/health`. Web is served from its built output (`apps/web/server.ts`). The runtime contract is the environment in `.env.example`, the health check is `/health`, and the process runs as the invoking user. The Nix flake pins the toolchain; container, Compose, ECS, and CI artifacts for reproducible production images live alongside the flake.
+`apps/server` compiles to a single Bun binary (`bun run --filter=@beet/server build`) that runs migrations on start (`start` script) and serves the API and `/health`. Web is served from its built output (`apps/web/server.ts`). The runtime contract is the environment in `.env.example`, the health check is `/health`, and the process runs as the invoking user. The Nix flake pins the toolchain; container, Compose, ECS, and CI artifacts for reproducible production images live alongside the flake. See [`docs/deployment.md`](docs/deployment.md) for build, Compose, NixOS, ECS, and observability details.
 
 ## Limitations
 
