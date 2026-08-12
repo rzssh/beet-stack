@@ -88,6 +88,7 @@ in
 
       serviceConfig = {
         Type = "exec";
+        EnvironmentFile = lib.mkIf (cfg.environmentFile != null) cfg.environmentFile;
         DynamicUser = true;
         RuntimeDirectory = "beet-stack";
         RuntimeDirectoryMode = "0700";

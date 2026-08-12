@@ -225,7 +225,11 @@
         nixos-module =
           let
             cfg = nixosEval.config;
+            mainEnvFile = cfg.systemd.services.beet-stack.serviceConfig.EnvironmentFile or null;
+            envFileAsserted = lib.assertMsg (mainEnvFile != null)
+              "beet-stack: main service must apply cfg.environmentFile";
           in
+          assert envFileAsserted;
           pkgs.runCommand "beet-stack-nixos-module-check"
             {
               execStart = cfg.systemd.services.beet-stack.serviceConfig.ExecStart;
