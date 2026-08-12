@@ -1,11 +1,11 @@
-import { createServerConfiguration, messagesRoutes } from "@acme/core/server";
+import { createApiApp } from "@acme/core/server";
 import { createFileRoute } from "@tanstack/react-router";
 import { Elysia } from "elysia";
 import { auth } from "~/lib/auth/server";
 
-export const app = new Elysia({ prefix: "/api" })
-  .use(createServerConfiguration({ serviceName: "web-api", auth }))
-  .use(messagesRoutes);
+export const app = new Elysia({ prefix: "/api" }).use(
+  createApiApp({ serviceName: "web-api", auth }),
+);
 
 const handle = ({ request }: { request: Request }) => app.fetch(request);
 

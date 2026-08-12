@@ -2,12 +2,6 @@
   "name": "@acme/web",
   "private": true,
   "type": "module",
-  "exports": {
-    "./app": {
-      "types": "./src/routes/api/$.ts",
-      "default": "./src/routes/api/$.ts"
-    }
-  },
   "license": "MIT",
   "scripts": {
     "dev": "bun with-env vite dev",
@@ -49,7 +43,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/server": "workspace:*",
     "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:react",

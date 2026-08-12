@@ -1,4 +1,4 @@
-import type { App } from "@acme/server/app";
+import type { App } from "@acme/core/server";
 import { treaty } from "@elysiajs/eden";
 import { QueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth";

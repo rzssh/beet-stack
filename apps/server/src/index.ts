@@ -9,5 +9,4 @@ const server = app.listen(env.SERVICE_PORT, () => {
   );
 });
 
-export type { App } from "./app";
 export { server };

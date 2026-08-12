@@ -1,17 +1,11 @@
 {
   "name": "@acme/server",
   "version": "0.0.0",
-  "main": "./src/index.ts",
-  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./app": {
-      "types": "./src/app.ts",
-      "default": "./src/app.ts"
     }
   },
   "license": "MIT",
@@ -34,7 +28,6 @@
     "pino": "catalog:",
     "pino-pretty": "catalog:"
   },
-  "module": "src/index.ts",
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
