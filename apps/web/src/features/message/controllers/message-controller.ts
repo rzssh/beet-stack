@@ -1,3 +1,4 @@
+import { type Message, unwrap } from "@acme/core/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "~/lib/api";
 
@@ -5,11 +6,8 @@ const messageKeys = {
   all: ["messages"] as const,
 };
 
-const failed = (action: string, status: number) =>
-  new Error(`${action} failed with HTTP ${status}`);
-
 export const messageController = {
-  useMessagesQuery(initialData?: Awaited<ReturnType<typeof loadMessages>>) {
+  useMessagesQuery(initialData?: Message[]) {
     return useQuery({
       queryKey: messageKeys.all,
       queryFn: loadMessages,
@@ -20,15 +18,16 @@ export const messageController = {
   useCreateMessageMutation() {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: async (input: { title: string; content: string }) => {
-        const response = await api().messages.post(input);
-        if (response.error || !response.data || !("message" in response.data)) {
-          throw failed("Creating message", response.status);
-        }
-        return response.data.message;
-      },
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: messageKeys.all }),
+      mutationFn: async (input: { title: string; content: string }) =>
+        unwrap<{ message: Message }>(
+          await api().messages.post(input),
+          "Creating message",
+        ).message,
+      onSuccess: (message) =>
+        queryClient.setQueryData<Message[]>(messageKeys.all, (messages) => [
+          message,
+          ...(messages ?? []),
+        ]),
     });
   },
 
@@ -39,17 +38,19 @@ export const messageController = {
         id: string;
         title: string;
         content: string;
-      }) => {
-        const response = await api()
-          .messages({ id: input.id })
-          .patch({ title: input.title, content: input.content });
-        if (response.error || !response.data || !("message" in response.data)) {
-          throw failed("Updating message", response.status);
-        }
-        return response.data.message;
-      },
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: messageKeys.all }),
+      }) =>
+        unwrap<{ message: Message }>(
+          await api()
+            .messages({ id: input.id })
+            .patch({ title: input.title, content: input.content }),
+          "Updating message",
+        ).message,
+      onSuccess: (message) =>
+        queryClient.setQueryData<Message[]>(messageKeys.all, (messages) =>
+          (messages ?? []).map((current) =>
+            current.id === message.id ? message : current,
+          ),
+        ),
     });
   },
 
@@ -57,19 +58,19 @@ export const messageController = {
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: async (id: string) => {
-        const response = await api().messages({ id }).delete();
-        if (response.error) throw failed("Deleting message", response.status);
+        await unwrap(await api().messages({ id }).delete(), "Deleting message");
       },
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: messageKeys.all }),
+      onSuccess: (_void, id) =>
+        queryClient.setQueryData<Message[]>(messageKeys.all, (messages) =>
+          (messages ?? []).filter((current) => current.id !== id),
+        ),
     });
   },
 };
 
-export async function loadMessages() {
-  const response = await api().messages.get();
-  if (response.error || !response.data || !("messages" in response.data)) {
-    throw failed("Loading messages", response.status);
-  }
-  return response.data.messages;
+export async function loadMessages(): Promise<Message[]> {
+  return unwrap<{ messages: Message[] }>(
+    await api().messages.get(),
+    "Loading messages",
+  ).messages;
 }

@@ -1,6 +1,7 @@
+import { type Message, unwrap } from "@acme/core/contracts";
 import type { App } from "@acme/core/server";
 import { treaty } from "@elysiajs/eden";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth";
 import { getApiUrl } from "./base-url";
 
@@ -16,51 +17,74 @@ export const api = treaty<App>(getApiUrl(), {
   },
 });
 
-const failed = (action: string, status: number) =>
-  new Error(`${action} failed with HTTP ${status}`);
+export const messageKeys = {
+  all: () => ["messages"] as const,
+  detail: (id: string) => ["messages", id] as const,
+};
 
 export const messageQueries = {
   all: () => ({
-    queryKey: ["messages"] as const,
-    queryFn: async () => {
-      const response = await api.messages.get();
-      if (response.error || !response.data || !("messages" in response.data)) {
-        throw failed("Loading messages", response.status);
-      }
-      return response.data.messages;
-    },
+    queryKey: messageKeys.all(),
+    queryFn: async (): Promise<Message[]> =>
+      unwrap<{ messages: Message[] }>(
+        await api.messages.get(),
+        "Loading messages",
+      ).messages,
   }),
   byId: (id: string) => ({
-    queryKey: ["messages", id] as const,
-    queryFn: async () => {
-      const response = await api.messages({ id }).get();
-      if (response.error || !response.data || !("message" in response.data)) {
-        throw failed("Loading message", response.status);
-      }
-      return response.data.message;
-    },
+    queryKey: messageKeys.detail(id),
+    queryFn: async (): Promise<Message> =>
+      unwrap<{ message: Message }>(
+        await api.messages({ id }).get(),
+        "Loading message",
+      ).message,
   }),
 };
 
 export const messageMutations = {
-  create: async (input: { title: string; content: string }) => {
-    const response = await api.messages.post(input);
-    if (response.error || !response.data || !("message" in response.data)) {
-      throw failed("Creating message", response.status);
-    }
-    return response.data.message;
-  },
-  update: async (input: { id: string; title: string; content: string }) => {
-    const response = await api
-      .messages({ id: input.id })
-      .patch({ title: input.title, content: input.content });
-    if (response.error || !response.data || !("message" in response.data)) {
-      throw failed("Updating message", response.status);
-    }
-    return response.data.message;
-  },
-  delete: async (id: string) => {
-    const response = await api.messages({ id }).delete();
-    if (response.error) throw failed("Deleting message", response.status);
+  create: async (input: { title: string; content: string }): Promise<Message> =>
+    unwrap<{ message: Message }>(
+      await api.messages.post(input),
+      "Creating message",
+    ).message,
+  update: async (input: {
+    id: string;
+    title: string;
+    content: string;
+  }): Promise<Message> =>
+    unwrap<{ message: Message }>(
+      await api
+        .messages({ id: input.id })
+        .patch({ title: input.title, content: input.content }),
+      "Updating message",
+    ).message,
+  delete: async (id: string): Promise<void> => {
+    await unwrap(await api.messages({ id }).delete(), "Deleting message");
   },
 };
+
+export function useMessageCache() {
+  const queryClient = useQueryClient();
+  return {
+    add(message: Message) {
+      queryClient.setQueryData<Message[]>(messageKeys.all(), (messages) => [
+        message,
+        ...(messages ?? []),
+      ]);
+    },
+    put(message: Message) {
+      queryClient.setQueryData(messageKeys.detail(message.id), message);
+      queryClient.setQueryData<Message[]>(messageKeys.all(), (messages) =>
+        (messages ?? []).map((current) =>
+          current.id === message.id ? message : current,
+        ),
+      );
+    },
+    remove(id: string) {
+      queryClient.setQueryData<Message[]>(messageKeys.all(), (messages) =>
+        (messages ?? []).filter((current) => current.id !== id),
+      );
+      queryClient.removeQueries({ queryKey: messageKeys.detail(id) });
+    },
+  };
+}

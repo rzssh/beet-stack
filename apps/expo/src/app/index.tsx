@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,7 +12,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { messageMutations, messageQueries } from "~/utils/api";
+import {
+  messageMutations,
+  messageQueries,
+  queryClient,
+  useMessageCache,
+} from "~/utils/api";
 import { authClient } from "~/utils/auth";
 import { ActionButton } from "~/utils/mobile-ui";
 
@@ -105,15 +110,15 @@ function AuthForm() {
 }
 
 function Messages({ email }: { email: string }) {
-  const queryClient = useQueryClient();
+  const cache = useMessageCache();
   const messages = useQuery(messageQueries.all());
   const create = useMutation({
     mutationFn: messageMutations.create,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages"] }),
+    onSuccess: (message) => cache.add(message),
   });
   const remove = useMutation({
     mutationFn: messageMutations.delete,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["messages"] }),
+    onSuccess: (_void, id) => cache.remove(id),
   });
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");

@@ -11,3 +11,12 @@ export const messageIdSchema = z.object({
 
 export type MessageInput = z.infer<typeof messageInputSchema>;
 export type MessageId = z.infer<typeof messageIdSchema>;
+
+export interface Message {
+  id: string;
+  title: string;
+  content: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

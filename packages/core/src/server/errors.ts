@@ -28,13 +28,4 @@ export class UnauthorizedError extends AppError {
   }
 }
 
-export interface ErrorResponse {
-  error: {
-    message: string;
-    code: string;
-    statusCode: number;
-    requestId: string;
-    timestamp: string;
-    path: string;
-  };
-}
+export type { ApiErrorResponse as ErrorResponse } from "../contracts/api";

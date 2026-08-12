@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Redirect, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -10,14 +10,14 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { messageMutations, messageQueries } from "~/utils/api";
+import { messageMutations, messageQueries, useMessageCache } from "~/utils/api";
 import { authClient } from "~/utils/auth";
 import { ActionButton } from "~/utils/mobile-ui";
 
 export default function MessageScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const cache = useMessageCache();
   const session = authClient.useSession();
   const message = useQuery({
     ...messageQueries.byId(id),
@@ -35,15 +35,15 @@ export default function MessageScreen() {
 
   const update = useMutation({
     mutationFn: messageMutations.update,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["messages"] });
+    onSuccess: (message) => {
+      cache.put(message);
       router.back();
     },
   });
   const remove = useMutation({
     mutationFn: messageMutations.delete,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["messages"] });
+    onSuccess: (_void, deletedId) => {
+      cache.remove(deletedId);
       router.back();
     },
   });
