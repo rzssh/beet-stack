@@ -3,16 +3,21 @@
   "files": {
     "includes": [
       "**/*.{ts,tsx,json,css}",
-      "!!**/.cache",
-      "!!**/.expo",
-      "!!**/.tanstack",
-      "!!**/dist",
-      "!!**/expo-env.d.ts",
-      "!!**/tsc-build",
-      "!!.claude",
-      "!!.mcp.json",
-      "!!tooling/tsconfig",
-      "!!apps/web/src/routeTree.gen.ts"
+      "!**/node_modules/**",
+      "!**/.bun/**",
+      "!.direnv/**",
+      "!.git/**",
+      "!**/.cache/**",
+      "!**/.expo/**",
+      "!**/.tanstack/**",
+      "!**/dist/**",
+      "!**/expo-env.d.ts",
+      "!**/tsc-build/**",
+      "!.claude",
+      "!.mcp.json",
+      "!tooling/tsconfig/**",
+      "!apps/web/src/routeTree.gen.ts",
+      "!bun.lock"
     ]
   },
   "css": { "parser": { "tailwindDirectives": true } },
