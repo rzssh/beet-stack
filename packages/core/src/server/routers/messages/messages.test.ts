@@ -227,4 +227,24 @@ describe("authenticated message contract", () => {
       service.create({ userId: "owner", title: " ", content: "message" }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  test("rejects malformed input at the route boundary", async () => {
+    const cases = [
+      { title: "", content: "ok" },
+      { title: "ok", content: "" },
+      { title: "x".repeat(101), content: "ok" },
+      { title: "ok", content: "x".repeat(1001) },
+      { title: "ok" },
+      { content: "ok" },
+    ];
+    for (const body of cases) {
+      const response = await request(app, "/messages", {
+        method: "POST",
+        userId: "owner",
+        body,
+      });
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.code).toBe("VALIDATION_ERROR");
+    }
+  });
 });

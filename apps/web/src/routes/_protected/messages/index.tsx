@@ -1,8 +1,19 @@
+import { type MessageInput, messageInputSchema } from "@acme/core/contracts";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { LogOut, Pencil, Plus, Save, Trash2 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import {
@@ -70,14 +81,14 @@ function MessagesPage() {
 
 function CreateMessage() {
   const mutation = messageController.useCreateMessageMutation();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const form = useForm<MessageInput>({
+    resolver: zodResolver(messageInputSchema),
+    defaultValues: { title: "", content: "" },
+  });
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    await mutation.mutateAsync({ title, content });
-    setTitle("");
-    setContent("");
+  const submit = async (values: MessageInput) => {
+    await mutation.mutateAsync(values);
+    form.reset();
   };
 
   return (
@@ -88,33 +99,41 @@ function CreateMessage() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={submit} className="space-y-3">
-          <label htmlFor="new-title" className="font-medium text-sm">
-            Title
-          </label>
-          <Input
-            id="new-title"
-            required
-            maxLength={100}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          <label htmlFor="new-content" className="font-medium text-sm">
-            Content
-          </label>
-          <Textarea
-            id="new-content"
-            required
-            maxLength={1000}
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-          />
-          {mutation.error && <ErrorText error={mutation.error} />}
-          <Button disabled={mutation.isPending} type="submit">
-            <Save className="mr-2 h-4 w-4" />
-            {mutation.isPending ? "Creating…" : "Create"}
-          </Button>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(submit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="new-title">Title</FormLabel>
+                  <FormControl>
+                    <Input id="new-title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="new-content">Content</FormLabel>
+                  <FormControl>
+                    <Textarea id="new-content" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {mutation.error && <ErrorText error={mutation.error} />}
+            <Button disabled={mutation.isPending} type="submit">
+              <Save className="mr-2 h-4 w-4" />
+              {mutation.isPending ? "Creating…" : "Create"}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
@@ -124,12 +143,13 @@ function MessageEditor({ message }: { message: Message }) {
   const update = messageController.useUpdateMessageMutation();
   const remove = messageController.useDeleteMessageMutation();
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(message.title);
-  const [content, setContent] = useState(message.content);
+  const form = useForm<MessageInput>({
+    resolver: zodResolver(messageInputSchema),
+    defaultValues: { title: message.title, content: message.content },
+  });
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    await update.mutateAsync({ id: message.id, title, content });
+  const submit = async (values: MessageInput) => {
+    await update.mutateAsync({ id: message.id, ...values });
     setEditing(false);
   };
 
@@ -137,47 +157,54 @@ function MessageEditor({ message }: { message: Message }) {
     <Card>
       <CardContent className="pt-6">
         {editing ? (
-          <form onSubmit={submit} className="space-y-3">
-            <label
-              htmlFor={`title-${message.id}`}
-              className="font-medium text-sm"
-            >
-              Title
-            </label>
-            <Input
-              id={`title-${message.id}`}
-              required
-              maxLength={100}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
-            <label
-              htmlFor={`content-${message.id}`}
-              className="font-medium text-sm"
-            >
-              Content
-            </label>
-            <Textarea
-              id={`content-${message.id}`}
-              required
-              maxLength={1000}
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-            />
-            {update.error && <ErrorText error={update.error} />}
-            <div className="flex gap-2">
-              <Button disabled={update.isPending} type="submit">
-                <Save className="mr-2 h-4 w-4" /> Save
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditing(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(submit)} className="space-y-3">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor={`title-${message.id}`}>Title</FormLabel>
+                    <FormControl>
+                      <Input id={`title-${message.id}`} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor={`content-${message.id}`}>
+                      Content
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea id={`content-${message.id}`} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {update.error && <ErrorText error={update.error} />}
+              <div className="flex gap-2">
+                <Button disabled={update.isPending} type="submit">
+                  <Save className="mr-2 h-4 w-4" /> Save
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    form.reset();
+                    setEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
         ) : (
           <div className="space-y-3">
             <div>
