@@ -1,51 +1,54 @@
 # BEET Stack
 
-BEET stands for Bun, Elysia, Expo, and TanStack Start. Better Auth, Drizzle, and PostgreSQL are the explicitly named supporting layers for auth, schema, and storage. The repository does one thing: users create an email/password account, keep a session, and create, read, update, and delete only their own messages.
+BEET is **B**un, **E**lysia, **E**xpo, and **T**anStack Start, with Better Auth, Drizzle, and PostgreSQL. The repository is a minimal starter: a user creates an email/password account, keeps a session, and creates, reads, updates, and deletes only their own messages.
 
 ## Architecture
 
-One Elysia app defines the full API contract in `packages/core/src/server/routers/`, exposed through Eden so clients get the routes, validation, and response types for free. TanStack Start web mounts that contract under `/api`; a standalone Elysia server mounts the same app on port 3001 for Expo. Web and native therefore consume the exact same API surface.
+One Elysia app in `packages/core/src/server` defines the full API contract. Clients consume it through Eden, so routes, validation, and response types stay in sync everywhere.
+
+- **Web** (TanStack Start) mounts the Elysia app in-process under `/api`. Server-side rendering calls `treaty(app)` directly — no second HTTP hop. The browser makes one HTTP request per operation to `/api`.
+- **Expo** talks to the standalone Elysia server (`apps/server`, port 3001) over HTTP, one request per operation.
 
 ```text
-TanStack Start web ── /api ─┐
-                             ├── shared Elysia routes ── Drizzle ── PostgreSQL
-Expo native ── port 3001 ───┘
-                    │
-                    └── Better Auth + SecureStore cookie bridge
+TanStack Start web ── /api (in-process) ─┐
+                                         ├── shared Elysia routes ── Drizzle ── PostgreSQL
+Expo native ── port 3001 (HTTP) ─────────┘
+                          │
+                          └── Better Auth sessions; Expo bridges the cookie via SecureStore
 ```
 
-- `packages/core/src/auth.ts` owns Better Auth configuration.
-- `packages/core/src/server/routers/messages/` owns API validation, service behavior, and ownership-scoped queries.
-- `packages/db/` owns Better Auth tables, message table, and migrations.
-- `apps/web/src/routes/api/$.ts` mounts the shared API under TanStack Start's `/api` route.
-- `apps/server/src/app.ts` mounts the same API for Expo.
-- `apps/expo/src/utils/api.tsx` derives the mobile client from the standalone Elysia app type.
+### Project layout
 
-### Web and native boundaries
+- `packages/core/src/contracts` — the shared Zod message contract and API error type, reused by Elysia (Standard Schema), the web forms (`zodResolver`), and both clients' domain operations. Client-safe.
+- `packages/core/src/server` — Elysia routes, services, ownership-scoped queries, and auth/request-logging middleware. Server-only (`./server`, `./auth`, `./env`).
+- `packages/core/src/auth.ts` — Better Auth configuration.
+- `packages/db` — Drizzle schema for Better Auth tables and messages, plus migrations.
+- `apps/web` — TanStack Start web app and the `/api` mount.
+- `apps/server` — standalone Elysia server for Expo.
+- `apps/expo` — Expo client.
 
-Web sessions are Better Auth HTTP cookies, issued and checked inside the `/api` mount. Native Expo does not inherit a browser cookie jar, so `@better-auth/expo` plus `expo-secure-store` bridge the session: the native client keeps the session token in SecureStore and sends it with every request to the standalone API. Both mounts share the same Elysia routes and the same Better Auth session check, which keeps route behavior aligned across clients.
+### Sessions
 
-### Security decisions
+Web sessions are Better Auth HTTP cookies issued and checked inside the `/api` mount. Expo has no browser cookie jar, so `@better-auth/expo` plus `expo-secure-store` bridge the session: the native client stores the token in SecureStore and sends it as a cookie to the standalone API. Both clients share the same Elysia routes and the same Better Auth session check.
 
-- Every message route requires a Better Auth session; a missing or expired session returns `401`.
+### Security
+
+- Every message route requires a Better Auth session; missing or expired sessions return `401`.
 - List, detail, update, and delete include the authenticated user ID in the PostgreSQL predicate, so queries can only touch rows the user owns.
-- Cross-user lookups return `404` rather than `403`, so message existence is never disclosed to another account.
-- Request payloads are validated at the trust boundary: route schemas reject blank and malformed input before the service layer runs.
-- Environment variables are parsed with `@t3-oss/env-core`; missing or invalid values fail at startup instead of silently degrading.
-- The PostgreSQL integration guard refuses any database host other than loopback before importing the database client.
-- CORS trusts only the exact origins in `TRUSTED_ORIGINS` — localhost web and API, plus the `beet-stack://` app scheme — and never a production wildcard.
-- `AUTH_SECRET` must be at least 32 characters. Example values in this repository are local-only and contain no usable secret.
+- Cross-user lookups return `404`, never `403`, so message existence is not disclosed.
+- Request payloads are validated at the trust boundary through the shared Zod contract before the service layer runs.
+- Environment variables are parsed with `@t3-oss/env-core`; invalid values fail at startup.
+- The PostgreSQL integration test refuses any database host other than loopback.
+- CORS trusts only the exact origins in `TRUSTED_ORIGINS`; never a production wildcard.
+- `AUTH_SECRET` must be at least 32 characters. Example values in this repository are local-only.
 
 ## Prerequisites
 
-- Bun 1.3.13, matching `packageManager` in `package.json`
-- PostgreSQL 15 or newer
-- Node 22.14 when running Expo tooling, matching `.nvmrc`
-- Expo Go or a local Android/iOS development build for device checks
+- Bun 1.3.13 (see `packageManager`)
+- PostgreSQL 15+
+- Node 22.14 for Expo tooling (see `.nvmrc`)
 
-No cloud account is required. Example values are local-only and contain no usable secret.
-
-On NixOS, enable `nix-ld` and run `direnv allow` once. The optional flake pins the toolchain and keeps React Native DevTools libraries inside this project.
+On NixOS, enable `nix-ld` and run `direnv allow`. The flake pins the toolchain and keeps React Native DevTools libraries inside the project.
 
 ## Setup
 
@@ -56,35 +59,32 @@ cp .env.example .env
 bun run db:migrate
 ```
 
-Start web and standalone API:
+Web and standalone API:
 
 ```sh
 bun run dev:web
 ```
 
-- Web: `http://localhost:3000`
-- Standalone health check: `http://localhost:3001/health`
+- Web: http://localhost:3000
+- Standalone health check: http://localhost:3001/health
 
-Start Expo in a second terminal:
+Expo (second terminal):
 
 ```sh
 bun run --filter=@beet/expo dev
 ```
 
-Expo normally derives the API host from the development server. If that fails, set `EXPO_PUBLIC_API_URL` to a LAN URL reachable from the device, such as `http://192.168.1.10:3001`, and include the corresponding origin in `TRUSTED_ORIGINS` when browser CORS applies.
+Expo usually derives the API host from the dev server. If not, set `EXPO_PUBLIC_API_URL` to a LAN URL reachable from the device (e.g. `http://192.168.1.10:3001`) and, where browser CORS applies, add that origin to `TRUSTED_ORIGINS`.
 
-## Verified commands
+## Checks
 
 ```sh
-bun run test
-bun run typecheck
-bun run check
-bun run build
+bun run test        # in-memory contract tests: session, ownership, validation
+bun run check       # vite dedupe, typecheck, biome
+bun run build       # all workspaces
 ```
 
-`bun run test` runs in-memory contract tests for session-required access, owner CRUD, blank-input rejection, empty cross-user lists, and cross-user read/update/delete denial.
-
-PostgreSQL integration is opt-in and rejects non-loopback database hosts before importing the database client. It migrates the local database, exercises Better Auth sign-up/sign-out/sign-in/session plus owner CRUD and cross-user denial, then removes its generated users through cascade deletes.
+PostgreSQL integration is opt-in and rejects non-loopback hosts before importing the database client:
 
 ```sh
 RUN_POSTGRES_INTEGRATION=1 \
@@ -93,57 +93,28 @@ AUTH_SECRET=local-integration-secret-with-at-least-32-characters \
 bun run test:integration
 ```
 
-A disposable local PostgreSQL option:
+Disposable local PostgreSQL:
 
 ```sh
 docker run --rm --name beet-messages-postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=messages \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=messages \
   -p 127.0.0.1:5432:5432 postgres:17
 ```
 
-## Dependency policy
+## Deployment
 
-Small coherent upgrades were applied and locked in `bun.lock`:
+`apps/server` compiles to a single Bun binary (`bun run --filter=@beet/server build`) that runs migrations on start (`start` script) and serves the API and `/health`. Web is served from its built output (`apps/web/server.ts`). The runtime contract is the environment in `.env.example`, the health check is `/health`, and the process runs as the invoking user. The Nix flake pins the toolchain; container, Compose, ECS, and CI artifacts for reproducible production images live alongside the flake.
 
-- Better Auth 1.6.26 and `@better-auth/expo` 1.6.26
-- Elysia 1.4.29, Eden 1.4.9, and CORS 1.4.2
-- TanStack Start 1.168.42, Router 1.170.25, and Query 5.101.4
-- Drizzle ORM 0.45.2, Drizzle Kit 0.31.10, and postgres.js 3.4.9
-- Expo SDK 55.0.28, React Native 0.83.10, and React 19.2.0
-- Vite 7.3.6 and TypeScript 5.9.3
+## Limitations
 
-Official sources used:
+- No TLS, password reset, email verification, social login, rate limiting, payments, analytics, or cloud integrations. Better Auth email/password uses an email-shaped identifier; no outbound email is sent.
+- Expo device/simulator behavior cannot be proven by TypeScript or Metro. Run the mobile checklist on each target platform.
+- `401` means the session cookie is absent or expired; sign in again and confirm `AUTH_SECRET` did not change.
+- Expo network errors usually mean the device cannot reach port 3001; check LAN/firewall and `EXPO_PUBLIC_API_URL`.
+- CORS errors require the exact origin in `TRUSTED_ORIGINS`.
+- Database errors usually mean PostgreSQL is unavailable, `DATABASE_URL` is wrong, or migrations were not run.
 
-- TanStack Start setup: <https://tanstack.com/start/latest/docs/framework/react/build-from-scratch>
-- Elysia Eden contract: <https://elysiajs.com/eden/overview>
-- Better Auth Expo integration: <https://better-auth.com/docs/integrations/expo>
-- Expo SDK compatibility table: <https://docs.expo.dev/versions/latest/>
-- Expo monorepo and isolated-install support: <https://docs.expo.dev/guides/monorepos/>
-- Drizzle PostgreSQL setup and migrations: <https://orm.drizzle.team/docs/get-started/postgresql-new>
-
-Deliberate compatibility ceilings:
-
-- Expo stays on stable SDK 55 because Better Auth's current Expo guide explicitly targets SDK 55. SDK 57 is newer, but moving two native SDK generations without iOS/Android builds would be dishonest.
-- React is exact `19.2.0`, matching Expo SDK 55's supported React line.
-- TypeScript is exact `5.9.3`; Expo SDK 55's config loader fails under TypeScript 7 (`Cannot read properties of undefined (reading 'CommonJS')`).
-- Vite stays on major 7. Vite 8 is unrelated to this slice and requires a separate compatibility pass through TanStack Start and its React plugin.
-
-## Removed integrations
-
-Repository no longer claims or configures email delivery, social OAuth, Stripe, billing, S3 storage, PostHog, Sentry, OpenTelemetry, rate limiting, WebSockets, fake analytics, fake profile controls, Railway, Docker deployment images, EAS deployment, or cloud release workflows. Better Auth email/password means credentials use an email-shaped account identifier; no verification or outbound email is sent.
-
-## Limitations and troubleshooting
-
-- Production hosting, TLS, password reset, email verification, social login, and rate limiting are intentionally out of scope.
-- Expo device/simulator behavior cannot be proven by TypeScript or Metro export. Complete the mobile checklist below on each target platform.
-- `expo-doctor` currently reports duplicate native module installations under Bun's isolated workspace layout. `bun pm why react-native` resolves one locked version and Android Metro export succeeds, but a native device build remains required.
-- `401` means the session cookie is absent or expired. Sign in again and verify `AUTH_SECRET` did not change between requests.
-- Expo network errors usually mean the phone cannot reach port `3001`. Check LAN routing/firewall and set `EXPO_PUBLIC_API_URL`.
-- CORS errors require the exact web or app origin in `TRUSTED_ORIGINS`; never use a production wildcard.
-- Database errors usually mean PostgreSQL is unavailable, `DATABASE_URL` points at the wrong database, or `bun run db:migrate` was not run.
-
-## Local release checklist
+## Release checklist
 
 Automated:
 
@@ -153,18 +124,18 @@ Automated:
 - [ ] `bun run check`
 - [ ] `bun run build`
 
-Web smoke check:
+Web smoke:
 
-- [ ] Create account, refresh, and confirm session persists.
+- [ ] Create account, refresh, confirm session persists.
 - [ ] Create, open, edit, and delete a message.
 - [ ] Sign out and confirm `/messages` redirects to sign-in.
-- [ ] Use a second account and confirm the first account's messages never appear.
+- [ ] A second account cannot see the first account's messages.
 
-Mobile smoke check on real target platform:
+Mobile smoke (real target platform):
 
-- [ ] Sign up and sign in through Expo; relaunch and confirm SecureStore restores the session.
+- [ ] Sign up and sign in; relaunch and confirm SecureStore restores the session.
 - [ ] Create, read, edit, and delete a message.
 - [ ] Sign out and confirm message data disappears.
-- [ ] Repeat on each intended iOS and Android target; record platform and OS version.
+- [ ] Repeat per iOS/Android target; record platform and OS version.
 
-Checklist is local verification only. It does not authorize a release, push, deploy, account change, DNS change, or cloud resource mutation.
+Local verification only — does not authorize a release, push, deploy, or cloud change.
