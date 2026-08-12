@@ -14,6 +14,7 @@ export const api = createIsomorphicFn()
   .client(
     () =>
       treaty<typeof app>(globalThis.location.origin, {
+        headers: { "x-client-platform": "web" },
         fetch: { credentials: "include" },
       }).api,
   );

@@ -4,6 +4,7 @@ import type { Logger as PinoLogger } from "pino";
 import type { Auth } from "../../auth";
 import { createAuthMiddleware } from "./auth";
 import { errorHandler } from "./error-handler";
+import { requestLog } from "./request-log";
 
 export type Logger = Pick<
   PinoLogger,
@@ -26,7 +27,8 @@ const createAttachMiddlewareBase = (auth: Auth, logger: Logger) =>
     .decorate("logger", logger)
     .decorate("auth", auth)
     .decorate("db", db)
-    .use(errorHandler(logger));
+    .use(errorHandler(logger))
+    .use(requestLog(logger));
 
 export const createAttachMiddleware = (auth?: Auth, logger?: Logger) => {
   if (!auth) return new Elysia() as unknown as ElysiaWithCore;

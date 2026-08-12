@@ -13,7 +13,10 @@ export const api = treaty<App>(getApiUrl(), {
   fetch: { credentials: "omit" },
   headers: () => {
     const cookies = authClient.getCookie();
-    return cookies ? { Cookie: cookies } : undefined;
+    return {
+      ...(cookies ? { Cookie: cookies } : {}),
+      "x-client-platform": "expo",
+    };
   },
 });
 

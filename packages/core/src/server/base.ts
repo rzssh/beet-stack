@@ -21,7 +21,12 @@ export const createServerConfiguration = ({
         origin: env.TRUSTED_ORIGINS,
         methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+        allowedHeaders: [
+          "Content-Type",
+          "Authorization",
+          "Cookie",
+          "x-client-platform",
+        ],
       }),
     )
     .use(createAttachMiddleware(auth, logger))
