@@ -9,7 +9,6 @@ lerna-debug.log*
 dist
 tsc-build
 node_modules/
-# TODO: weird logs are spawning, should debug
 apps/server/server
 
 .env

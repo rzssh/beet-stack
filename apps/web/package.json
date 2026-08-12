@@ -1,5 +1,5 @@
 {
-  "name": "@acme/web",
+  "name": "@beet/web",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -7,7 +7,7 @@
     "dev": "bun with-env vite dev",
     "build": "bun with-env vite build",
     "build:types": "tsc",
-    "start": "bun run --filter=@acme/db db:migrate && bun with-env run server.ts",
+    "start": "bun run --filter=@beet/db db:migrate && bun with-env run server.ts",
     "with-env": "bun --env-file=../../.env --bun",
     "fixall": "biome check --write --diagnostic-level=error .",
     "lint": "biome lint --write --diagnostic-level=error .",
@@ -17,8 +17,8 @@
     "ui": "bunx shadcn@latest"
   },
   "dependencies": {
-    "@acme/core": "workspace:*",
-    "@acme/db": "workspace:*",
+    "@beet/core": "workspace:*",
+    "@beet/db": "workspace:*",
     "@elysiajs/eden": "catalog:",
     "@elysiajs/static": "catalog:",
     "@fontsource-variable/geist": "catalog:",
@@ -43,8 +43,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@beet/tailwind-config": "workspace:*",
+    "@beet/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:react",
     "@types/node": "catalog:",
     "@types/react": "catalog:react",

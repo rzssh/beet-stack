@@ -1,5 +1,5 @@
 {
-  "name": "@acme/db",
+  "name": "@beet/db",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -38,11 +38,10 @@
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
-    "drizzle-zod": "catalog:",
     "postgres": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@beet/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",

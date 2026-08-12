@@ -1,5 +1,5 @@
 {
-  "extends": ["@acme/tsconfig/base.json"],
+  "extends": ["@beet/tsconfig/base.json"],
   "compilerOptions": {
     "jsx": "react-native",
     "allowJs": true,

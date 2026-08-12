@@ -1,5 +1,5 @@
 {
-  "name": "@acme/tailwind-config",
+  "name": "@beet/tailwind-config",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
     "tailwindcss": "catalog:react"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@beet/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

@@ -19,11 +19,11 @@ const suite = enabled ? describe : describe.skip;
 
 suite("PostgreSQL auth and message integration", () => {
   let app: typeof import("./app").app;
-  let db: typeof import("@acme/db/client").db;
+  let db: typeof import("@beet/db/client").db;
   let migrated = false;
 
   beforeAll(async () => {
-    ({ db } = await import("@acme/db/client"));
+    ({ db } = await import("@beet/db/client"));
     const { migrate } = await import("drizzle-orm/postgres-js/migrator");
     await migrate(db, {
       migrationsFolder: new URL(
@@ -38,7 +38,7 @@ suite("PostgreSQL auth and message integration", () => {
   afterAll(async () => {
     if (!migrated) return;
     const { inArray } = await import("drizzle-orm");
-    const { user } = await import("@acme/db/auth-schema");
+    const { user } = await import("@beet/db/auth-schema");
     await db.delete(user).where(inArray(user.email, emails));
   });
 

@@ -1,5 +1,5 @@
-import { initAuth } from "@acme/core/auth";
-import { env } from "@acme/core/env";
+import { initAuth } from "@beet/core/auth";
+import { env } from "@beet/core/env";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 export const auth = initAuth({

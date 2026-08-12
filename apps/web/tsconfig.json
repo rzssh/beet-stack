@@ -1,5 +1,5 @@
 {
-  "extends": "@acme/tsconfig/web.json",
+  "extends": "@beet/tsconfig/web.json",
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"],
   "compilerOptions": {

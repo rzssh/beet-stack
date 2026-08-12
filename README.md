@@ -68,7 +68,7 @@ bun run dev:web
 Start Expo in a second terminal:
 
 ```sh
-bun run --filter=@acme/expo dev
+bun run --filter=@beet/expo dev
 ```
 
 Expo normally derives the API host from the development server. If that fails, set `EXPO_PUBLIC_API_URL` to a LAN URL reachable from the device, such as `http://192.168.1.10:3001`, and include the corresponding origin in `TRUSTED_ORIGINS` when browser CORS applies.

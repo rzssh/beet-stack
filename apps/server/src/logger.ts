@@ -1,4 +1,4 @@
-import { env } from "@acme/core/env";
+import { env } from "@beet/core/env";
 import { pino } from "pino";
 
 export const logger = pino({

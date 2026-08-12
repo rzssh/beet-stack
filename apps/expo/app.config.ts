@@ -10,7 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/icon-light.png",
   userInterfaceStyle: "automatic",
   ios: {
-    bundleIdentifier: "com.acme.beetstack",
+    bundleIdentifier: "dev.beetstack.app",
     supportsTablet: true,
     icon: {
       light: "./assets/icon-light.png",
@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: "com.acme.beetstack",
+    package: "dev.beetstack.app",
     adaptiveIcon: {
       foregroundImage: "./assets/icon-light.png",
       backgroundColor: "#1F104A",

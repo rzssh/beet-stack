@@ -1,4 +1,4 @@
-import { createApiApp } from "@acme/core/server";
+import { createApiApp } from "@beet/core/server";
 import { auth } from "./lib/auth";
 import { logger } from "./logger";
 

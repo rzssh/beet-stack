@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import type { Message } from "@acme/db";
+import type { Message } from "@beet/db";
 import { Elysia } from "elysia";
 import type { Auth } from "../../../auth";
 import { createServerConfiguration } from "../../base";

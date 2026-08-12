@@ -1,5 +1,5 @@
 {
-  "name": "@acme/core",
+  "name": "@beet/core",
   "private": true,
   "type": "module",
   "exports": {
@@ -24,7 +24,7 @@
     "format": "biome format --write --diagnostic-level=error ."
   },
   "dependencies": {
-    "@acme/db": "workspace:*",
+    "@beet/db": "workspace:*",
     "@better-auth/expo": "catalog:",
     "@elysiajs/cors": "catalog:",
     "@t3-oss/env-core": "catalog:",
@@ -34,7 +34,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@beet/tsconfig": "workspace:*",
     "typescript": "catalog:"
   }
 }

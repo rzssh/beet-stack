@@ -1,5 +1,5 @@
 {
-  "name": "@acme/server",
+  "name": "@beet/server",
   "version": "0.0.0",
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
     "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server ./src/index.ts",
     "build:types": "tsc",
     "dev": "bun with-env --watch src/index.ts",
-    "start": "bun run --filter=@acme/db db:migrate && bun with-env ./server",
+    "start": "bun run --filter=@beet/db db:migrate && bun with-env ./server",
     "with-env": "bun --env-file=../../.env --bun",
     "fixall": "biome check --write --diagnostic-level=error .",
     "lint": "biome lint --write --diagnostic-level=error .",
@@ -22,14 +22,14 @@
     "clean": "rm -rf .turbo node_modules dist"
   },
   "dependencies": {
-    "@acme/core": "workspace:*",
-    "@acme/db": "workspace:*",
+    "@beet/core": "workspace:*",
+    "@beet/db": "workspace:*",
     "elysia": "catalog:",
     "pino": "catalog:",
     "pino-pretty": "catalog:"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@beet/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "drizzle-orm": "catalog:",

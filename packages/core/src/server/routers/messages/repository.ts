@@ -1,5 +1,5 @@
-import { and, db, desc, eq } from "@acme/db";
-import { message } from "@acme/db/schema";
+import { and, db, desc, eq } from "@beet/db";
+import { message } from "@beet/db/schema";
 
 export const messageRepository = {
   findManyByUser(userId: string) {

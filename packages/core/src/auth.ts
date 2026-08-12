@@ -1,4 +1,4 @@
-import { db } from "@acme/db/client";
+import { db } from "@beet/db/client";
 import { expo } from "@better-auth/expo";
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { betterAuth } from "better-auth";

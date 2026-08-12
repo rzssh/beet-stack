@@ -1,4 +1,4 @@
-import { createApiApp } from "@acme/core/server";
+import { createApiApp } from "@beet/core/server";
 import { createFileRoute } from "@tanstack/react-router";
 import { Elysia } from "elysia";
 import { auth } from "~/lib/auth/server";

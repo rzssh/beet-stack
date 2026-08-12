@@ -1,4 +1,4 @@
-import type { Message } from "@acme/db";
+import type { Message } from "@beet/db";
 import { NotFoundError, ValidationError } from "../../errors";
 import { messageRepository } from "./repository";
 

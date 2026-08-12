@@ -10,9 +10,9 @@
       },
     },
     "apps/expo": {
-      "name": "@acme/expo",
+      "name": "@beet/expo",
       "dependencies": {
-        "@acme/core": "workspace:*",
+        "@beet/core": "workspace:*",
         "@better-auth/expo": "catalog:",
         "@elysiajs/eden": "catalog:",
         "@tanstack/react-query": "catalog:react",
@@ -36,24 +36,24 @@
         "react-native-worklets": "~0.7.0",
       },
       "devDependencies": {
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "@types/react": "catalog:react",
         "elysia": "catalog:",
         "typescript": "catalog:",
       },
     },
     "apps/server": {
-      "name": "@acme/server",
+      "name": "@beet/server",
       "version": "0.0.0",
       "dependencies": {
-        "@acme/core": "workspace:*",
-        "@acme/db": "workspace:*",
+        "@beet/core": "workspace:*",
+        "@beet/db": "workspace:*",
         "elysia": "catalog:",
         "pino": "catalog:",
         "pino-pretty": "catalog:",
       },
       "devDependencies": {
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "drizzle-orm": "catalog:",
@@ -61,10 +61,10 @@
       },
     },
     "apps/web": {
-      "name": "@acme/web",
+      "name": "@beet/web",
       "dependencies": {
-        "@acme/core": "workspace:*",
-        "@acme/db": "workspace:*",
+        "@beet/core": "workspace:*",
+        "@beet/db": "workspace:*",
         "@elysiajs/eden": "catalog:",
         "@elysiajs/static": "catalog:",
         "@fontsource-variable/geist": "catalog:",
@@ -89,8 +89,8 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@acme/tailwind-config": "workspace:*",
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tailwind-config": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "@tailwindcss/vite": "catalog:react",
         "@types/node": "catalog:",
         "@types/react": "catalog:react",
@@ -102,9 +102,9 @@
       },
     },
     "packages/core": {
-      "name": "@acme/core",
+      "name": "@beet/core",
       "dependencies": {
-        "@acme/db": "workspace:*",
+        "@beet/db": "workspace:*",
         "@better-auth/expo": "catalog:",
         "@elysiajs/cors": "catalog:",
         "@t3-oss/env-core": "catalog:",
@@ -114,20 +114,19 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/db": {
-      "name": "@acme/db",
+      "name": "@beet/db",
       "version": "0.1.0",
       "dependencies": {
         "drizzle-orm": "catalog:",
-        "drizzle-zod": "catalog:",
         "postgres": "catalog:",
       },
       "devDependencies": {
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "drizzle-kit": "catalog:",
@@ -135,19 +134,19 @@
       },
     },
     "tooling/tailwind-config": {
-      "name": "@acme/tailwind-config",
+      "name": "@beet/tailwind-config",
       "dependencies": {
         "@tailwindcss/postcss": "catalog:react",
         "tailwindcss": "catalog:react",
       },
       "devDependencies": {
-        "@acme/tsconfig": "workspace:*",
+        "@beet/tsconfig": "workspace:*",
         "@types/node": "catalog:",
         "typescript": "catalog:",
       },
     },
     "tooling/tsconfig": {
-      "name": "@acme/tsconfig",
+      "name": "@beet/tsconfig",
     },
   },
   "trustedDependencies": [
@@ -171,7 +170,6 @@
     "better-auth": "^1.6.26",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
-    "drizzle-zod": "^0.8.3",
     "elysia": "^1.4.29",
     "immer": "^10.2.0",
     "pino": "^10.3.1",
@@ -207,20 +205,6 @@
     },
   },
   "packages": {
-    "@acme/core": ["@acme/core@workspace:packages/core"],
-
-    "@acme/db": ["@acme/db@workspace:packages/db"],
-
-    "@acme/expo": ["@acme/expo@workspace:apps/expo"],
-
-    "@acme/server": ["@acme/server@workspace:apps/server"],
-
-    "@acme/tailwind-config": ["@acme/tailwind-config@workspace:tooling/tailwind-config"],
-
-    "@acme/tsconfig": ["@acme/tsconfig@workspace:tooling/tsconfig"],
-
-    "@acme/web": ["@acme/web@workspace:apps/web"],
-
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
 
     "@babel/code-frame": ["@babel/code-frame@7.27.1", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.27.1", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg=="],
@@ -408,6 +392,20 @@
     "@babel/traverse": ["@babel/traverse@7.29.8", "", { "dependencies": { "@babel/code-frame": "^7.29.7", "@babel/generator": "^7.29.8", "@babel/helper-globals": "^7.29.7", "@babel/parser": "^7.29.8", "@babel/template": "^7.29.7", "@babel/types": "^7.29.8", "debug": "^4.3.1" } }, "sha512-I5z7H3bf/41ktsNVLtpN0wAa336HkqIHQ5BuPLEhTkt1jVSyZpeNKIzTgEWmlxjdg81R0IgUCcaE+Ok3NvrfZg=="],
 
     "@babel/types": ["@babel/types@7.29.8", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg=="],
+
+    "@beet/core": ["@beet/core@workspace:packages/core"],
+
+    "@beet/db": ["@beet/db@workspace:packages/db"],
+
+    "@beet/expo": ["@beet/expo@workspace:apps/expo"],
+
+    "@beet/server": ["@beet/server@workspace:apps/server"],
+
+    "@beet/tailwind-config": ["@beet/tailwind-config@workspace:tooling/tailwind-config"],
+
+    "@beet/tsconfig": ["@beet/tsconfig@workspace:tooling/tsconfig"],
+
+    "@beet/web": ["@beet/web@workspace:apps/web"],
 
     "@better-auth/core": ["@better-auth/core@1.6.26", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.39.0", "@standard-schema/spec": "^1.1.0", "zod": "^4.3.6" }, "peerDependencies": { "@better-auth/utils": "0.4.2", "@better-fetch/fetch": "1.3.1", "@cloudflare/workers-types": ">=4", "@opentelemetry/api": "^1.9.0", "better-call": "1.3.7", "jose": "^6.1.0", "kysely": "^0.28.5 || ^0.29.0", "nanostores": "^1.0.1" }, "optionalPeers": ["@cloudflare/workers-types", "@opentelemetry/api"] }, "sha512-Ud4FqnjIJDvmeo+3bN+OsuVVAiuvFjNERbW7G8/65ictSxCox62gNgTOsJ4YXmbwXzBzyyekStzrupg2qNGEkA=="],
 
@@ -1066,8 +1064,6 @@
     "drizzle-kit": ["drizzle-kit@0.31.10", "", { "dependencies": { "@drizzle-team/brocli": "^0.10.2", "@esbuild-kit/esm-loader": "^2.5.5", "esbuild": "^0.25.4", "tsx": "^4.21.0" }, "bin": { "drizzle-kit": "bin.cjs" } }, "sha512-7OZcmQUrdGI+DUNNsKBn1aW8qSoKuTH7d0mYgSP8bAzdFzKoovxEFnoGQp2dVs82EOJeYycqRtciopszwUf8bw=="],
 
     "drizzle-orm": ["drizzle-orm@0.45.2", "", { "peerDependencies": { "@aws-sdk/client-rds-data": ">=3", "@cloudflare/workers-types": ">=4", "@electric-sql/pglite": ">=0.2.0", "@libsql/client": ">=0.10.0", "@libsql/client-wasm": ">=0.10.0", "@neondatabase/serverless": ">=0.10.0", "@op-engineering/op-sqlite": ">=2", "@opentelemetry/api": "^1.4.1", "@planetscale/database": ">=1.13", "@prisma/client": "*", "@tidbcloud/serverless": "*", "@types/better-sqlite3": "*", "@types/pg": "*", "@types/sql.js": "*", "@upstash/redis": ">=1.34.7", "@vercel/postgres": ">=0.8.0", "@xata.io/client": "*", "better-sqlite3": ">=7", "bun-types": "*", "expo-sqlite": ">=14.0.0", "gel": ">=2", "knex": "*", "kysely": "*", "mysql2": ">=2", "pg": ">=8", "postgres": ">=3", "sql.js": ">=1", "sqlite3": ">=5" }, "optionalPeers": ["@aws-sdk/client-rds-data", "@cloudflare/workers-types", "@electric-sql/pglite", "@libsql/client", "@libsql/client-wasm", "@neondatabase/serverless", "@op-engineering/op-sqlite", "@opentelemetry/api", "@planetscale/database", "@prisma/client", "@tidbcloud/serverless", "@types/better-sqlite3", "@types/pg", "@types/sql.js", "@upstash/redis", "@vercel/postgres", "@xata.io/client", "better-sqlite3", "bun-types", "expo-sqlite", "gel", "knex", "kysely", "mysql2", "pg", "postgres", "sql.js", "sqlite3"] }, "sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q=="],
-
-    "drizzle-zod": ["drizzle-zod@0.8.3", "", { "peerDependencies": { "drizzle-orm": ">=0.36.0", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-66yVOuvGhKJnTdiqj1/Xaaz9/qzOdRJADpDa68enqS6g3t0kpNkwNYjUuaeXgZfO/UWuIM9HIhSlJ6C5ZraMww=="],
 
     "ee-first": ["ee-first@1.1.1", "", {}, "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="],
 

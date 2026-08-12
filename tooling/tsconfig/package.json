@@ -1,5 +1,5 @@
 {
-  "name": "@acme/tsconfig",
+  "name": "@beet/tsconfig",
   "private": true,
   "license": "MIT",
   "files": [

@@ -1,4 +1,4 @@
-import { db } from "@acme/db/client";
+import { db } from "@beet/db/client";
 import { Elysia } from "elysia";
 import type { Logger as PinoLogger } from "pino";
 import type { Auth } from "../../auth";

@@ -1,4 +1,4 @@
-import { type MessageInput, messageInputSchema } from "@acme/core/contracts";
+import { type MessageInput, messageInputSchema } from "@beet/core/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { LogOut, Pencil, Plus, Save, Trash2 } from "lucide-react";

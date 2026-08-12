@@ -1,4 +1,4 @@
-import { type Message, unwrap } from "@acme/core/contracts";
+import { type Message, unwrap } from "@beet/core/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "~/lib/api";
 

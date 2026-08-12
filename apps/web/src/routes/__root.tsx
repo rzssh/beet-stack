@@ -12,7 +12,7 @@ import css from "~/styles/app.css?url";
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   api: typeof import("~/lib/api").api;
-  user: import("@acme/core/auth").Session["user"] | null;
+  user: import("@beet/core/auth").Session["user"] | null;
 }>()({
   head: () => ({
     meta: [

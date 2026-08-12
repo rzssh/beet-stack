@@ -1,4 +1,4 @@
-import { env } from "@acme/core/env";
+import { env } from "@beet/core/env";
 import { app } from "./app";
 import { logger } from "./logger";
 

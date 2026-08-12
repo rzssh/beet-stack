@@ -1,5 +1,5 @@
-import { type Message, unwrap } from "@acme/core/contracts";
-import type { App } from "@acme/core/server";
+import { type Message, unwrap } from "@beet/core/contracts";
+import type { App } from "@beet/core/server";
 import { treaty } from "@elysiajs/eden";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "./auth";
