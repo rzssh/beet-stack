@@ -11,7 +11,7 @@
     "check": "bun run check:vite && bun run typecheck && biome check . --diagnostic-level=error",
     "check:vite": "bun scripts/check-vite-instance.mjs",
     "test": "DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/messages AUTH_SECRET=local-test-secret-with-at-least-32-characters bun test packages/core/src/server/routers/messages/messages.test.ts",
-    "test:integration": "bun test apps/server/src/app.integration.test.ts",
+    "test:integration": "bun test apps/server/src/app.integration.test.ts packages/db/src/migrate.concurrent.test.ts",
     "dev": "bun run --filter=* dev",
     "dev:web": "bun run --filter=@beet/web --filter=@beet/server dev",
     "typecheck": "bun run --filter=* typecheck",

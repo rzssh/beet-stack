@@ -13,6 +13,11 @@ const migrationsFolder =
 
 const sql = postgres(url, { max: 1 });
 const db = drizzle(sql);
-await migrate(db, { migrationsFolder });
+await sql`SELECT pg_advisory_lock(314159, 265)`;
+try {
+  await migrate(db, { migrationsFolder });
+} finally {
+  await sql`SELECT pg_advisory_unlock(314159, 265)`.catch(() => {});
+}
 await sql.end();
 console.log("beet: database migrations applied");
