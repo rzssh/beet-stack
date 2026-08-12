@@ -3,7 +3,9 @@
 `apps/server` is a standalone Elysia API: a single compiled Bun binary that runs
 database migrations on start and serves the API plus `GET /health` on
 `SERVICE_PORT` (default `3001`). Stateless replicas share PostgreSQL for data and
-Better Auth sessions, so they scale horizontally behind a load balancer.
+Better Auth sessions, so they scale horizontally behind a load balancer. Startup
+migrations are serialized with a PostgreSQL advisory lock, so concurrent replicas
+wait for the in-flight migration instead of racing on the schema.
 
 The runtime contract is `.env.example`: `DATABASE_URL`, `AUTH_SECRET` (>= 32
 characters), `NODE_ENV=production`, `TRUSTED_ORIGINS`, and `SERVICE_PORT`. The
