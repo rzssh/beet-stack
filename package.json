@@ -21,6 +21,8 @@
     "lint:ws": "bunx sherif@latest",
     "postinstall": "bun lint:ws",
     "db:generate": "bun run --filter=@beet/db db:generate",
+    "db:start": "docker compose -f docker-compose.dev.yml up -d --wait",
+    "db:stop": "docker compose -f docker-compose.dev.yml down",
     "db:migrate": "bun run --filter=@beet/db db:migrate",
     "db:push": "bun run --filter=@beet/db db:push",
     "db:seed": "bun run --filter=@beet/server db:seed",

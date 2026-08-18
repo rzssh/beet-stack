@@ -56,6 +56,7 @@ On NixOS, enable `nix-ld` and run `direnv allow`. The flake pins the toolchain a
 bun install --frozen-lockfile
 cp .env.example .env
 # Replace AUTH_SECRET with: openssl rand -base64 32
+bun run db:start
 bun run db:migrate
 ```
 
@@ -99,12 +100,11 @@ AUTH_SECRET=local-integration-secret-with-at-least-32-characters \
 bun run test:integration
 ```
 
-Disposable local PostgreSQL:
+Local PostgreSQL runs through the development Compose file and persists between sessions:
 
 ```sh
-docker run --rm --name beet-messages-postgres \
-  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=messages \
-  -p 127.0.0.1:5432:5432 postgres:17
+bun run db:start
+bun run db:stop
 ```
 
 ## Deployment
