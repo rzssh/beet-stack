@@ -24,6 +24,12 @@ import { authClient } from "~/lib/auth/client";
 
 type Message = Awaited<ReturnType<typeof loadMessages>>[number];
 
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
 export const Route = createFileRoute("/_protected/messages/")({
   loader: async ({ context }) => ({
     messages: await loadMessages(),
@@ -143,6 +149,10 @@ function MessageEditor({ message }: { message: Message }) {
   const update = messageController.useUpdateMessageMutation();
   const remove = messageController.useDeleteMessageMutation();
   const [editing, setEditing] = useState(false);
+  const createdAt = new Date(message.createdAt);
+  const updatedAt = new Date(message.updatedAt);
+  const wasUpdated = updatedAt.getTime() > createdAt.getTime();
+  const timestamp = wasUpdated ? updatedAt : createdAt;
   const form = useForm<MessageInput>({
     resolver: zodResolver(messageInputSchema),
     defaultValues: { title: message.title, content: message.content },
@@ -214,7 +224,8 @@ function MessageEditor({ message }: { message: Message }) {
               </p>
             </div>
             <p className="text-muted-foreground text-xs">
-              Updated {new Date(message.updatedAt).toLocaleString()}
+              {wasUpdated ? "Updated" : "Created"}{" "}
+              {dateFormatter.format(timestamp)} UTC
             </p>
             {remove.error && <ErrorText error={remove.error} />}
             <div className="flex gap-2">
